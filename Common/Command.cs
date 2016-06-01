@@ -24,6 +24,7 @@ namespace Belgrade.SqlClient.Common
         /// Creates command object.
         /// </summary>
         /// <param name="connection">Connection to Sql Database.</param>
+        /// <param name="errorHandler">Function that will be called if some exception is thrown.</param>
         public Command(DbConnection connection, Action<Exception> errorHandler = null)
         {
             this.Connection = connection;
