@@ -1,24 +1,26 @@
 ﻿using System;
+using System.Data.Common;
 using System.Data.SqlClient;
 using System.Threading.Tasks;
 
-namespace Belgrade.SqlClient.Async
+namespace Belgrade.SqlClient.Common
 {
     /// <summary>
     /// Executes SQL query and provides DataReader to callback function.
     /// </summary>
-    public class QueryMapper : IQueryMapper
+    public class QueryMapper<T> : IQueryMapper
+        where T : DbCommand, new()
     {
         /// <summary>
         /// Connection to Sql Database.
         /// </summary>
-        private SqlConnection Connection;
+        private DbConnection Connection;
 
         /// <summary>
         /// Creates Query object.
         /// </summary>
         /// <param name="connection">Connection to Sql Database.</param>
-        public QueryMapper(SqlConnection connection)
+        public QueryMapper(DbConnection connection)
         {
             this.Connection = connection;
         }
@@ -29,10 +31,12 @@ namespace Belgrade.SqlClient.Async
         /// <param name="sql">SQL query that will be executed.</param>
         /// <param name="callback">Callback function that will be called for each row.</param>
         /// <returns>Task</returns>
-        public async Task ExecuteReader(string sql, Func<SqlDataReader, Task> callback)
+        public async Task ExecuteReader(string sql, Func<DbDataReader, Task> callback)
         {
-            using (var command = new SqlCommand(sql, this.Connection))
+            using (DbCommand command = new T())
             {
+                command.CommandText = sql;
+                command.Connection = this.Connection;
                 await this.ExecuteReader(command, callback);
             }
         }
@@ -43,7 +47,7 @@ namespace Belgrade.SqlClient.Async
         /// <param name="command">SQL command that will be executed.</param>
         /// <param name="callback">Callback function that will be called for each row.</param>
         /// <returns>Task</returns>
-        public async Task ExecuteReader(SqlCommand command, Action<SqlDataReader> callback)
+        public async Task ExecuteReader(DbCommand command, Action<DbDataReader> callback)
         {
             if (command.Connection == null)
                 command.Connection = this.Connection;
@@ -70,10 +74,12 @@ namespace Belgrade.SqlClient.Async
         /// <param name="sql">SQL query that will be executed.</param>
         /// <param name="callback">Async callback function that will be called for each row.</param>
         /// <returns>Task</returns>
-        public async Task ExecuteReader(string sql, Action<SqlDataReader> callback)
+        public async Task ExecuteReader(string sql, Action<DbDataReader> callback)
         {
-            using (var command = new SqlCommand(sql, this.Connection))
+            using (DbCommand command = new T())
             {
+                command.CommandText = sql;
+                command.Connection = this.Connection;
                 await this.ExecuteReader(command, callback);
             }
         }
@@ -84,7 +90,7 @@ namespace Belgrade.SqlClient.Async
         /// <param name="command">SQL command that will be executed.</param>
         /// <param name="callback">Async callback function that will be called for each row.</param>
         /// <returns>Task</returns>
-        public async Task ExecuteReader(SqlCommand command, Func<SqlDataReader, Task> callback)
+        public async Task ExecuteReader(DbCommand command, Func<DbDataReader, Task> callback)
         {
             if(command.Connection == null)
                 command.Connection = this.Connection;

@@ -2,7 +2,7 @@
 using System.Data.SqlClient;
 using System.Linq;
 
-namespace Belgrade.SqlClient.JSON
+namespace Belgrade.SqlClient.SqlDb
 {
     /// <summary>
     /// Extension of SqlParameterCollection class with methods for adding array values that will be serialized as JSON.

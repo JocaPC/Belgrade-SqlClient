@@ -9,6 +9,5 @@ C:\Projects\Azure\CSharpSqlDbSample\Belgrade.SqlClient\obj\Debug\Belgrade.SqlCli
 C:\Projects\Azure\CSharpSqlDbSample\Belgrade.SqlClient\obj\Debug\Belgrade.SqlClient.csprojResolveAssemblyReference.cache
 C:\Users\jovanpop\Documents\GitHub\CLR-Belgrade-SqlClient\bin\Debug\Belgrade.SqlClient.dll
 C:\Users\jovanpop\Documents\GitHub\CLR-Belgrade-SqlClient\bin\Debug\Belgrade.SqlClient.pdb
-C:\Users\jovanpop\Documents\GitHub\CLR-Belgrade-SqlClient\obj\Debug\Belgrade.SqlClient.csprojResolveAssemblyReference.cache
 C:\Users\jovanpop\Documents\GitHub\CLR-Belgrade-SqlClient\obj\Debug\Belgrade.SqlClient.dll
 C:\Users\jovanpop\Documents\GitHub\CLR-Belgrade-SqlClient\obj\Debug\Belgrade.SqlClient.pdb

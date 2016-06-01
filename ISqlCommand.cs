@@ -1,4 +1,4 @@
-﻿using System.Data.SqlClient;
+﻿using System.Data.Common;
 using System.Threading.Tasks;
 
 namespace Belgrade.SqlClient
@@ -20,7 +20,7 @@ namespace Belgrade.SqlClient
         /// </summary>
         /// <param name="command">SqlCommand that will be executed.</param>
         /// <returns>Generic task.</returns>
-        Task ExecuteNonQuery(SqlCommand command);
+        Task ExecuteNonQuery(DbCommand command);
     }
     
 }

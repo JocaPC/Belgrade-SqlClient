@@ -1,4 +1,4 @@
-﻿using System.Data.SqlClient;
+﻿using System.Data.Common;
 using System.IO;
 using System.Threading.Tasks;
 
@@ -25,6 +25,6 @@ namespace Belgrade.SqlClient
         /// <param name="stream">Output stream wehre results will be written.</param>
         /// <param name="defaultOutput">Default content that will be written into stream if there are no results.</param>
         /// <returns>Task</returns>
-        Task Stream(SqlCommand command, Stream stream, string defaultOutput = "");
+        Task Stream(DbCommand command, Stream stream, string defaultOutput = "");
     }    
 }

@@ -1,33 +1,35 @@
-﻿using System.Data.SqlClient;
+﻿using System.Data.Common;
+using System.Data.SqlClient;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Belgrade.SqlClient.Async
+namespace Belgrade.SqlClient.Common
 {
     /// <summary>
     /// Query component that streams results of SQL query into an oputput stream.
     /// </summary>
-    public class QueryPipe : IQueryPipe
+    public class QueryPipe<T> : IQueryPipe
+        where T : DbCommand, new()
     {
         /// <summary>
         /// Connection to Sql Database.
         /// </summary>
-        private SqlConnection Connection;
+        private DbConnection Connection;
 
         /// <summary>
         /// Query mapper used to stream results.
         /// </summary>
-        private QueryMapper Mapper;
+        private QueryMapper<T> Mapper;
 
         /// <summary>
         /// Creates Query object.
         /// </summary>
         /// <param name="connection">Connection to Sql Database.</param>
-        public QueryPipe(SqlConnection connection)
+        public QueryPipe(DbConnection connection)
         {
             this.Connection = connection;
-            this.Mapper = new QueryMapper(connection);
+            this.Mapper = new QueryMapper<T>(connection);
         }
 
         /// <summary>
@@ -39,8 +41,10 @@ namespace Belgrade.SqlClient.Async
         /// <returns>Task</returns>
         public async Task Stream(string sql, Stream stream, string defaultOutput = "")
         {
-            using (var command = new SqlCommand(sql, this.Connection))
+            using (DbCommand command = new T())
             {
+                command.CommandText = sql;
+                command.Connection = this.Connection;
                 await this.SqlResultsToStream(command, stream, defaultOutput);
             }
         }
@@ -52,13 +56,13 @@ namespace Belgrade.SqlClient.Async
         /// <param name="stream">Output stream wehre results will be written.</param>
         /// <param name="defaultOutput">Default content that will be written into stream if there are no results.</param>
         /// <returns>Task</returns>
-        public async Task Stream(SqlCommand command, Stream stream, string defaultOutput = "")
+        public async Task Stream(DbCommand command, Stream stream, string defaultOutput = "")
         {
             command.Connection = this.Connection;
             await this.SqlResultsToStream(command, stream, defaultOutput);
         }
 
-        private async Task SqlResultsToStream(SqlCommand command, Stream stream, string defaultOutput)
+        private async Task SqlResultsToStream(DbCommand command, Stream stream, string defaultOutput)
         {
             try
             {

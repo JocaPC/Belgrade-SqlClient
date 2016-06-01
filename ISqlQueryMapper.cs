@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Data.SqlClient;
+using System.Data.Common;
 using System.Threading.Tasks;
 
 namespace Belgrade.SqlClient
@@ -9,14 +9,13 @@ namespace Belgrade.SqlClient
     /// </summary>
     public interface IQueryMapper
     {
-
         /// <summary>
         /// Executes sql statement and provides each row to the callback function.
         /// </summary>
         /// <param name="sql">SQL query that will be executed.</param>
         /// <param name="callback">Callback function that will be called for each row.</param>
         /// <returns>Task</returns>
-        Task ExecuteReader(string sql, Action<SqlDataReader> callback);
+        Task ExecuteReader(string sql, Action<DbDataReader> callback);
 
         /// <summary>
         /// Executes sql command and provides each row to the callback function.
@@ -24,7 +23,7 @@ namespace Belgrade.SqlClient
         /// <param name="command">SQL command that will be executed.</param>
         /// <param name="callback">Callback function that will be called for each row.</param>
         /// <returns>Task</returns>
-        Task ExecuteReader(SqlCommand command, Action<SqlDataReader> callback);
+        Task ExecuteReader(DbCommand command, Action<DbDataReader> callback);
 
         /// <summary>
         /// Executes sql statement and provides each row to the async callback function.
@@ -32,7 +31,7 @@ namespace Belgrade.SqlClient
         /// <param name="sql">SQL query that will be executed.</param>
         /// <param name="callback">Async callback function that will be called for each row.</param>
         /// <returns>Task</returns>
-        Task ExecuteReader(string sql, Func<SqlDataReader, Task> callback);
+        Task ExecuteReader(string sql, Func<DbDataReader, Task> callback);
 
         /// <summary>
         /// Executes sql command and provides each row to the async callback function.
@@ -40,7 +39,7 @@ namespace Belgrade.SqlClient
         /// <param name="command">SQL command that will be executed.</param>
         /// <param name="callback">Async callback function that will be called for each row.</param>
         /// <returns>Task</returns>
-        Task ExecuteReader(SqlCommand command, Func<SqlDataReader, Task> callback);
+        Task ExecuteReader(DbCommand command, Func<DbDataReader, Task> callback);
 
     }
 }

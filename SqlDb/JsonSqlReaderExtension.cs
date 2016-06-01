@@ -2,7 +2,7 @@
 using System.Data.SqlClient;
 using System.Linq;
 
-namespace Belgrade.SqlClient.JSON
+namespace Belgrade.SqlClient.SqlDb
 {
     /// <summary>
     /// Extension of JsonSqlReaderExtension class with a method for reading array serialized as JSON.

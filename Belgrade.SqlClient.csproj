@@ -36,16 +36,20 @@
     <Reference Include="System.Data" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Async\Command.cs" />
-    <Compile Include="Async\QueryMapper.cs" />
-    <Compile Include="Async\QueryPipe.cs" />
+    <Compile Include="Common\Command.cs" />
+    <Compile Include="Common\QueryMapper.cs" />
+    <Compile Include="Common\QueryPipe.cs" />
     <Compile Include="ISqlCommand.cs" />
     <Compile Include="ISqlQueryPipe.cs" />
     <Compile Include="ISqlQueryMapper.cs" />
-    <Compile Include="JSON\JsonSqlReaderExtension.cs" />
-    <Compile Include="JSON\JsonSqlParametersExtension.cs" />
+    <Compile Include="SqlDb\JsonSqlReaderExtension.cs" />
+    <Compile Include="SqlDb\JsonSqlParametersExtension.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SqlDb\Command.cs" />
+    <Compile Include="SqlDb\QueryPipe.cs" />
+    <Compile Include="SqlDb\QueryMapper.cs" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

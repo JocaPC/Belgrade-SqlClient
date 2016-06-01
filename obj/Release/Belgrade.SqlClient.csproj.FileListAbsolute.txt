@@ -1,0 +1,4 @@
+C:\Users\jovanpop\Documents\GitHub\CLR-Belgrade-SqlClient\bin\Release\Belgrade.SqlClient.dll
+C:\Users\jovanpop\Documents\GitHub\CLR-Belgrade-SqlClient\bin\Release\Belgrade.SqlClient.pdb
+C:\Users\jovanpop\Documents\GitHub\CLR-Belgrade-SqlClient\obj\Release\Belgrade.SqlClient.dll
+C:\Users\jovanpop\Documents\GitHub\CLR-Belgrade-SqlClient\obj\Release\Belgrade.SqlClient.pdb
