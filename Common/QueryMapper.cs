@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Data.Common;
-using System.Data.SqlClient;
 using System.Threading.Tasks;
 
 namespace Belgrade.SqlClient.Common
@@ -17,12 +16,18 @@ namespace Belgrade.SqlClient.Common
         private DbConnection Connection;
 
         /// <summary>
+        /// Delegate that is called when some error happens.
+        /// </summary>
+        Action<Exception> ErrorHandler = null;
+
+        /// <summary>
         /// Creates Query object.
         /// </summary>
         /// <param name="connection">Connection to Sql Database.</param>
-        public QueryMapper(DbConnection connection)
+        public QueryMapper(DbConnection connection, Action<Exception> errorHandler = null)
         {
             this.Connection = connection;
+            this.ErrorHandler = errorHandler;
         }
 
         /// <summary>
@@ -62,6 +67,11 @@ namespace Belgrade.SqlClient.Common
                     }
                 }
             }
+            catch (Exception ex)
+            {
+                if (this.ErrorHandler != null)
+                    this.ErrorHandler(ex);
+            }
             finally
             {
                 command.Connection.Close();
@@ -92,23 +102,7 @@ namespace Belgrade.SqlClient.Common
         /// <returns>Task</returns>
         public async Task ExecuteReader(DbCommand command, Func<DbDataReader, Task> callback)
         {
-            if(command.Connection == null)
-                command.Connection = this.Connection;
-            try
-            {
-                await command.Connection.OpenAsync().ConfigureAwait(false);
-                using (var reader = await command.ExecuteReaderAsync().ConfigureAwait(false))
-                {
-                    while (await reader.ReadAsync().ConfigureAwait(false))
-                    {
-                        await callback(reader).ConfigureAwait(false);
-                    }
-                }
-            }
-            finally
-            {
-                command.Connection.Close();
-            }
+            await this.ExecuteReader(command, async reader => { await callback(reader).ConfigureAwait(false); });
         }
     }
 }

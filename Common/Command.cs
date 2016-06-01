@@ -1,6 +1,5 @@
-﻿using System.Data;
+﻿using System;
 using System.Data.Common;
-using System.Data.SqlClient;
 using System.Threading.Tasks;
 
 namespace Belgrade.SqlClient.Common
@@ -17,12 +16,18 @@ namespace Belgrade.SqlClient.Common
         private DbConnection Connection;
 
         /// <summary>
+        /// Delegate that is called when some error happens.
+        /// </summary>
+        Action<Exception> ErrorHandler = null;
+
+        /// <summary>
         /// Creates command object.
         /// </summary>
         /// <param name="connection">Connection to Sql Database.</param>
-        public Command(DbConnection connection)
+        public Command(DbConnection connection, Action<Exception> errorHandler = null)
         {
             this.Connection = connection;
+            this.ErrorHandler = errorHandler;
         }
 
         /// <summary>
@@ -53,6 +58,11 @@ namespace Belgrade.SqlClient.Common
             {
                 await command.Connection.OpenAsync().ConfigureAwait(false);
                 await command.ExecuteNonQueryAsync().ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                if (this.ErrorHandler != null)
+                    this.ErrorHandler(ex);
             }
             finally
             {

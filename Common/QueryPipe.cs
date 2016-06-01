@@ -1,5 +1,5 @@
-﻿using System.Data.Common;
-using System.Data.SqlClient;
+﻿using System;
+using System.Data.Common;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace Belgrade.SqlClient.Common
 {
     /// <summary>
-    /// Query component that streams results of SQL query into an oputput stream.
+    /// Component that streams results of SQL query into an output stream.
     /// </summary>
     public class QueryPipe<T> : IQueryPipe
         where T : DbCommand, new()
@@ -23,13 +23,19 @@ namespace Belgrade.SqlClient.Common
         private QueryMapper<T> Mapper;
 
         /// <summary>
+        /// Delegate that is called when some error happens.
+        /// </summary>
+        Action<Exception> ErrorHandler = null;
+
+        /// <summary>
         /// Creates Query object.
         /// </summary>
         /// <param name="connection">Connection to Sql Database.</param>
-        public QueryPipe(DbConnection connection)
+        public QueryPipe(DbConnection connection, Action<Exception> errorHandler = null)
         {
             this.Connection = connection;
             this.Mapper = new QueryMapper<T>(connection);
+            this.ErrorHandler = errorHandler;
         }
 
         /// <summary>
@@ -82,6 +88,11 @@ namespace Belgrade.SqlClient.Common
                                 stream.Write(Encoding.UTF8.GetBytes(defaultOutput), 0, defaultOutput.Length);
                         }
                     });
+            }
+            catch (Exception ex)
+            {
+                if (this.ErrorHandler != null)
+                    this.ErrorHandler(ex);
             }
             finally
             {

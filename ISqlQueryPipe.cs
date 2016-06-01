@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 namespace Belgrade.SqlClient
 {
     /// <summary>
-    /// Query component that streams results of SQL query into an oputput stream.
+    /// Query component that streams results of SQL query into an output stream.
     /// </summary>
     public interface IQueryPipe
     {
