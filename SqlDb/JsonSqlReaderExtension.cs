@@ -9,6 +9,13 @@ namespace Belgrade.SqlClient.SqlDb
     /// </summary>
     public static class JsonSqlReaderExtension
     {
+        /// <summary>
+        /// Reads an array of objects from SqlReader.
+        /// </summary>
+        /// <typeparam name="T">Type of the elements in the array.</typeparam>
+        /// <param name="reader">SqlDataReader that executed the query where one of the columns is array serialized as JSON.</param>
+        /// <param name="i">Position of the array.</param>
+        /// <returns></returns>
         public static T[] GetArray<T>(this SqlDataReader reader, int i)
             where T: struct
         {

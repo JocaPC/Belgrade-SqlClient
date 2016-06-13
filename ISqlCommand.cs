@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 namespace Belgrade.SqlClient
 {
     /// <summary>
-    /// Sql Command that will be executed.
+    /// Sql Command that will be executed. Command does not return any result.
     /// </summary>
     public interface ICommand
     {

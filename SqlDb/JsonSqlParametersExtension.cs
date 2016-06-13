@@ -12,7 +12,7 @@ namespace Belgrade.SqlClient.SqlDb
         /// <summary>
         /// Adds a parameter to collection with array value.
         /// </summary>
-        /// <typeparam name="T"></typeparam>
+        /// <typeparam name="T">Type of the elements in the array that will be serialized as JSON.</typeparam>
         /// <param name="paramCollection">Parameter collection where new parameter with a value will be added.</param>
         /// <param name="parameterName">The name of new parameter.</param>
         /// <param name="values">Array of values that will be assigned to parameter</param>
@@ -27,7 +27,7 @@ namespace Belgrade.SqlClient.SqlDb
         /// <summary>
         /// Adds a parameter to collection with array value.
         /// </summary>
-        /// <typeparam name="T"></typeparam>
+        /// <typeparam name="T">Type of the elements in the array that will be serialized as JSON.</typeparam>
         /// <param name="paramCollection">Parameter collection where new parameter with a value will be added.</param>
         /// <param name="parameterName">The name of new parameter.</param>
         /// <param name="values">Array of values that will be assigned to parameter</param>

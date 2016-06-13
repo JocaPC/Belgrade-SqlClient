@@ -9,7 +9,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Belgrade.SqlClient</RootNamespace>
     <AssemblyName>Belgrade.SqlClient</AssemblyName>
-    <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
   </PropertyGroup>
@@ -31,14 +31,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Data" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="Common\Command.cs" />
-    <Compile Include="Common\QueryMapper.cs" />
-    <Compile Include="Common\QueryPipe.cs" />
+    <Compile Include="Common\GenericCommand.cs" />
+    <Compile Include="Common\GenericQueryMapper.cs" />
+    <Compile Include="Common\GenericQueryPipe.cs" />
     <Compile Include="ISqlCommand.cs" />
     <Compile Include="ISqlQueryPipe.cs" />
     <Compile Include="ISqlQueryMapper.cs" />
@@ -49,7 +44,14 @@
     <Compile Include="SqlDb\QueryPipe.cs" />
     <Compile Include="SqlDb\QueryMapper.cs" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Data" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="nuget\BGD-SQL-CLI.0.0.1.nupkg" />
+    <None Include="nuget\BGD-SQL-CLI.nupkg" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

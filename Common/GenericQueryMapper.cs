@@ -8,7 +8,7 @@ namespace Belgrade.SqlClient.Common
     /// <summary>
     /// Executes SQL query and provides DataReader to callback function.
     /// </summary>
-    public class QueryMapper<T> : IQueryMapper
+    public class GenericQueryMapper<T> : IQueryMapper
         where T : DbCommand, new()
     {
         /// <summary>
@@ -26,7 +26,7 @@ namespace Belgrade.SqlClient.Common
         /// </summary>
         /// <param name="connection">Connection to Sql Database.</param>
         /// <param name="errorHandler">Function that will be called if some exception is thrown.</param>
-        public QueryMapper(DbConnection connection, Action<Exception> errorHandler = null)
+        public GenericQueryMapper(DbConnection connection, Action<Exception> errorHandler = null)
         {
             this.Connection = connection;
             this.ErrorHandler = errorHandler;
@@ -71,8 +71,7 @@ namespace Belgrade.SqlClient.Common
             }
             catch (Exception ex)
             {
-                if (this.ErrorHandler != null)
-                    this.ErrorHandler(ex);
+                this.ErrorHandler?.Invoke(ex);
             }
             finally
             {
@@ -119,8 +118,7 @@ namespace Belgrade.SqlClient.Common
             }
             catch (Exception ex)
             {
-                if (this.ErrorHandler != null)
-                    this.ErrorHandler(ex);
+                this.ErrorHandler?.Invoke(ex);
             }
             finally
             {

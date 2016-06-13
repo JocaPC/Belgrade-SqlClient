@@ -9,7 +9,7 @@ namespace Belgrade.SqlClient.Common
     /// <summary>
     /// Component that streams results of SQL query into an output stream.
     /// </summary>
-    public class QueryPipe<T> : IQueryPipe
+    public class GenericQueryPipe<T> : IQueryPipe
         where T : DbCommand, new()
     {
         /// <summary>
@@ -20,7 +20,7 @@ namespace Belgrade.SqlClient.Common
         /// <summary>
         /// Query mapper used to stream results.
         /// </summary>
-        private QueryMapper<T> Mapper;
+        private GenericQueryMapper<T> Mapper;
 
         /// <summary>
         /// Delegate that is called when some error happens.
@@ -32,10 +32,10 @@ namespace Belgrade.SqlClient.Common
         /// </summary>
         /// <param name="connection">Connection to Sql Database.</param>
         /// <param name="errorHandler">Function that will be called if some exception is thrown.</param>
-        public QueryPipe(DbConnection connection, Action<Exception> errorHandler = null)
+        public GenericQueryPipe(DbConnection connection, Action<Exception> errorHandler = null)
         {
             this.Connection = connection;
-            this.Mapper = new QueryMapper<T>(connection);
+            this.Mapper = new GenericQueryMapper<T>(connection);
             this.ErrorHandler = errorHandler;
         }
 

@@ -1,0 +1,6 @@
+*.cache
+*.dll
+*.nupkg
+nuget/*.*
+obj/*.*
+bin/*.*

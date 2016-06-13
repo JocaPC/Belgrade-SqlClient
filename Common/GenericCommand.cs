@@ -7,7 +7,7 @@ namespace Belgrade.SqlClient.Common
     /// <summary>
     /// Sql Command that will be executed.
     /// </summary>
-    public class Command <T> : ICommand
+    public class GenericCommand <T> : ICommand
         where T : DbCommand, new()
     {
         /// <summary>
@@ -25,7 +25,7 @@ namespace Belgrade.SqlClient.Common
         /// </summary>
         /// <param name="connection">Connection to Sql Database.</param>
         /// <param name="errorHandler">Function that will be called if some exception is thrown.</param>
-        public Command(DbConnection connection, Action<Exception> errorHandler = null)
+        public GenericCommand(DbConnection connection, Action<Exception> errorHandler = null)
         {
             this.Connection = connection;
             this.ErrorHandler = errorHandler;
