@@ -35,15 +35,16 @@ namespace Belgrade.SqlClient.Common
         public GenericQueryPipe(DbConnection connection, Action<Exception> errorHandler = null)
         {
             this.Connection = connection;
-            this.Mapper = new GenericQueryMapper<T>(connection, errorHandler);
-            this.ErrorHandler = errorHandler;
+            this.ErrorHandler = errorHandler?? delegate(Exception ex) { throw ex; };
+            this.Mapper = new GenericQueryMapper<T>(connection, this.ErrorHandler);
+            
         }
 
         /// <summary>
         /// Executes SQL query and put results into stream.
         /// </summary>
         /// <param name="sql">SQL query that will be executed.</param>
-        /// <param name="stream">Output stream wehre results will be written.</param>
+        /// <param name="stream">Output stream where results will be written.</param>
         /// <param name="defaultOutput">Default content that will be written into stream if there are no results.</param>
         /// <returns>Task</returns>
         public async Task Stream(string sql, Stream stream, string defaultOutput = "")
@@ -60,7 +61,7 @@ namespace Belgrade.SqlClient.Common
         /// Executes SQL command and put results into stream.
         /// </summary>
         /// <param name="command">SQL command that will be executed.</param>
-        /// <param name="stream">Output stream wehre results will be written.</param>
+        /// <param name="stream">Output stream where results will be written.</param>
         /// <param name="defaultOutput">Default content that will be written into stream if there are no results.</param>
         /// <returns>Task</returns>
         public async Task Stream(DbCommand command, Stream stream, string defaultOutput = "")

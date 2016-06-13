@@ -29,7 +29,7 @@ namespace Belgrade.SqlClient.Common
         public GenericQueryMapper(DbConnection connection, Action<Exception> errorHandler = null)
         {
             this.Connection = connection;
-            this.ErrorHandler = errorHandler;
+            this.ErrorHandler = errorHandler ?? delegate (Exception ex) { throw ex; };
         }
 
         /// <summary>

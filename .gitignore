@@ -4,3 +4,8 @@
 nuget/*.*
 obj/*.*
 bin/*.*
+*.suo
+.vs/Belgrade.SqlClient/v14/.suo
+*.pdb
+obj/Debug/Belgrade.SqlClient.dll
+*.pdb
