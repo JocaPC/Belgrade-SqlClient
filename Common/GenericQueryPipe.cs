@@ -35,7 +35,7 @@ namespace Belgrade.SqlClient.Common
         public GenericQueryPipe(DbConnection connection, Action<Exception> errorHandler = null)
         {
             this.Connection = connection;
-            this.Mapper = new GenericQueryMapper<T>(connection);
+            this.Mapper = new GenericQueryMapper<T>(connection, errorHandler);
             this.ErrorHandler = errorHandler;
         }
 
