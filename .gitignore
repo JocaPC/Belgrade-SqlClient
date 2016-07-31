@@ -1,13 +1,9 @@
 *.cache
-*.nupkg
-nuget/*
 *.suo
 *.sln
-.vs/*
-bin/*
-obj/*
 *.sln
 *.log
 *.suo
 *.user
+Properties/*
 project.lock.json
