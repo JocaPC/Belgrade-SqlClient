@@ -5,5 +5,7 @@
 *.log
 *.suo
 *.user
-Properties/*
+obj/*
+bin/*
+.vs/*
 project.lock.json
