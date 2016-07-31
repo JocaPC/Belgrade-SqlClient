@@ -9,3 +9,5 @@ obj/*
 *.sln
 *.log
 *.suo
+*.user
+project.lock.json
