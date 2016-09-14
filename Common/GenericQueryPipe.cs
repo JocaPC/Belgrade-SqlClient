@@ -57,8 +57,7 @@ namespace Belgrade.SqlClient.Common
             using (DbCommand command = new T())
             {
                 command.CommandText = sql;
-                command.Connection = this.Connection;
-                await this.SqlResultsToStream(command, stream, defaultOutput);
+                await this.Stream(command, stream, defaultOutput);
             }
         }
 

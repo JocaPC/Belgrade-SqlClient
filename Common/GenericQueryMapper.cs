@@ -46,8 +46,7 @@ namespace Belgrade.SqlClient.Common
         {
             using (DbCommand command = new T())
             {
-                command.CommandText = sql;
-                command.Connection = this.Connection;
+                command.CommandText = sql;                
                 await this.ExecuteReader(command, callback);
             }
         }
@@ -94,7 +93,6 @@ namespace Belgrade.SqlClient.Common
             using (DbCommand command = new T())
             {
                 command.CommandText = sql;
-                command.Connection = this.Connection;
                 await this.ExecuteReader(command, callback);
             }
         }
