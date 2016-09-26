@@ -7,7 +7,7 @@ using System;
 using System.Data.SqlClient;
 using System.Linq;
 
-namespace Belgrade.SqlClient.SqlDb
+namespace Belgrade.SqlClient.SqlDb.Json
 {
     /// <summary>
     /// Extension of JsonSqlReaderExtension class with a method for reading array serialized as JSON.
@@ -19,7 +19,7 @@ namespace Belgrade.SqlClient.SqlDb
         /// </summary>
         /// <typeparam name="T">Type of the elements in the array.</typeparam>
         /// <param name="reader">SqlDataReader that executed the query where one of the columns is array serialized as JSON.</param>
-        /// <param name="i">Position of the array.</param>
+        /// <param name="i">Position of the column that will be converted to an array.</param>
         /// <returns></returns>
         public static T[] GetArray<T>(this SqlDataReader reader, int i)
             where T: struct

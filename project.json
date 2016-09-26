@@ -20,7 +20,12 @@
     },
     "net45": {
       "frameworkAssemblies": {
-        "System.Data": "",
+        "System.Data": ""
+      }
+    },
+    "net46": {
+      "frameworkAssemblies": {
+        "System.Data": ""
       }
     }
   }

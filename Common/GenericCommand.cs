@@ -25,6 +25,13 @@ namespace Belgrade.SqlClient.Common
         /// </summary>
         Action<Exception> ErrorHandler = null;
 
+        Func<DbCommand, DbCommand> CommandModifier = c => c;
+
+        internal void SetCommandModifier(Func<DbCommand, DbCommand> value)
+        {
+            this.CommandModifier = value;
+        }
+
         /// <summary>
         /// Creates command object.
         /// </summary>
@@ -57,6 +64,7 @@ namespace Belgrade.SqlClient.Common
         /// <returns>Generic task.</returns>
         public async Task ExecuteNonQuery(DbCommand command)
         {
+            command = this.CommandModifier(command);
             if (command.Connection == null)
                 command.Connection = this.Connection;
             try

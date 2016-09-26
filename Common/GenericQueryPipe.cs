@@ -32,6 +32,11 @@ namespace Belgrade.SqlClient.Common
         /// </summary>
         Action<Exception> ErrorHandler = null;
 
+        internal void SetCommandModifier(Func<DbCommand, DbCommand> value)
+        {
+            this.Mapper.SetCommandModifier(value);
+        }
+
         /// <summary>
         /// Creates QueryPipe object.
         /// </summary>

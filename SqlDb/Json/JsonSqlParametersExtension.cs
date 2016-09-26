@@ -1,5 +1,5 @@
 ﻿//  Author:     Jovan Popovic. 
-//  This source file is free software, available under MIT license .
+//  This source file is free software, available under MIT license.
 //  This source file is distributed in the hope that it will be useful, but
 //  WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 //  or FITNESS FOR A PARTICULAR PURPOSE.See the license files for details.
@@ -7,7 +7,7 @@ using System;
 using System.Data.SqlClient;
 using System.Linq;
 
-namespace Belgrade.SqlClient.SqlDb
+namespace Belgrade.SqlClient.SqlDb.Json
 {
     /// <summary>
     /// Extension of SqlParameterCollection class with methods for adding array values that will be serialized as JSON.

@@ -37,16 +37,23 @@
     <Compile Include="ISqlCommand.cs" />
     <Compile Include="ISqlQueryPipe.cs" />
     <Compile Include="ISqlQueryMapper.cs" />
-    <Compile Include="SqlDb\JsonSqlReaderExtension.cs" />
-    <Compile Include="SqlDb\JsonSqlParametersExtension.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SqlDb\Command.cs" />
+    <Compile Include="SqlDb\Json\JsonSqlParametersExtension.cs" />
+    <Compile Include="SqlDb\Json\JsonSqlReaderExtension.cs" />
     <Compile Include="SqlDb\QueryPipe.cs" />
     <Compile Include="SqlDb\QueryMapper.cs" />
+    <Compile Include="SqlDb\Rls\CommandSessionContextAdapter.cs" />
+    <Compile Include="SqlDb\Rls\QueryMapperSessionContextAdapter.cs" />
+    <Compile Include="SqlDb\Rls\QueryPipeSessionContextAdapter.cs" />
+    <Compile Include="SqlDb\Rls\RlsBase.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Data" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="README.md" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
