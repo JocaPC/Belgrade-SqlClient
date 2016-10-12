@@ -17,15 +17,20 @@ This library is used in SQL Server 2016/Azure SQL Database samples.
 
 ## Contents
 
+[setup](#setup)<br/>
 [Initializing data access components](#init)<br/>
 [Query Mapper](#query-mapper)<br/>
 [Query Pipe](#query-pipe)<br/>
 [Command](#command)<br/>
 
-
+<a name="setup"></a>
+You cna download source of this package and build you version of Belgrade Sql Client.
+To install Belgrade SqlClient using NuGet, run the following command in the Package Manager Console: 
+```
+Install-Package Belgrade.Sql.Client 
+```
 
 <a name="init"></a>
-
 ## Initializing data access components
 
 In order to initialize data access components, you can provide standard *SqlConnection8 as a constructor:
@@ -47,8 +52,8 @@ await sqlMapper.ExecuteReader(command,
                     async reader =>
                     {
                         if (reader.HasRows) {
-		// Populate object using reader.
-	}
+                            // Populate object using reader.
+                        }
                     });
 ```
 You can provide function that accepts *DataReader* as an argument and populate fields from *DataReader* into some object.
@@ -63,12 +68,16 @@ Method *Stream* in *QueryPipe* class may accept two or three parameters:
 - First parameter is a T-SQL query that will be executed.
 - Second parameter is an output stream where results of query will be pushed. This can be response stream of web Http request, output stream that writes to file, or any other output stream.
 - Third (optional) parameter is a text content that should be sent to the output stream if query does not return any results. By default, nothing will be sent to output stream if there are not results form database. Usually default content that should be sent to output stream is an empty array "[]" or empty object "{}".
+
 <a name="command"></a>
+
 ## Command
+
 Command is data-access component that executes a query or stored procedure that don’t return any results. Commands are used in update statements. 
 ```javascript
-            var cmd = new SqlCommand("InsertProduct");
-            cmd.CommandType = System.Data.CommandType.StoredProcedure;
-            cmd.Parameters.AddWithValue("Product", product);
-            await sqlCmd.ExecuteNonQuery(cmd);
+var cmd = new SqlCommand("InsertProduct");
+cmd.CommandType = System.Data.CommandType.StoredProcedure;
+cmd.Parameters.AddWithValue("Product", product);
+await sqlCmd.ExecuteNonQuery(cmd);
 ```
+It is just an async wrapper around standard SqlComand that handles errors and manage connection.
