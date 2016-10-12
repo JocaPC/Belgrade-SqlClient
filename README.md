@@ -17,14 +17,17 @@ This library is used in SQL Server 2016/Azure SQL Database samples.
 
 ## Contents
 
-[setup](#setup)<br/>
+[Setup](#setup)<br/>
 [Initializing data access components](#init)<br/>
 [Query Mapper](#query-mapper)<br/>
 [Query Pipe](#query-pipe)<br/>
 [Command](#command)<br/>
 
 <a name="setup"></a>
-You cna download source of this package and build you version of Belgrade Sql Client.
+
+## Setup
+
+You can download source of this package and build you version of Belgrade Sql Client.
 To install Belgrade SqlClient using NuGet, run the following command in the Package Manager Console: 
 ```
 Install-Package Belgrade.Sql.Client 
@@ -81,3 +84,52 @@ cmd.Parameters.AddWithValue("Product", product);
 await sqlCmd.ExecuteNonQuery(cmd);
 ```
 It is just an async wrapper around standard SqlComand that handles errors and manage connection.
+
+## Row-level security
+
+Row-level security is a new feature that enables you to filter some rows in the tables based on some predicate.
+Condition in predicates depend on data in table rows and some informaiton that identify users (e.g. current user name, role, or some value in SESSION_CONTEXT).
+If you are defining secrity rules using database roles, there you don't need any change in your app. However, if you want to put user id in SQL SESSION_CONTEXT
+variable, you need to create some logic that populates this value.
+
+First you need to define some function that will return value that identifies user.
+Here is an example of C# function that get CompanyId from an ASP.NET Session:
+
+```javascript
+	services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+	Func<IServiceProvider, string> GetCompanyID = (serviceProvider =>
+	{
+		var session = serviceProvider.GetServices<IHttpContextAccessor>().First().HttpContext.Session;
+		return session.GetString("CompanyID") ?? "-1";
+	});
+```
+Once you define a function that will provide a value that represents identity of the user, you can create a wrapper 
+that will get this value on every execution of SQL command, write value from the ASP.NET Session into SQL SESSION_CONTEXT:
+
+```javascript
+	services.AddTransient<IQueryPipe>(
+		sp =>
+		{
+			return new QueryPipeSessionContextAdapter(
+				new QueryPipe(new SqlConnection(ConnString)), "CompanyID", () => GetCompanyID(sp));
+		});
+
+	services.AddTransient<ICommand>(
+		sp =>
+		{
+			return new CommandSessionContextAdapter(
+				new Command(new SqlConnection(ConnString)), "CompanyID", () => GetCompanyID(sp));
+		});
+```
+**QueryPipeSessionContextAdapter** and **CommandSessionContextAdapter** are wrappers around standard QueryPipe and Command classes that wput provided value in 
+session context, execute underlying statement, and clean session context variable:
+
+```
+EXEC sp_set_session_context @{KEYNAME}, @{VALUE};
+{command.CommandText}
+EXEC sp_set_session_context @{KEYNAME}, NULL;
+```
+
+KEYNAME is second parameter provided to SessioncontextAdapter constructor, while VALUE is a value returned by function provided as third parameter.
+
+
