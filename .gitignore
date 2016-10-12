@@ -6,5 +6,6 @@
 *.user
 obj/*
 bin/*
+nuget/*
 .vs/*
 project.lock.json

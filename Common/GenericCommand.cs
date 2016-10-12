@@ -12,35 +12,21 @@ namespace Belgrade.SqlClient.Common
     /// <summary>
     /// Sql Command that will be executed.
     /// </summary>
-    public class GenericCommand <T> : ICommand
+    public class GenericCommand <T> : BaseStatement, ICommand
         where T : DbCommand, new()
     {
-        /// <summary>
-        /// Connection to Sql Database.
-        /// </summary>
-        private DbConnection Connection;
-
-        /// <summary>
-        /// Delegate that is called when some error happens.
-        /// </summary>
-        Action<Exception> ErrorHandler = null;
-
-        Func<DbCommand, DbCommand> CommandModifier = c => c;
-
-        internal void SetCommandModifier(Func<DbCommand, DbCommand> value)
-        {
-            this.CommandModifier = value;
-        }
-
         /// <summary>
         /// Creates command object.
         /// </summary>
         /// <param name="connection">Connection to Sql Database.</param>
-        /// <param name="errorHandler">Function that will be called if some exception is thrown.</param>
-        public GenericCommand(DbConnection connection, Action<Exception> errorHandler = null)
+        public GenericCommand(DbConnection connection)
         {
             this.Connection = connection;
-            this.ErrorHandler = errorHandler ?? delegate (Exception ex) { throw ex; };
+        }
+
+        public new GenericCommand<T> AddErrorHandlerBuilder(ErrorHandlerBuilder builder)
+        {
+            return base.AddErrorHandlerBuilder(builder) as GenericCommand<T>;
         }
 
         /// <summary>
@@ -74,8 +60,7 @@ namespace Belgrade.SqlClient.Common
             }
             catch (Exception ex)
             {
-                if (this.ErrorHandler != null)
-                    this.ErrorHandler(ex);
+                base.GetErrorHandlerBuilder().SetCommand(command).CreateErrorHandler()(ex);
             }
             finally
             {

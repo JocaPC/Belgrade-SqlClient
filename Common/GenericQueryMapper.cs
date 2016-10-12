@@ -12,35 +12,16 @@ namespace Belgrade.SqlClient.Common
     /// <summary>
     /// Executes SQL query and provides DataReader to callback function.
     /// </summary>
-    public class GenericQueryMapper<T> : IQueryMapper
+    public class GenericQueryMapper<T> : BaseStatement, IQueryMapper
         where T : DbCommand, new()
     {
-        /// <summary>
-        /// Connection to Sql Database.
-        /// </summary>
-        private DbConnection Connection;
-
-        /// <summary>
-        /// Delegate that is called when some error happens.
-        /// </summary>
-        Action<Exception> ErrorHandler = null;
-
-        Func<DbCommand, DbCommand> CommandModifier = c => c;
-
-        internal void SetCommandModifier(Func<DbCommand, DbCommand> value)
-        {
-            this.CommandModifier = value;
-        }
-
         /// <summary>
         /// Creates Mapper object.
         /// </summary>
         /// <param name="connection">Connection to Sql Database.</param>
-        /// <param name="errorHandler">Function that will be called if some exception is thrown.</param>
-        public GenericQueryMapper(DbConnection connection, Action<Exception> errorHandler = null)
+        public GenericQueryMapper(DbConnection connection)
         {
             this.Connection = connection;
-            this.ErrorHandler = errorHandler ?? delegate (Exception ex) { throw ex; };
         }
 
         /// <summary>
@@ -82,7 +63,7 @@ namespace Belgrade.SqlClient.Common
             }
             catch (Exception ex)
             {
-                this.ErrorHandler?.Invoke(ex);
+                base.GetErrorHandlerBuilder().CreateErrorHandler()(ex);
             }
             finally
             {
@@ -90,10 +71,10 @@ namespace Belgrade.SqlClient.Common
             }
         }
 
-        protected virtual DbCommand ModifyCommand(DbCommand command)
-        {
-            return command;
-        }
+        //protected virtual DbCommand ModifyCommand(DbCommand command)
+        //{
+        //    return command;
+        //}
 
         /// <summary>
         /// Executes sql statement and provides each row to the async callback function.
@@ -118,7 +99,7 @@ namespace Belgrade.SqlClient.Common
         /// <returns>Task</returns>
         public async Task ExecuteReader(DbCommand command, Func<DbDataReader, Task> callback)
         { 
-            command = this.CommandModifier(command);
+            command = base.CommandModifier(command);
             if (command.Connection == null)
                 command.Connection = this.Connection;
             try
@@ -134,7 +115,7 @@ namespace Belgrade.SqlClient.Common
             }
             catch (Exception ex)
             {
-                this.ErrorHandler?.Invoke(ex);
+                base.GetErrorHandlerBuilder().CreateErrorHandler()(ex);
             }
             finally
             {

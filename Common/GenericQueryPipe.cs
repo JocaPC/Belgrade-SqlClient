@@ -14,40 +14,27 @@ namespace Belgrade.SqlClient.Common
     /// <summary>
     /// Component that streams results of SQL query into an output stream.
     /// </summary>
-    public class GenericQueryPipe<T> : IQueryPipe
+    public class GenericQueryPipe<T> : BaseStatement, IQueryPipe
         where T : DbCommand, new()
     {
-        /// <summary>
-        /// Connection to Sql Database.
-        /// </summary>
-        private DbConnection Connection;
-
         /// <summary>
         /// Query mapper used to stream results.
         /// </summary>
         private GenericQueryMapper<T> Mapper;
 
-        /// <summary>
-        /// Delegate that is called when some error happens.
-        /// </summary>
-        Action<Exception> ErrorHandler = null;
-
-        internal void SetCommandModifier(Func<DbCommand, DbCommand> value)
+        internal new GenericQueryPipe<T> SetCommandModifier(Func<DbCommand, DbCommand> value)
         {
-            this.Mapper.SetCommandModifier(value);
+            return this.Mapper.SetCommandModifier(value) as GenericQueryPipe<T>;
         }
 
         /// <summary>
         /// Creates QueryPipe object.
         /// </summary>
         /// <param name="connection">Connection to Sql Database.</param>
-        /// <param name="errorHandler">Function that will be called if some exception is thrown.</param>
-        public GenericQueryPipe(DbConnection connection, Action<Exception> errorHandler = null)
+        public GenericQueryPipe(DbConnection connection)
         {
             this.Connection = connection;
-            this.ErrorHandler = errorHandler?? delegate(Exception ex) { throw ex; };
-            this.Mapper = new GenericQueryMapper<T>(connection, this.ErrorHandler);
-            
+            this.Mapper = new GenericQueryMapper<T>(connection);
         }
 
         /// <summary>
@@ -107,8 +94,7 @@ namespace Belgrade.SqlClient.Common
             }
             catch (Exception ex)
             {
-                if (this.ErrorHandler != null)
-                    this.ErrorHandler(ex);
+                base.GetErrorHandlerBuilder().SetCommand(command).CreateErrorHandler()(ex);
             }
             finally
             {
