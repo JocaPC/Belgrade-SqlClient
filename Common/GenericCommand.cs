@@ -21,6 +21,12 @@ namespace Belgrade.SqlClient.Common
         /// <param name="connection">Connection to Sql Database.</param>
         public GenericCommand(DbConnection connection)
         {
+            if (connection == null)
+                throw new ArgumentNullException("Connection is not defined.");
+
+            if (string.IsNullOrWhiteSpace(connection.ConnectionString))
+                throw new ArgumentNullException("Connection string is not set.");
+
             this.Connection = connection;
         }
 
@@ -36,6 +42,9 @@ namespace Belgrade.SqlClient.Common
         /// <returns>Generic task.</returns>
         public async Task ExecuteNonQuery(string sql)
         {
+            if (string.IsNullOrWhiteSpace(sql))
+                throw new ArgumentNullException("Command SQL text is not set.");
+
             using (DbCommand command = new T())
             {
                 command.CommandText = sql;
@@ -50,6 +59,12 @@ namespace Belgrade.SqlClient.Common
         /// <returns>Generic task.</returns>
         public async Task ExecuteNonQuery(DbCommand command)
         {
+            if (command == null)
+                throw new ArgumentNullException("Command is not defined.");
+
+            if (string.IsNullOrWhiteSpace(command.CommandText))
+                throw new ArgumentNullException("Command SQL text is not set.");
+
             command = this.CommandModifier(command);
             if (command.Connection == null)
                 command.Connection = this.Connection;

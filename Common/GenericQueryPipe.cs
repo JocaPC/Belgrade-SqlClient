@@ -33,6 +33,12 @@ namespace Belgrade.SqlClient.Common
         /// <param name="connection">Connection to Sql Database.</param>
         public GenericQueryPipe(DbConnection connection)
         {
+            if (connection == null)
+                throw new ArgumentNullException("Connection is not defined.");
+
+            if (string.IsNullOrWhiteSpace(connection.ConnectionString))
+                throw new ArgumentNullException("Connection string is not set.");
+
             this.Connection = connection;
             this.Mapper = new GenericQueryMapper<T>(connection);
         }
