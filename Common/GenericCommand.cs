@@ -5,6 +5,7 @@
 //  or FITNESS FOR A PARTICULAR PURPOSE.See the license files for details.
 using System;
 using System.Data.Common;
+using System.IO;
 using System.Threading.Tasks;
 
 namespace Belgrade.SqlClient.Common
@@ -28,6 +29,8 @@ namespace Belgrade.SqlClient.Common
                 throw new ArgumentNullException("Connection string is not set.");
 
             this.Connection = connection;
+            this.Pipe = new GenericQueryPipe<T>(connection);
+            this.Mapper = new GenericQueryMapper<T>(connection);
         }
 
         public new GenericCommand<T> AddErrorHandlerBuilder(ErrorHandlerBuilder builder)
@@ -81,6 +84,77 @@ namespace Belgrade.SqlClient.Common
             {
                 command.Connection.Close();
             }
+        }
+
+        /// <summary>
+        /// Query pipe used to stream results.
+        /// </summary>
+        private GenericQueryPipe<T> Pipe;
+
+        /// <summary>
+        /// Executes SQL query and put results into stream.
+        /// </summary>
+        /// <param name="sql">SQL query that will be executed.</param>
+        /// <param name="stream">Output stream where results will be written.</param>
+        /// <returns>Task</returns>
+        public async Task Stream(string sql, Stream output)
+        {
+            using (DbCommand command = new T())
+            {
+                command.CommandText = sql;
+                await this.Stream(command, output);
+            }
+        }
+
+        /// <summary>
+        /// Executes sql statement and provides each row to the callback function.
+        /// </summary>
+        /// <param name="command">SQL command that will be executed.</param>
+        /// <param name="callback">Callback function that will be called for each row.</param>
+        /// <returns>Task</returns>
+        public async Task Stream(DbCommand command, Stream output)
+        {
+            command = this.CommandModifier(command);
+            if (command.Connection == null)
+                command.Connection = this.Connection;
+
+            await this.Pipe.Stream(command, output);
+        }
+
+        /// <summary>
+        /// Query mapper used to stream results.
+        /// </summary>
+        private GenericQueryMapper<T> Mapper;
+
+
+        /// <summary>
+        /// Executes sql statement and provides each row to the callback function.
+        /// </summary>
+        /// <param name="sql">SQL query that will be executed.</param>
+        /// <param name="callback">Callback function that will be called for each row.</param>
+        /// <returns>Task</returns>
+        public async Task ExecuteReader(string sql, Func<DbDataReader, Task> callback)
+        {
+            using (DbCommand command = new T())
+            {
+                command.CommandText = sql;
+                await this.ExecuteReader(command, callback);
+            }
+        }
+
+        /// <summary>
+        /// Executes sql statement and provides each row to the callback function.
+        /// </summary>
+        /// <param name="command">SQL command that will be executed.</param>
+        /// <param name="callback">Callback function that will be called for each row.</param>
+        /// <returns>Task</returns>
+        public async Task ExecuteReader(DbCommand command, Func<DbDataReader, Task> callback)
+        {
+            command = this.CommandModifier(command);
+            if (command.Connection == null)
+                command.Connection = this.Connection;
+
+            await this.Mapper.ExecuteReader(command, callback);
         }
     }
 }

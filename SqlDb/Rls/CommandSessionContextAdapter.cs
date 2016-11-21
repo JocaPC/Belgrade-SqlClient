@@ -5,6 +5,7 @@
 //  or FITNESS FOR A PARTICULAR PURPOSE.See the license files for details.
 using System;
 using System.Data.Common;
+using System.IO;
 using System.Threading.Tasks;
 
 namespace Belgrade.SqlClient.SqlDb.Rls
@@ -44,6 +45,26 @@ namespace Belgrade.SqlClient.SqlDb.Rls
         public Task ExecuteNonQuery(string sql)
         {
             return SqlCommand.ExecuteNonQuery(sql);
+        }
+
+        public Task ExecuteReader(DbCommand command, Func<DbDataReader, Task> callback)
+        {
+            return SqlCommand.ExecuteReader(command, callback);
+        }
+
+        public Task ExecuteReader(string sql, Func<DbDataReader, Task> callback)
+        {
+            return SqlCommand.ExecuteReader(sql, callback);
+        }
+
+        public Task Stream(DbCommand command, Stream output)
+        {
+            return SqlCommand.Stream(command, output);
+        }
+
+        public Task Stream(string sql, Stream output)
+        {
+            return SqlCommand.Stream(sql, output);
         }
     }
 }
