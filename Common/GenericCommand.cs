@@ -97,12 +97,12 @@ namespace Belgrade.SqlClient.Common
         /// <param name="sql">SQL query that will be executed.</param>
         /// <param name="stream">Output stream where results will be written.</param>
         /// <returns>Task</returns>
-        public async Task Stream(string sql, Stream output)
+        public async Task Stream<D>(string sql, Stream output, D defaultOutput)
         {
             using (DbCommand command = new T())
             {
                 command.CommandText = sql;
-                await this.Stream(command, output);
+                await this.Stream<D>(command, output, defaultOutput);
             }
         }
 
@@ -112,20 +112,19 @@ namespace Belgrade.SqlClient.Common
         /// <param name="command">SQL command that will be executed.</param>
         /// <param name="callback">Callback function that will be called for each row.</param>
         /// <returns>Task</returns>
-        public async Task Stream(DbCommand command, Stream output)
+        public async Task Stream<D>(DbCommand command, Stream output, D defaultOutput)
         {
             command = this.CommandModifier(command);
             if (command.Connection == null)
                 command.Connection = this.Connection;
 
-            await this.Pipe.Stream(command, output);
+            await this.Pipe.Stream<D>(command, output, defaultOutput);
         }
 
         /// <summary>
         /// Query mapper used to stream results.
         /// </summary>
         private GenericQueryMapper<T> Mapper;
-
 
         /// <summary>
         /// Executes sql statement and provides each row to the callback function.

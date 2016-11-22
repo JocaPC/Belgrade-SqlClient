@@ -57,14 +57,14 @@ namespace Belgrade.SqlClient.SqlDb.Rls
             return SqlCommand.ExecuteReader(sql, callback);
         }
 
-        public Task Stream(DbCommand command, Stream output)
+        public Task Stream<D>(DbCommand command, Stream output, D defaultOutput)
         {
-            return SqlCommand.Stream(command, output);
+            return SqlCommand.Stream<D>(command, output, defaultOutput);
         }
 
-        public Task Stream(string sql, Stream output)
+        public Task Stream<D>(string sql, Stream output, D defaultOutput)
         {
-            return SqlCommand.Stream(sql, output);
+            return SqlCommand.Stream<D>(sql, output, defaultOutput);
         }
     }
 }

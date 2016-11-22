@@ -52,7 +52,7 @@ namespace Belgrade.SqlClient
         /// <param name="sql">SQL query that will be executed.</param>
         /// <param name="stream">Output stream where results will be written.</param>
         /// <returns>Task</returns>
-        Task Stream(string sql, Stream output);
+        Task Stream<D>(string sql, Stream output, D defaultOutput);
 
         /// <summary>
         /// Executes sql statement and provides each row to the callback function.
@@ -60,7 +60,7 @@ namespace Belgrade.SqlClient
         /// <param name="command">SQL command that will be executed.</param>
         /// <param name="callback">Callback function that will be called for each row.</param>
         /// <returns>Task</returns>
-        Task Stream(DbCommand command, Stream output);
+        Task Stream<D>(DbCommand command, Stream output, D defaultOutput);
     }
     
 }
