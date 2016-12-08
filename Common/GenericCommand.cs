@@ -2,7 +2,7 @@
 //  This source file is free software, available under MIT license .
 //  This source file is distributed in the hope that it will be useful, but
 //  WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-//  or FITNESS FOR A PARTICULAR PURPOSE.See the license files for details.
+//  or FITNESS FOR A PARTICULAR PURPOSE. See the license files for details.
 using System;
 using System.Data.Common;
 using System.IO;
@@ -155,5 +155,35 @@ namespace Belgrade.SqlClient.Common
 
             await this.Mapper.ExecuteReader(command, callback);
         }
+
+        /// <summary>
+        /// Executes sql statement and provides each row to the callback function.
+        /// </summary>
+        /// <param name="command">SQL command that will be executed.</param>
+        /// <param name="callback">Callback function that will be called for each row.</param>
+        /// <returns>Task</returns>
+        public async Task ExecuteReader(DbCommand command, Action<DbDataReader> callback)
+        {
+            command = this.CommandModifier(command);
+            if (command.Connection == null)
+                command.Connection = this.Connection;
+
+            await this.Mapper.ExecuteReader(command, callback);
+        }
+        /// <summary>
+        /// Executes sql statement and provides each row to the callback function.
+        /// </summary>
+        /// <param name="sql">SQL query that will be executed.</param>
+        /// <param name="callback">Callback function that will be called for each row.</param>
+        /// <returns>Task</returns>
+        public async Task ExecuteReader(string sql, Action<DbDataReader> callback)
+        {
+            using (DbCommand command = new T())
+            {
+                command.CommandText = sql;
+                await this.ExecuteReader(command, callback);
+            }
+        }
+
     }
 }

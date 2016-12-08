@@ -47,9 +47,19 @@ namespace Belgrade.SqlClient.SqlDb.Rls
             return SqlCommand.ExecuteNonQuery(sql);
         }
 
+        public Task ExecuteReader(DbCommand command, Action<DbDataReader> callback)
+        {
+            return SqlCommand.ExecuteReader(command, callback);
+        }
+
         public Task ExecuteReader(DbCommand command, Func<DbDataReader, Task> callback)
         {
             return SqlCommand.ExecuteReader(command, callback);
+        }
+
+        public Task ExecuteReader(string sql, Action<DbDataReader> callback)
+        {
+            return this.SqlCommand.ExecuteReader(sql, callback);
         }
 
         public Task ExecuteReader(string sql, Func<DbDataReader, Task> callback)

@@ -47,6 +47,23 @@ namespace Belgrade.SqlClient
         Task ExecuteReader(DbCommand command, Func<DbDataReader, Task> callback);
 
         /// <summary>
+        /// Executes sql statement and provides each row to the callback function.
+        /// </summary>
+        /// <param name="sql">SQL query that will be executed.</param>
+        /// <param name="callback">Callback function that will be called for each row.</param>
+        /// <returns>Task</returns>
+        Task ExecuteReader(string sql, Action<DbDataReader> callback);
+
+        /// <summary>
+        /// Executes sql statement and provides each row to the callback function.
+        /// </summary>
+        /// <param name="command">SQL command that will be executed.</param>
+        /// <param name="callback">Callback function that will be called for each row.</param>
+        /// <returns>Task</returns>
+        Task ExecuteReader(DbCommand command, Action<DbDataReader> callback);
+
+
+        /// <summary>
         /// Executes SQL query and put results into stream.
         /// </summary>
         /// <param name="sql">SQL query that will be executed.</param>
