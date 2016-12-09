@@ -1,0 +1,11 @@
+*.cache
+*.suo
+*.sln
+*.log
+*.suo
+*.user
+obj/*
+bin/*
+nuget/*
+.vs/*
+project.lock.json
