@@ -6,8 +6,8 @@
     "System.Xml.XmlDocument": "4.0.1",
     "Newtonsoft.Json": "9.0.1",
     "dotnet-test-xunit": "2.2.0-preview2-build1029",
-    "Belgrade.Sql.Client": "0.6.1",
-    "Xunit.Combinatorial": "1.1.20"
+    "Xunit.Combinatorial": "1.1.20",
+    "Code": "1.0.0-*"
   },
   "frameworks": {
     "net46": {

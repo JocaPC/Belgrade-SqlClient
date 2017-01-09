@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 
 namespace Belgrade.SqlClient.SqlDb.Rls
 {
+	[Obsolete("Use method: .AddRls(key, value) instead of this wrapper.")]
     /// <summary>
     /// Adapter for QueryMapper object that wraps SQL text with SESSION_CONTEXT variable.
     /// </summary>
@@ -49,6 +50,11 @@ namespace Belgrade.SqlClient.SqlDb.Rls
         public Task ExecuteReader(DbCommand command, Func<DbDataReader, Task> callback)
         {
             return Mapper.ExecuteReader(command, callback);
+        }
+
+        public new IQueryMapper OnError(Action<Exception> handler)
+        {
+            return Mapper.OnError(handler) as IQueryMapper;
         }
     }
 }

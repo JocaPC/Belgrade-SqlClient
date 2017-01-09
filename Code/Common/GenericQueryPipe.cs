@@ -22,9 +22,10 @@ namespace Belgrade.SqlClient.Common
         /// </summary>
         private GenericQueryMapper<T> Mapper;
 
-        internal new GenericQueryPipe<T> SetCommandModifier(Func<DbCommand, DbCommand> value)
+        internal override BaseStatement SetCommandModifier(Func<DbCommand, DbCommand> value)
         {
-            return this.Mapper.SetCommandModifier(value) as GenericQueryPipe<T>;
+            this.Mapper.SetCommandModifier(value);
+            return this;
         }
 
         /// <summary>
@@ -142,7 +143,12 @@ namespace Belgrade.SqlClient.Common
             }
             catch (Exception ex)
             {
-                base.GetErrorHandlerBuilder().SetCommand(command).CreateErrorHandler()(ex);
+                try
+                {
+                    base.GetErrorHandlerBuilder().SetCommand(command).CreateErrorHandler()(ex);
+                } catch {
+                    defaultOutput = null; // Don't generate default output if error is raised.
+                }
             }
             finally
             {

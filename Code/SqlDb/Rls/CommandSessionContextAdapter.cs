@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 
 namespace Belgrade.SqlClient.SqlDb.Rls
 {
+    [Obsolete("Use method: .AddRls(key, value) instead of this wrapper.")]
     /// <summary>
     /// Adapter for Command object that wraps SQL text with SESSION_CONTEXT variable.
     /// </summary>
@@ -65,6 +66,11 @@ namespace Belgrade.SqlClient.SqlDb.Rls
         public Task ExecuteReader(string sql, Func<DbDataReader, Task> callback)
         {
             return SqlCommand.ExecuteReader(sql, callback);
+        }
+
+        public new ICommand OnError(Action<Exception> handler)
+        {
+            return SqlCommand.OnError(handler) as ICommand;
         }
 
         public Task Stream<D>(DbCommand command, Stream output, D defaultOutput)

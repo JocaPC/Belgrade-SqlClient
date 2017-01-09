@@ -9,6 +9,7 @@ using System.Data.SqlClient;
 
 namespace Belgrade.SqlClient.SqlDb.Rls
 {
+    [Obsolete("Use method: .AddRls(key, value) instead of this wrapper.")]
     /// <summary>
     /// Base Rls adapter that contains common code that wraps SQL command with SESSION_CONTEXT variable.
     /// </summary>

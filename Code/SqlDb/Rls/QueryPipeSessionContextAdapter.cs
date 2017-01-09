@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 
 namespace Belgrade.SqlClient.SqlDb.Rls
 {
+	[Obsolete("Use method: .AddRls(key, value) instead of this wrapper.")]
     /// <summary>
     /// QueryPipeSessionContextAdapter that adapts QueryPipe with required RlS variables.
     /// </summary>
@@ -31,7 +32,12 @@ namespace Belgrade.SqlClient.SqlDb.Rls
             this.Pipe = pipe;
             this.Pipe.SetCommandModifier(base.commandModifier);            
         }
-        
+
+        public new IQueryPipe OnError(Action<Exception> handler)
+        {
+            return Pipe.OnError(handler) as IQueryPipe;
+        }
+
         public Task Stream(DbCommand command, Stream stream)
         {
             return Pipe.Stream(command, stream);
@@ -49,7 +55,7 @@ namespace Belgrade.SqlClient.SqlDb.Rls
 
         public Task Stream<T>(string sql, Stream stream, T defaultOutput)
         {
-            return ((IQueryPipe)Pipe).Stream<T>(sql, stream, defaultOutput);
+            return Pipe.Stream<T>(sql, stream, defaultOutput);
         }
     }
 }

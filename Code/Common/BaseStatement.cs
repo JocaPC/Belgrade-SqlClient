@@ -25,7 +25,7 @@ namespace Belgrade.SqlClient.Common
         /// Set the object that will modify command.
         /// </summary>
         /// <param name="value">Function that will modify command.</param>
-        internal BaseStatement SetCommandModifier(Func<DbCommand, DbCommand> value)
+        internal virtual BaseStatement SetCommandModifier(Func<DbCommand, DbCommand> value)
         {
             this.CommandModifier = value;
             return this;
@@ -36,7 +36,21 @@ namespace Belgrade.SqlClient.Common
         /// </summary>
         /// <param name="builder">The object that will build an error handler.</param>
         /// <returns>The current instance of command.</returns>
-        public BaseStatement AddErrorHandlerBuilder(ErrorHandlerBuilder builder)
+        internal virtual BaseStatement OnError(Action<Exception> handler)
+        {
+            if (this.ErrorHandlerBuilder == null)
+                this.ErrorHandlerBuilder = new ActionErrorHandlerBuilder(handler);
+            else
+                this.ErrorHandlerBuilder.AddErrorHandlerBuilder(new ActionErrorHandlerBuilder(handler));
+            return this;
+        }
+
+        /// <summary>
+        /// Sets an object that will create ErrorHandler.
+        /// </summary>
+        /// <param name="builder">The object that will build an error handler.</param>
+        /// <returns>The current instance of command.</returns>
+        internal BaseStatement OnError(ErrorHandlerBuilder builder)
         {
             if (this.ErrorHandlerBuilder == null)
                 this.ErrorHandlerBuilder = builder;

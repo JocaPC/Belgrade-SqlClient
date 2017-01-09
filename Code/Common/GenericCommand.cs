@@ -33,11 +33,6 @@ namespace Belgrade.SqlClient.Common
             this.Mapper = new GenericQueryMapper<T>(connection);
         }
 
-        public new GenericCommand<T> AddErrorHandlerBuilder(ErrorHandlerBuilder builder)
-        {
-            return base.AddErrorHandlerBuilder(builder) as GenericCommand<T>;
-        }
-
         /// <summary>
         /// Executes SQL command text.
         /// </summary>
