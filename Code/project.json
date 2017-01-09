@@ -25,5 +25,8 @@
         "System.Data": ""
       }
     }
+  },
+  "buildOptions": {
+    "outputName": "Belgrade.SqlClient"
   }
 }
