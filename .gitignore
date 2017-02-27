@@ -1,1 +1,4 @@
 *.suo
+packages/*.*
+*.dll
+WebApplication2

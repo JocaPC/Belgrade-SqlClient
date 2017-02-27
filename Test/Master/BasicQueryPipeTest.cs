@@ -17,7 +17,7 @@ namespace Basic
         IQueryPipe sut;
         public Pipe()
         {
-            sut = new QueryPipe("Server=.;Database=master;Integrated Security=true");
+            sut = new QueryPipe(Util.Settings.ConnectionString);
         }
 
         [Fact]

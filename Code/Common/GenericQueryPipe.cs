@@ -111,6 +111,11 @@ namespace Belgrade.SqlClient.Common
 
         private async Task SqlResultsToStream(DbCommand command, Stream stream, byte[] defaultOutput)
         {
+            if (stream == null)
+                throw new ArgumentNullException("stream", "Stream provided to SqlResultToStream is not defined!");
+            if (!stream.CanWrite)
+                throw new ArgumentException("Cannot write to the stream in SqlResultToStream", "stream");
+
             bool outputIsGenerated = false;
             try
             {
@@ -127,6 +132,8 @@ namespace Belgrade.SqlClient.Common
                             {
                                 buffer = (byte[])reader[0];
                             }
+                            if (buffer == null)
+                                throw new NullReferenceException("Buffer is not fetched from Server does not exists.");
                             await stream.WriteAsync(buffer, 0, buffer.Length).ConfigureAwait(false);
                             await stream.FlushAsync();
                             outputIsGenerated = true;
@@ -145,7 +152,11 @@ namespace Belgrade.SqlClient.Common
             {
                 try
                 {
-                    base.GetErrorHandlerBuilder().SetCommand(command).CreateErrorHandler()(ex);
+                    var errorHandler = base.GetErrorHandlerBuilder().SetCommand(command).CreateErrorHandler();
+                    if (errorHandler == null)
+                        throw;
+                    else
+                        errorHandler(ex);
                 } catch {
                     defaultOutput = null; // Don't generate default output if error is raised.
                 }

@@ -22,7 +22,7 @@ namespace Basic
 
             var sut =
                 new QueryMapperSessionContextAdapter(
-                    new QueryMapper("Server=.;Database=master;Integrated Security=true"),
+                    new QueryMapper(Util.Settings.ConnectionString),
                     key,
                     () => value);
 
@@ -38,7 +38,7 @@ namespace Basic
 
             var sut =
                 new QueryPipeSessionContextAdapter(
-                    new QueryPipe("Server=.;Database=master;Integrated Security=true"),
+                    new QueryPipe(Util.Settings.ConnectionString),
                     key,
                     () => value);
 
@@ -59,7 +59,7 @@ namespace Basic
 
             var sut =
                 new CommandSessionContextAdapter(
-                    new Command("Server=.;Database=master;Integrated Security=true"),
+                    new Command(Util.Settings.ConnectionString),
                     key,
                     () => value);
 

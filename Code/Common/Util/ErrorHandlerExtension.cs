@@ -12,7 +12,7 @@ namespace Belgrade.SqlClient
         public static IQueryPipe OnError(this IQueryPipe pipe, Action<Exception> handler)
         {
             var stmt = pipe as BaseStatement;
-            stmt.OnError(new ActionErrorHandlerBuilder(handler));
+            stmt.AddErrorHandler(new ActionErrorHandlerBuilder(handler));
             return pipe;
         }
 
@@ -20,7 +20,7 @@ namespace Belgrade.SqlClient
         public static IQueryMapper OnError(this IQueryMapper mapper, Action<Exception> handler)
         {
             var stmt = mapper as BaseStatement;
-            stmt.OnError(new ActionErrorHandlerBuilder(handler));
+            stmt.AddErrorHandler(new ActionErrorHandlerBuilder(handler));
             return mapper;
         }
 
@@ -28,7 +28,7 @@ namespace Belgrade.SqlClient
         public static ICommand OnError(this ICommand cmd, Action<Exception> handler)
         {
             var stmt = cmd as BaseStatement;
-            stmt.OnError(new ActionErrorHandlerBuilder(handler));
+            stmt.AddErrorHandler(new ActionErrorHandlerBuilder(handler));
             return cmd;
         }
     }

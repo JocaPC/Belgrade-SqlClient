@@ -18,8 +18,8 @@ namespace CQRS
 
         public Scenario()
         {
-            mapper = new QueryMapper("Server=.;Database=ProductCatalogDemo;Integrated Security=true");
-            command = new Command("Server=.;Database=ProductCatalogDemo;Integrated Security=true");
+            mapper = new QueryMapper(Util.Settings.ConnectionString.Replace("Database=master;", "Database=ProductCatalogDemo;"));
+            command = new Command(Util.Settings.ConnectionString.Replace("Database=master;", "Database=ProductCatalogDemo;"));
         }
 
         [Fact]

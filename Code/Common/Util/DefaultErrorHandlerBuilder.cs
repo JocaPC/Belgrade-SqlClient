@@ -19,7 +19,7 @@ namespace Belgrade.SqlClient
         /// <returns>Action that re-throws the exception.</returns>
         public override Action<Exception> CreateErrorHandler()
         {
-            return ex => { throw ex; };
+            return null;
         }
     }
 }

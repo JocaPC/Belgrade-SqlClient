@@ -78,7 +78,11 @@ namespace Belgrade.SqlClient.Common
             }
             catch (Exception ex)
             {
-                base.GetErrorHandlerBuilder().CreateErrorHandler()(ex);
+                var errorHandler = base.GetErrorHandlerBuilder().SetCommand(command).CreateErrorHandler();
+                if (errorHandler == null)
+                    throw;
+                else
+                    errorHandler(ex);
             }
             finally
             {
@@ -130,7 +134,11 @@ namespace Belgrade.SqlClient.Common
             }
             catch (Exception ex)
             {
-                base.GetErrorHandlerBuilder().CreateErrorHandler()(ex);
+                var errorHandler = base.GetErrorHandlerBuilder().SetCommand(command).CreateErrorHandler();
+                if (errorHandler == null)
+                    throw;
+                else
+                    errorHandler(ex);
             }
             finally
             {

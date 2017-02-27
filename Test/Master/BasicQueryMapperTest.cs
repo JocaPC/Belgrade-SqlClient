@@ -8,6 +8,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
 using System.Xml;
+using Util;
 
 namespace Basic
 {
@@ -16,7 +17,7 @@ namespace Basic
         IQueryMapper sut;
         public Mapper()
         {
-            sut = new QueryMapper("Server=.;Database=master;Integrated Security=true");
+            sut = new QueryMapper(Util.Settings.ConnectionString);
         }
 
         [Fact]
