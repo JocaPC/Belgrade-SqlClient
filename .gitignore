@@ -2,3 +2,4 @@
 packages/*.*
 *.dll
 WebApplication2
+*.nupkg

@@ -45,22 +45,6 @@ namespace Belgrade.SqlClient.Common
         }
 
         /// <summary>
-        /// Executes SQL query and put results into stream.
-        /// </summary>
-        /// <param name="sql">SQL query that will be executed.</param>
-        /// <param name="stream">Output stream where results will be written.</param>
-        /// <param name="defaultOutput">Default content that will be written into stream if there are no results.</param>
-        /// <returns>Task</returns>
-        public async Task Stream(string sql, Stream stream)
-        {
-            using (DbCommand command = new T())
-            {
-                command.CommandText = sql;
-                await this.Stream(command, stream);
-            }
-        }
-
-        /// <summary>
         /// Executes SQL command and put results into stream.
         /// </summary>
         /// <param name="command">SQL command that will be executed.</param>
@@ -70,22 +54,6 @@ namespace Belgrade.SqlClient.Common
         {
             command.Connection = this.Connection;
             await this.SqlResultsToStream(command, stream, null);
-        }
-
-
-        /// <summary>
-        /// Executes SQL query and puts results into stream.
-        /// </summary>
-        /// <param name="command">SQL command that will be executed.</param>
-        /// <param name="stream">Output stream where results will be written.</param>
-        /// <returns>Task</returns>
-        public async Task Stream<T1>(string sql, Stream stream, T1 defaultOutput)
-        {
-            using (DbCommand command = new T())
-            {
-                command.CommandText = sql;
-                await this.Stream<T1>(command, stream, defaultOutput);
-            }
         }
 
         /// <summary>
@@ -99,23 +67,37 @@ namespace Belgrade.SqlClient.Common
         {
             if (defaultOutput is byte[])
             {
-                await SqlResultsToStream(command, stream, defaultOutput as byte[]).ConfigureAwait(false);
+                await SqlResultsToStream(command, stream, System.Text.UTF8Encoding.UTF8.GetString(defaultOutput as byte[])).ConfigureAwait(false);
             }
             else if (defaultOutput is string)
             {
-                await SqlResultsToStream(command, stream, Encoding.UTF8.GetBytes(defaultOutput as string)).ConfigureAwait(false);
+                await SqlResultsToStream(command, stream, (defaultOutput as string)).ConfigureAwait(false);
             }
             else
                 throw new ArgumentException();
         }
 
-        private async Task SqlResultsToStream(DbCommand command, Stream stream, byte[] defaultOutput)
+        private Task SqlResultsToStream(DbCommand command, Stream stream, string defaultOutput)
         {
             if (stream == null)
                 throw new ArgumentNullException("stream", "Stream provided to SqlResultToStream is not defined!");
             if (!stream.CanWrite)
                 throw new ArgumentException("Cannot write to the stream in SqlResultToStream", "stream");
+ 
+            StreamWriter writer = new StreamWriter(stream);
+            return Stream(command, writer, defaultOutput);
+        }
 
+
+        /// <summary>
+        /// Executes SQL command and puts results into stream.
+        /// </summary>
+        /// <param name="command">SQL command that will be executed.</param>
+        /// <param name="writer">TextWriter where results will be written.</param>
+        /// <param name="defaultOutput">Default content that will be written into TextWriter if there are no results.</param>
+        /// <returns>Task</returns>
+        public async Task Stream(DbCommand command, TextWriter writer, string defaultOutput)
+        {
             bool outputIsGenerated = false;
             try
             {
@@ -124,25 +106,26 @@ namespace Belgrade.SqlClient.Common
                     {
                         if (reader.HasRows)
                         {
-                            byte[] buffer = null;
+                            string buffer = null;
                             if(reader[0].GetType().Name == "String")
                             {
-                                buffer = Encoding.UTF8.GetBytes(reader.GetString(0));
+                                buffer = reader.GetString(0);
                             } else if (reader[0].GetType().Name == "Byte[]")
                             {
-                                buffer = (byte[])reader[0];
+                                buffer = null;  //(byte[])reader[0];
                             }
                             if (buffer == null)
                                 throw new NullReferenceException("Buffer is not fetched from Server does not exists.");
-                            await stream.WriteAsync(buffer, 0, buffer.Length).ConfigureAwait(false);
-                            await stream.FlushAsync();
+                            await writer.WriteAsync(buffer).ConfigureAwait(false);
+                            await writer.FlushAsync();
                             outputIsGenerated = true;
                         }
                         else
                         {
                             if (defaultOutput != null)
                             {
-                                stream.Write(defaultOutput, 0, defaultOutput.Length);
+                                await writer.WriteAsync(defaultOutput);
+                                await writer.FlushAsync();
                                 outputIsGenerated = true;
                             }
                         }
@@ -166,7 +149,8 @@ namespace Belgrade.SqlClient.Common
                 /// If the output is not generated by DataReader we need to generate default value.
                 if (!outputIsGenerated && defaultOutput != null)
                 {
-                    stream.Write(defaultOutput, 0, defaultOutput.Length);
+                    await writer.WriteAsync(defaultOutput);
+                    await writer.FlushAsync();
                 }
                 command.Connection.Close();
             }

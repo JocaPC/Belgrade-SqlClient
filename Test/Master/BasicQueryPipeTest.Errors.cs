@@ -1,5 +1,4 @@
 ﻿using Belgrade.SqlClient;
-using Belgrade.SqlClient.SqlDb;
 using System;
 using System.IO;
 using System.Threading.Tasks;
@@ -12,7 +11,7 @@ namespace Errors
         IQueryPipe sut;
         public Pipe()
         {
-            sut = new QueryPipe(Util.Settings.ConnectionString);
+            sut = new Belgrade.SqlClient.SqlDb.QueryPipe(Util.Settings.ConnectionString);
         }
 
 
@@ -73,7 +72,7 @@ namespace Errors
         {
             bool exceptionThrown = false;
             var connString = Util.Settings.ConnectionString.Replace(ConnStringToken, NewValue);
-            var sut = new QueryPipe(connString);
+            var sut = new Belgrade.SqlClient.SqlDb.QueryPipe(connString);
             using (MemoryStream ms = new MemoryStream())
             {
                 await sut

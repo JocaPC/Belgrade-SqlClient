@@ -4,8 +4,11 @@
 //  WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 //  or FITNESS FOR A PARTICULAR PURPOSE.See the license files for details.
 using Belgrade.SqlClient.Common;
+using System;
 using System.Data.Common;
 using System.Data.SqlClient;
+using System.IO;
+using System.Threading.Tasks;
 
 namespace Belgrade.SqlClient.SqlDb
 {

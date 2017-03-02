@@ -1,4 +1,4 @@
-﻿using Belgrade.SqlClient.SqlDb;
+﻿using Belgrade.SqlClient;
 using Belgrade.SqlClient.SqlDb.Rls;
 using System;
 using System.IO;
@@ -20,11 +20,7 @@ namespace Basic
             string key = Guid.NewGuid().ToString();
             string value = Guid.NewGuid().ToString().Replace('-', '_');
 
-            var sut =
-                new QueryMapperSessionContextAdapter(
-                    new QueryMapper(Util.Settings.ConnectionString),
-                    key,
-                    () => value);
+            var sut = new Belgrade.SqlClient.SqlDb.QueryMapper(Util.Settings.ConnectionString).AddRls(key,() => value);
 
             await sut.ExecuteReader("select cast(SESSION_CONTEXT(N'"+key+"') as varchar(50))", 
                 reader => Assert.Equal(value, reader.GetString(0)));   
@@ -36,11 +32,7 @@ namespace Basic
             string key = Guid.NewGuid().ToString();
             string value = Guid.NewGuid().ToString().Replace('-', '_');
 
-            var sut =
-                new QueryPipeSessionContextAdapter(
-                    new QueryPipe(Util.Settings.ConnectionString),
-                    key,
-                    () => value);
+            IQueryPipe sut = new Belgrade.SqlClient.SqlDb.QueryPipe(Util.Settings.ConnectionString).AddRls(key,() => value);
 
             using (MemoryStream ms = new MemoryStream())
             {
@@ -57,11 +49,7 @@ namespace Basic
             string key = Guid.NewGuid().ToString();
             string value = Guid.NewGuid().ToString().Replace('-', '_');
 
-            var sut =
-                new CommandSessionContextAdapter(
-                    new Command(Util.Settings.ConnectionString),
-                    key,
-                    () => value);
+            var sut = new Belgrade.SqlClient.SqlDb.Command(Util.Settings.ConnectionString).AddRls(key,() => value);
 
             string json = null;
             sut.ExecuteReader(
