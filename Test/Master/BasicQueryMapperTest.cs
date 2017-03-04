@@ -47,5 +47,12 @@ namespace Basic
                 Assert.Equal(0, i);
             }
         }
+
+        [Fact]
+        public async Task ReturnsEmptyResult()
+        {
+            var response = await sut.GetStringAsync("select * from sys.all_objects where 1 = 0");
+            Assert.Equal("", response);
+        }
     }
 }

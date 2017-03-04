@@ -1,11 +1,15 @@
-﻿using System;
+﻿//  Author:     Jovan Popovic. 
+//  This source file is free software, available under MIT license .
+//  This source file is distributed in the hope that it will be useful, but
+//  WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+//  or FITNESS FOR A PARTICULAR PURPOSE.See the license files for details.
+using System;
 using System.Data.Common;
 using System.Data.SqlClient;
-using System.IO;
 using System.Threading.Tasks;
-using Belgrade.SqlClient.SqlDb;
+using System.Text;
 
-namespace Belgrade.SqlClient
+namespace Belgrade.SqlClient.SqlDb
 {
     public static class QueryMapperExtensions
     {
@@ -15,10 +19,8 @@ namespace Belgrade.SqlClient
         /// <param name="sql">SQL query that will be executed.</param>
         /// <param name="callback">Callback function that will be called for each row.</param>
         /// <returns>Task</returns>
-        public static Task ExecuteReader(this IQueryMapper mapper, string sql, Action<DbDataReader> callback)
+        public static Task ExecuteReader(this QueryMapper mapper, string sql, Action<DbDataReader> callback)
         {
-            if (!(mapper is QueryMapper))
-                throw new ArgumentException("Argument mapper must be derived from QueryMapper", "mapper");
             var cmd = new SqlCommand(sql);
             return mapper.ExecuteReader(cmd, callback);
         }
@@ -29,12 +31,34 @@ namespace Belgrade.SqlClient
         /// <param name="sql">SQL query that will be executed.</param>
         /// <param name="callback">Async callback function that will be called for each row.</param>
         /// <returns>Task</returns>
-        public static Task ExecuteReader(this IQueryMapper mapper, string sql, Func<DbDataReader, Task> callback)
+        public static Task ExecuteReader(this QueryMapper mapper, string sql, Func<DbDataReader, Task> callback)
         {
-            if (!(mapper is QueryMapper))
-                throw new ArgumentException("Argument mapper must be derived from QueryMapper", "mapper");
             var cmd = new SqlCommand(sql);
             return mapper.ExecuteReader(cmd, callback);
+        }
+
+        /// <summary>
+        /// Executes sql statement and provides each row to the async callback function.
+        /// </summary>
+        /// <param name="sql">SQL query that will be executed.</param>
+        /// <param name="callback">Async callback function that will be called for each row.</param>
+        /// <returns>Task</returns>
+        public static async Task<string> GetStringAsync(this QueryMapper mapper, SqlCommand cmd)
+        {
+            var sb = new StringBuilder();
+            await mapper.ExecuteReader(cmd, reader => sb.Append(reader[0]));
+            return sb.ToString();
+        }
+
+        /// <summary>
+        /// Executes sql statement and provides each row to the async callback function.
+        /// </summary>
+        /// <param name="sql">SQL query that will be executed.</param>
+        /// <returns>Task</returns>
+        public static Task<string> GetStringAsync(this QueryMapper mapper, string sql)
+        {
+            var cmd = new SqlCommand(sql);
+            return QueryMapperExtensions.GetStringAsync(mapper, cmd);
         }
     }
 }
