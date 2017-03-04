@@ -71,9 +71,11 @@ namespace Basic
                 }
             } else 
             {
-                StringWriter sw = new StringWriter();
-                await sut.Stream(new SqlCommand(sql), sw, "[]");
-                json = sw.ToString();
+                using (var sw = new StringWriter())
+                {
+                    await sut.Stream(sql, sw, "[]");
+                    json = sw.ToString();
+                }
             }
             AssertEx.IsValidJson(json);
         }
@@ -97,9 +99,11 @@ namespace Basic
                 }
             } else
             {
-                StringWriter sw = new StringWriter();
-                await sut.Stream(new SqlCommand(sql), sw, "");
-                xml.LoadXml(sw.ToString());
+                using (var sw = new StringWriter())
+                {
+                    await sut.Stream(new SqlCommand(sql), sw, "<root/>");
+                    xml.LoadXml(sw.ToString());
+                }
             }
 
 //-- auto, root             root / o / @const
