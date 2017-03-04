@@ -12,14 +12,16 @@ namespace Basic
     {
         IQueryPipe pipe;
         IQueryMapper mapper;
+        ICommand command;
         public Query()
         {
             pipe = new Belgrade.SqlClient.SqlDb.QueryPipe(Util.Settings.ConnectionString);
             mapper = new Belgrade.SqlClient.SqlDb.QueryMapper(Util.Settings.ConnectionString);
+            command = new Belgrade.SqlClient.SqlDb.Command(Util.Settings.ConnectionString);
         }
         
         [Theory, PairwiseData]
-        public async Task ReturnsJson( [CombinatorialValues("stream", "writer", "mapper")] string client,
+        public async Task ReturnsJson( [CombinatorialValues("stream", "writer", "mapper", "command")] string client,
                                        [CombinatorialValues(1, 5, 500, 1000)] string top, 
                                        [CombinatorialValues("auto","path")] string mode1,
                                        [CombinatorialValues(",include_null_values", ",root('test')", ",root")] string mode2,
@@ -48,6 +50,17 @@ namespace Basic
                         await pipe.Stream(sql, sw, "[]");
                     json = sw.ToString();
                 }
+            } else if (client == "command")
+            {
+                using (MemoryStream ms = new MemoryStream())
+                {
+                    if (useCommand)
+                        await command.Stream(new SqlCommand(sql), ms, "");
+                    else
+                        await command.Stream(sql, ms, "");
+                    ms.Position = 0;
+                    json = new StreamReader(ms).ReadToEnd();
+                }
             } else
             {
                 if(useCommand)
@@ -61,7 +74,7 @@ namespace Basic
 
         [Theory, PairwiseData]
 
-        public async Task ReturnsXml(  [CombinatorialValues("stream", "writer","mapper")] string client, 
+        public async Task ReturnsXml(  [CombinatorialValues("stream", "writer","mapper", "command")] string client, 
                                        [CombinatorialValues(1, 5, 500, 1000)] string top,
                                        [CombinatorialValues("auto", "path", "raw")] string mode,
                                        [CombinatorialValues("", "test")] string rootmode,
@@ -89,6 +102,17 @@ namespace Basic
                     else
                         await pipe.Stream(sql, sw, "<root/>");
                     xml.LoadXml(sw.ToString());
+                }
+            } else if (client == "command")
+            {
+                using (MemoryStream ms = new MemoryStream())
+                {
+                    if (useCommand)
+                        await command.Stream(new SqlCommand(sql), ms, "<root/>");
+                    else
+                        await command.Stream(sql, ms, "<root/>");
+                    ms.Position = 0;
+                    xml.LoadXml( new StreamReader(ms).ReadToEnd() );
                 }
             } else
             {

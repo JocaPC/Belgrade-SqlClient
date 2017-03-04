@@ -1,13 +1,12 @@
-﻿using System;
+﻿using Belgrade.SqlClient.SqlDb;
+using System;
 using System.Data.Common;
-using System.Data.SqlClient;
 using System.IO;
 using System.Threading.Tasks;
-using Belgrade.SqlClient.SqlDb;
 
 namespace Belgrade.SqlClient
 {
-    public static class CommandExtensions
+    public static class ICommandExtensions
     {
         /// <summary>
         /// Executes SQL command text.
@@ -17,9 +16,8 @@ namespace Belgrade.SqlClient
         public static Task ExecuteNonQuery(this ICommand command, string sql)
         {
             if (!(command is Command))
-                throw new ArgumentException("Argument command must be derived from Command", "command");
-            var cmd = new SqlCommand(sql);
-            return command.ExecuteNonQuery(cmd);
+                throw new ArgumentException("The argument command must be derived from Command class.", "command");
+            return CommandExtensions.ExecuteNonQuery((command as Command), sql);
         }
 
         /// <summary>
@@ -31,9 +29,8 @@ namespace Belgrade.SqlClient
         public static Task ExecuteReader(this ICommand command, string sql, Func<DbDataReader, Task> callback)
         {
             if (!(command is Command))
-                throw new ArgumentException("Argument command must be derived from Command", "command");
-            var cmd = new SqlCommand(sql);
-            return command.ExecuteReader(cmd, callback);
+                throw new ArgumentException("The argument command must be derived from Command class.", "command");
+            return CommandExtensions.ExecuteReader((command as Command), sql, callback);
         }
 
         /// <summary>
@@ -45,9 +42,8 @@ namespace Belgrade.SqlClient
         public static Task ExecuteReader(this ICommand command, string sql, Action<DbDataReader> callback)
         {
             if (!(command is Command))
-                throw new ArgumentException("Argument command must be derived from Command", "command");
-            var cmd = new SqlCommand(sql);
-            return command.ExecuteReader(cmd, callback);
+                throw new ArgumentException("The argument command must be derived from Command class.", "command");
+            return CommandExtensions.ExecuteReader((command as Command), sql, callback);
         }
 
         /// <summary>
@@ -60,8 +56,7 @@ namespace Belgrade.SqlClient
         {
             if (!(command is Command))
                 throw new ArgumentException("Argument command must be derived from Command", "command");
-            var cmd = new SqlCommand(sql);
-            return command.Stream(cmd, output, defaultOutput);
+            return CommandExtensions.Stream<D>((command as Command), sql, output, defaultOutput);
         }
     }
 }
