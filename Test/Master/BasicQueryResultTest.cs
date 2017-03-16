@@ -29,8 +29,11 @@ namespace Basic
                                        [CombinatorialValues(",include_null_values", ",root('test')", ",root")] string mode2,
                                        [CombinatorialValues(true, false)] bool useCommand)
         {
+            // Arrange
             var sql = "select top " + top + " o.object_id tid, o.name t_name, o.schema_id, o.type t, o.type_desc, o.create_date cd, o.modify_date md, c.* from sys.objects o, sys.columns c for json " + mode1 + mode2;
-            string json;
+            string json = "INVALID JSON";
+
+            // Action
             if (client == "stream")
             {
                 using (MemoryStream ms = new MemoryStream())
@@ -69,8 +72,9 @@ namespace Basic
                     json = await mapper.GetStringAsync(new SqlCommand(sql));
                 else
                     json = await mapper.GetStringAsync(sql);
-                AssertEx.IsValidJson(json);
             }
+
+            // Assert
             AssertEx.IsValidJson(json);
         }
 
@@ -82,8 +86,11 @@ namespace Basic
                                        [CombinatorialValues("", "test")] string rootmode,
                                        [CombinatorialValues(true, false)] bool useCommand)
         {
+            // Arrange
             string sql = "select top " + top + " 'CONST_ID' as const, o.object_id tid, o.name t_name, o.schema_id, o.type t, o.type_desc, o.create_date cd, o.modify_date md from sys.objects o for xml " + mode + ", root" + (rootmode!=""?"('"+rootmode+"')":"");
             var xml = new XmlDocument();
+
+            // Action
             if (client == "stream")
             {
                 using (MemoryStream ms = new MemoryStream())
@@ -124,6 +131,8 @@ namespace Basic
                     xml.LoadXml(await mapper.GetStringAsync(sql));
             }
 
+            // Assert
+
             //-- auto, root             root / o / @const
             //-- auto, root('test')     test / o / @const
             //-- raw, root('test')      test / row / @const
@@ -152,8 +161,11 @@ namespace Basic
                 [CombinatorialValues("writer", "stream", "command-stream")] string client,
                 [CombinatorialValues(true, false)] bool useCommand)
         {
+            // Arrange
             var sql = "select * from sys.all_objects where 1 = 0";
-            string defaultValue = "", text = "INITIAL_VALUE";
+            string defaultValue = length==0 ? "" : GenerateChar(length), text = "INITIAL_VALUE";
+
+            // Action
             if (client == "stream")
             {
                 using (MemoryStream ms = new MemoryStream())
@@ -167,7 +179,6 @@ namespace Basic
                     }
                     else if (STRING)
                     {
-                        defaultValue = GenerateChar(length);
                         if (useCommand)
                             await pipe.Stream(new SqlCommand(sql), ms, defaultValue);
                         else
@@ -175,7 +186,6 @@ namespace Basic
                     }
                     else
                     {
-                        defaultValue = GenerateChar(length);
                         if (useCommand)
                             await pipe.Stream(new SqlCommand(sql), ms, Encoding.UTF8.GetBytes(defaultValue));
                         else
@@ -184,7 +194,6 @@ namespace Basic
 
                     ms.Position = 0;
                     text = new StreamReader(ms).ReadToEnd();
-
                 }
             }
             else if (client == "writer")
@@ -200,7 +209,6 @@ namespace Basic
                     }
                     else if (STRING)
                     {
-                        defaultValue = GenerateChar(length);
                         if (useCommand)
                             await pipe.Stream(new SqlCommand(sql), ms, defaultValue);
                         else
@@ -209,6 +217,8 @@ namespace Basic
                     else
                     {
                         // cannot send binary default value to TextWriter.
+                        // Invalid test case => abort test
+                        return;
                     }
 
                     text = ms.ToString();
@@ -227,7 +237,6 @@ namespace Basic
                     }
                     else if (STRING)
                     {
-                        defaultValue = GenerateChar(length);
                         if (useCommand)
                             await command.Stream(new SqlCommand(sql), ms, defaultValue);
                         else
@@ -235,7 +244,6 @@ namespace Basic
                     }
                     else
                     {
-                        defaultValue = GenerateChar(length);
                         if (useCommand)
                             await command.Stream(new SqlCommand(sql), ms, Encoding.UTF8.GetBytes(defaultValue));
                         else
@@ -246,9 +254,10 @@ namespace Basic
                     text = new StreamReader(ms).ReadToEnd();
                 }
             }
+
+            // Assert
             Assert.Equal(defaultValue, text);
         }
-
 
         public string GenerateChar()
         {
