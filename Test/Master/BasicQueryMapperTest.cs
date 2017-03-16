@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using Xunit;
 using System.Xml;
 using Util;
+using System.IO.Compression;
 
 namespace Basic
 {
@@ -18,6 +19,31 @@ namespace Basic
         public Mapper()
         {
             sut = new QueryMapper(Util.Settings.ConnectionString);
+        }
+
+        [Fact]
+        public async Task ReturnConstantSync()
+        {
+            int constant = new Random().Next();
+            constant = constant % 10000;
+            int result = 0;
+
+            var sql = String.Format("select {0} 'a'", constant);
+            await sut.ExecuteReader(sql, reader => result = reader.GetInt32(0));
+            Assert.Equal(constant, result);
+        }
+
+
+        [Fact]
+        public async Task ReturnConstantAsync()
+        {
+            int constant = new Random().Next();
+            constant = constant % 10000;
+            int result = 0;
+
+            var sql = String.Format("select {0} 'a'", constant);
+            await sut.ExecuteReader(sql, (reader) => { result = reader.GetInt32(0); });
+            Assert.Equal(constant, result);
         }
 
         [Fact]
@@ -54,5 +80,6 @@ namespace Basic
             var response = await sut.GetStringAsync("select * from sys.all_objects where 1 = 0");
             Assert.Equal("", response);
         }
+       
     }
 }
