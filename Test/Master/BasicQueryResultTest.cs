@@ -1,7 +1,9 @@
 ﻿using Belgrade.SqlClient;
 using BSCT;
+using System;
 using System.Data.SqlClient;
 using System.IO;
+using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
 using Xunit;
@@ -142,5 +144,130 @@ namespace Basic
             Assert.Equal("CONST_ID", xml.SelectSingleNode("//" + prefix + "const").InnerText);
             Assert.NotEmpty(xml.SelectSingleNode("//" + prefix + "tid").InnerText);
         }
+
+        [Theory, PairwiseData]
+        public async Task ReturnsDefaultValue(
+                [CombinatorialValues(0, 1, 100, 3500, 10000)] int length,
+                [CombinatorialValues(false, true)] bool STRING,
+                [CombinatorialValues("writer", "stream", "command-stream")] string client,
+                [CombinatorialValues(true, false)] bool useCommand)
+        {
+            var sql = "select * from sys.all_objects where 1 = 0";
+            string defaultValue = "", text = "INITIAL_VALUE";
+            if (client == "stream")
+            {
+                using (MemoryStream ms = new MemoryStream())
+                {
+                    if (length == 0)
+                    {
+                        if (useCommand)
+                            await pipe.Stream(new SqlCommand(sql), ms);
+                        else
+                            await pipe.Stream(sql, ms);
+                    }
+                    else if (STRING)
+                    {
+                        defaultValue = GenerateChar(length);
+                        if (useCommand)
+                            await pipe.Stream(new SqlCommand(sql), ms, defaultValue);
+                        else
+                            await pipe.Stream(sql, ms, defaultValue);
+                    }
+                    else
+                    {
+                        defaultValue = GenerateChar(length);
+                        if (useCommand)
+                            await pipe.Stream(new SqlCommand(sql), ms, Encoding.UTF8.GetBytes(defaultValue));
+                        else
+                            await pipe.Stream(sql, ms, Encoding.UTF8.GetBytes(defaultValue));
+                    }
+
+                    ms.Position = 0;
+                    text = new StreamReader(ms).ReadToEnd();
+
+                }
+            }
+            else if (client == "writer")
+            {
+                using (var ms = new StringWriter())
+                {
+                    if (length == 0)
+                    {
+                        if (useCommand)
+                            await pipe.Stream(new SqlCommand(sql), ms, "");
+                        else
+                            await pipe.Stream(sql, ms, "");
+                    }
+                    else if (STRING)
+                    {
+                        defaultValue = GenerateChar(length);
+                        if (useCommand)
+                            await pipe.Stream(new SqlCommand(sql), ms, defaultValue);
+                        else
+                            await pipe.Stream(sql, ms, defaultValue);
+                    }
+                    else
+                    {
+                        // cannot send binary default value to TextWriter.
+                    }
+
+                    text = ms.ToString();
+                }
+            }
+            else if (client == "command-stream")
+            {
+                using (var ms = new MemoryStream())
+                {
+                    if (length == 0)
+                    {
+                        if (useCommand)
+                            await command.Stream(new SqlCommand(sql), ms, "");
+                        else
+                            await command.Stream(sql, ms, "");
+                    }
+                    else if (STRING)
+                    {
+                        defaultValue = GenerateChar(length);
+                        if (useCommand)
+                            await command.Stream(new SqlCommand(sql), ms, defaultValue);
+                        else
+                            await command.Stream(sql, ms, defaultValue);
+                    }
+                    else
+                    {
+                        defaultValue = GenerateChar(length);
+                        if (useCommand)
+                            await command.Stream(new SqlCommand(sql), ms, Encoding.UTF8.GetBytes(defaultValue));
+                        else
+                            await command.Stream(sql, ms, Encoding.UTF8.GetBytes(defaultValue));
+                    }
+
+                    ms.Position = 0;
+                    text = new StreamReader(ms).ReadToEnd();
+                }
+            }
+            Assert.Equal(defaultValue, text);
+        }
+
+
+        public string GenerateChar()
+        {
+            Random random = new Random();
+
+            return Convert.ToChar(Convert.ToInt32(Math.Floor(26 * random.NextDouble() + 65))).ToString();
+        }
+
+        public string GenerateChar(int count)
+        {
+            string randomString = "";
+
+            for (int i = 0; i < count; i++)
+            {
+                randomString += GenerateChar();
+            }
+
+            return randomString;
+        }
+
     }
 }

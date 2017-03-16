@@ -32,79 +32,6 @@ namespace Basic
         }
 
 
-        [Theory, PairwiseData]
-        public async Task ReturnsDefaultValue(
-            [CombinatorialValues(0, 1, 100, 3500, 10000)] int length,
-            [CombinatorialValues(false, true)] bool STRING,
-            [CombinatorialValues("writer", "stream")] string client,
-            [CombinatorialValues(true, false)] bool useCommand)
-        {
-            var sql = "select * from sys.all_objects where 1 = 0";
-            string defaultValue = "", text = "INITIAL_VALUE";
-            if (client == "stream")
-            {
-                using (MemoryStream ms = new MemoryStream())
-                {
-                    if (length == 0)
-                    {
-                        if (useCommand)
-                            await sut.Stream(new SqlCommand(sql), ms);
-                        else
-                            await sut.Stream(sql, ms);
-                    }
-                    else if (STRING)
-                    {
-                        defaultValue = GenerateChar(length);
-                        if (useCommand)
-                            await sut.Stream(new SqlCommand(sql), ms, defaultValue);
-                        else
-                            await sut.Stream(sql, ms, defaultValue);
-                    }
-                    else
-                    {
-                        defaultValue = GenerateChar(length);
-                        if (useCommand)
-                            await sut.Stream(new SqlCommand(sql), ms, Encoding.UTF8.GetBytes(defaultValue));
-                        else
-                            await sut.Stream(sql, ms, Encoding.UTF8.GetBytes(defaultValue));
-                    }
-
-                    ms.Position = 0;
-                    text = new StreamReader(ms).ReadToEnd();
-
-                }
-            }
-            else
-            {
-                using (var ms = new StringWriter())
-                {
-                    if (length == 0)
-                    {
-                        if (useCommand)
-                            await sut.Stream(new SqlCommand(sql), ms, "");
-                        else
-                            await sut.Stream(sql, ms, "");
-                    }
-                    else if (STRING)
-                    {
-                        defaultValue = GenerateChar(length);
-                        if (useCommand)
-                            await sut.Stream(new SqlCommand(sql), ms, defaultValue);
-                        else
-                            await sut.Stream(sql, ms, defaultValue);
-                    }
-                    else
-                    {
-                        // cannot send binary default value to TextWriter.
-                    }
-
-                    text = ms.ToString();
-                }
-            }
-            Assert.Equal(defaultValue, text);
-        }
-
-
         [Fact]
         public async Task ReturnsDefaultTextValue()
         {
@@ -194,23 +121,5 @@ namespace Basic
         }
 
 
-           public string GenerateChar()
-            {
-                Random random = new Random();
-
-                return Convert.ToChar(Convert.ToInt32(Math.Floor(26 * random.NextDouble() + 65))).ToString();
-            }
-
-            public string GenerateChar(int count)
-            {        
-                string randomString = "";
-
-                for (int i = 0; i < count; i++)
-                {
-                        randomString += GenerateChar();
-                }
-
-                return randomString;
-            }
     }
 }
