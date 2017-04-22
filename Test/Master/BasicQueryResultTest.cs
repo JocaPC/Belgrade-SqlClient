@@ -1,6 +1,7 @@
 ﻿using Belgrade.SqlClient;
 using BSCT;
 using System;
+using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.IO;
 using System.Text;
@@ -21,7 +22,25 @@ namespace Basic
             mapper = new Belgrade.SqlClient.SqlDb.QueryMapper(Util.Settings.ConnectionString);
             command = new Belgrade.SqlClient.SqlDb.Command(Util.Settings.ConnectionString);
         }
-        
+
+        [Fact]
+        public void ReturnsJsonParallel()
+        {
+            List<Task> tasks = new List<Task>();
+            var client =  new string[] { "stream", "writer", "mapper", "command" };
+            for (int i = 0; i <= 100; i++)
+                tasks.Add(Task.Run(() => ReturnsJson(client[i%4], (i%2==0)?"1":"1000", "path", "", i%3==0)));
+
+            Task.WaitAll(tasks.ToArray());
+
+            foreach (var t in tasks)
+            {
+                Assert.Equal(false, t.IsCanceled);
+                Assert.Equal(true, t.IsCompleted);
+                Assert.Equal(false, t.IsFaulted);
+            }
+        }
+
         [Theory, PairwiseData]
         public async Task ReturnsJson( [CombinatorialValues("stream", "writer", "mapper", "command")] string client,
                                        [CombinatorialValues(1, 5, 500, 1000)] string top, 
@@ -30,6 +49,12 @@ namespace Basic
                                        [CombinatorialValues(true, false)] bool useCommand)
         {
             // Arrange
+            var pipe = new Belgrade.SqlClient.SqlDb.QueryPipe(Util.Settings.ConnectionString)
+                .OnError(ex=> { throw ex; });
+            var mapper = new Belgrade.SqlClient.SqlDb.QueryMapper(Util.Settings.ConnectionString)
+                .OnError(ex => { throw ex; });
+            var command = new Belgrade.SqlClient.SqlDb.Command(Util.Settings.ConnectionString)
+                .OnError(ex => { throw ex; });
             var sql = "select top " + top + " o.object_id tid, o.name t_name, o.schema_id, o.type t, o.type_desc, o.create_date cd, o.modify_date md, c.* from sys.objects o, sys.columns c for json " + mode1 + mode2;
             string json = "INVALID JSON";
 
