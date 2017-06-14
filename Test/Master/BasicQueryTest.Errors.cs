@@ -42,6 +42,22 @@ namespace Errors
             }
         }
 
+        [Fact]
+        public async Task NonExistingTableSql()
+        {
+            bool exceptionThrown = false;
+            using (MemoryStream ms = new MemoryStream())
+            {
+                await sut
+                    .OnError(ex => {
+                        Assert.True(ex.GetType().Name == "SqlException");
+                        Assert.Equal("Invalid object name 'NonExistentTable'.", ex.Message);
+                        exceptionThrown = true;
+                    })
+                    .Stream("select * from NonExistentTable FOR JSON PATH", ms);
+                Assert.True(exceptionThrown);
+            }
+        }
 
         [Fact]
         public void ClosedStream()
