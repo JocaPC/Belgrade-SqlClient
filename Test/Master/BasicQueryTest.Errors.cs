@@ -25,7 +25,6 @@ namespace Errors
                     .Stream("select 1 as a, 1/0 as b for json path", ms);
                 Assert.True(exceptionThrown);
             }
-
         }
 
         [Fact]
@@ -95,7 +94,7 @@ namespace Errors
                     .OnError(ex => {
                         exceptionThrown = true;
                         Assert.True(ex.GetType().Name == "SqlException");
-                        Assert.Equal(ex.Message, "A network-related or instance-specific error occurred while establishing a connection to SQL Server.The server was not found or was not accessible.Verify that the instance name is correct and that SQL Server is configured to allow remote connections. (provider: SQL Network Interfaces, error: 26 - Error Locating Server/ Instance Specified)");
+                        Assert.Equal("A network-related or instance-specific error occurred while establishing a connection to SQL Server.The server was not found or was not accessible.Verify that the instance name is correct and that SQL Server is configured to allow remote connections. (provider: SQL Network Interfaces, error: 26 - Error Locating Server/ Instance Specified)", ex.Message);
                     })
                     .Stream("select 1 as a for json path", ms);
                 Assert.True(exceptionThrown, "Exception should be thrown when using connection string: " + connString);

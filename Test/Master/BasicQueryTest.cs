@@ -107,7 +107,7 @@ namespace Basic
 
             // Assert
             Assert.Empty(text);
-            Assert.Equal(true, isErrorThrown);
+            Assert.True(isErrorThrown);
         }
 
 

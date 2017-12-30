@@ -81,7 +81,7 @@ namespace Basic
             }
 
             // Assert
-            Assert.Equal(false, callbackExecuted);
+            Assert.False(callbackExecuted);
         }
 
         [Fact]

@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard1.5;netcoreapp1.0;net45;net46</TargetFrameworks>
+    <TargetFrameworks>netstandard1.6;netcoreapp1.0;netcoreapp1.1;netcoreapp2.0;net46</TargetFrameworks>
     <AssemblyName>Belgrade.SqlClient</AssemblyName>
     <PackageId>Code</PackageId>
     <PackageTargetFallback Condition=" '$(TargetFramework)' == 'netstandard1.5' ">$(PackageTargetFallback);dnxcore50</PackageTargetFallback>
@@ -26,7 +26,7 @@
   <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard1.5' ">
     <PackageReference Include="System.Data.SqlClient" Version="4.1.0" />
   </ItemGroup>
-
+  
   <ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp1.0' ">
     <PackageReference Include="System.Data.SqlClient" Version="4.1.0" />
   </ItemGroup>
@@ -41,6 +41,10 @@
     <Reference Include="System.Data" />
     <Reference Include="System" />
     <Reference Include="Microsoft.CSharp" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Data.SqlClient" Version="4.4.2" />
   </ItemGroup>
 
 </Project>

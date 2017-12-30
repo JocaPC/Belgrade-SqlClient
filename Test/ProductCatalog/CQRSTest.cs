@@ -15,13 +15,12 @@ namespace CQRS
 {
     public class Scenario
     {
-        IQueryMapper mapper;
-        ICommand command;
-
         public Scenario()
         {
             var command = new Command(Util.Settings.ConnectionString.Replace("Database=master;", "Database=ProductCatalogDemo;"));
+#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
             command.ExecuteNonQuery("DELETE Company WHERE companyId >= 4");
+#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
         }
 
         [Fact]
@@ -35,9 +34,9 @@ namespace CQRS
 
             foreach (var t in tasks)
             {
-                Assert.Equal(false, t.IsCanceled);
-                Assert.Equal(true, t.IsCompleted);
-                Assert.Equal(false, t.IsFaulted);
+                Assert.False(t.IsCanceled);
+                Assert.True(t.IsCompleted);
+                Assert.False(t.IsFaulted);
             }
         }
 
@@ -151,7 +150,7 @@ namespace CQRS
 
             Assert.Equal(NAME4, name);
             Assert.Equal(id, deletedId);
-            Assert.Equal(0, errors.Count);
+            Assert.Empty(errors);
         }
     }
 }

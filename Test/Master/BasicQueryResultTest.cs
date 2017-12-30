@@ -35,9 +35,9 @@ namespace Basic
 
             foreach (var t in tasks)
             {
-                Assert.Equal(false, t.IsCanceled);
-                Assert.Equal(true, t.IsCompleted);
-                Assert.Equal(false, t.IsFaulted);
+                Assert.False(t.IsCanceled);
+                Assert.True(t.IsCompleted);
+                Assert.False(t.IsFaulted);
             }
         }
 
