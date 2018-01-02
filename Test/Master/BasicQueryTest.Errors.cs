@@ -59,6 +59,41 @@ namespace Errors
         }
 
         [Fact]
+        public async Task NonExistingColumn()
+        {
+            bool exceptionThrown = false;
+            using (MemoryStream ms = new MemoryStream())
+            {
+                await sut
+                    .OnError(ex => {
+                        Assert.True(ex.GetType().Name == "SqlException");
+                        Assert.Equal("Invalid column name 'UnknownColumn'.", ex.Message);
+                        exceptionThrown = true;
+                    })
+                    .Stream("select UnknownColumn, * from sys.objects FOR JSON PATH", ms);
+                Assert.True(exceptionThrown);
+            }
+        }
+
+
+        [Fact]
+        public async Task GeometryColumn()
+        {
+            bool exceptionThrown = false;
+            using (MemoryStream ms = new MemoryStream())
+            {
+                await sut
+                    .OnError(ex => {
+                        Assert.True(ex.GetType().Name == "SqlException");
+                        Assert.Equal("FOR JSON cannot serialize CLR objects. Cast CLR types explicitly into one of the supported types in FOR JSON queries.", ex.Message);
+                        exceptionThrown = true;
+                    })
+                    .Stream("select g= geometry::STGeomFromText('LINESTRING (100 100, 20 180, 180 180)', 0), * from sys.objects FOR JSON PATH", ms);
+                Assert.True(exceptionThrown);
+            }
+        }
+
+        [Fact]
         public void ClosedStream()
         {
             bool exceptionThrown = false;

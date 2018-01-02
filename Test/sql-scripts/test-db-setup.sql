@@ -50,3 +50,8 @@ SELECT CompanyID, Name, Address, Email, Phone, Postcode
 FROM OPENJSON (@companies)
 	WITH(CompanyID int, Name nvarchar(50), Address nvarchar(100), Email nvarchar(50), Phone nvarchar(50), Postcode nvarchar(20))
 GO
+
+CREATE PROCEDURE dbo.ProcWithOutput @in int, @out int OUTPUT
+AS BEGIN
+	SET @out = @in;
+END
