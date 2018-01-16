@@ -1,6 +1,7 @@
 ﻿using Belgrade.SqlClient.SqlDb;
 using System;
 using System.Data.Common;
+using System.Data.SqlClient;
 using System.IO;
 using System.Threading.Tasks;
 
@@ -52,11 +53,42 @@ namespace Belgrade.SqlClient
         /// <param name="sql">SQL query that will be executed.</param>
         /// <param name="stream">Output stream where results will be written.</param>
         /// <returns>Task</returns>
-        public static Task Stream<D>(this ICommand command, string sql, Stream output, D defaultOutput)
+        public static Task Stream(this ICommand command, string sql, Stream output, string defaultOutput)
         {
             if (!(command is Command))
                 throw new ArgumentException("Argument command must be derived from Command", "command");
-            return CommandExtensions.Stream<D>((command as Command), sql, output, defaultOutput);
+            var cmd = new SqlCommand(sql);
+            return command.Stream(cmd, output, new Options() { DefaultOutput = defaultOutput });
+        }
+
+        public static Task Stream(this ICommand command, SqlCommand cmd, Stream output, string defaultOutput)
+        {
+            if (!(command is Command))
+                throw new ArgumentException("Argument command must be derived from Command", "command");
+            return command.Stream(cmd, output, new Options() { DefaultOutput = defaultOutput });
+        }
+
+        public static Task Stream(this ICommand command, string sql, Stream output, byte[] defaultOutput)
+        {
+            if (!(command is Command))
+                throw new ArgumentException("Argument command must be derived from Command", "command");
+            var cmd = new SqlCommand(sql);
+            return command.Stream(cmd, output, new Options() { DefaultOutput = defaultOutput });
+        }
+
+        public static Task Stream(this ICommand command, SqlCommand cmd, Stream output, byte[] defaultOutput)
+        {
+            if (!(command is Command))
+                throw new ArgumentException("Argument command must be derived from Command", "command");
+            return command.Stream(cmd, output, new Options() { DefaultOutput = defaultOutput });
+        }
+        
+        public static Task Stream(this ICommand command, string sql, Stream output, Options options)
+        {
+            if (!(command is Command))
+                throw new ArgumentException("Argument command must be derived from Command", "command");
+            var cmd = new SqlCommand(sql);
+            return command.Stream(cmd, output, options);
         }
     }
 }

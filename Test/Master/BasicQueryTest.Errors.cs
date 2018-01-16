@@ -9,9 +9,13 @@ namespace Errors
     public class Pipe
     {
         IQueryPipe sut;
+        IQueryMapper mapper;
+        ICommand command;
         public Pipe()
         {
             sut = new Belgrade.SqlClient.SqlDb.QueryPipe(Util.Settings.ConnectionString);
+            mapper = new Belgrade.SqlClient.SqlDb.QueryMapper(Util.Settings.ConnectionString);
+            command = new Belgrade.SqlClient.SqlDb.Command(Util.Settings.ConnectionString);
         }
 
 
@@ -36,63 +40,98 @@ namespace Errors
                 await sut
                     .OnError(ex=> { exceptionThrown = true;
                                     Assert.True(ex.GetType().Name == "SqlException"); })
-                    .Stream("SELECT hrkljush", ms);
+                    .Stream("SELECT hrkljush", ms,
+                                new Options() { Prefix = "<start>", Suffix = "<end>" });
                 Assert.True(exceptionThrown);
             }
         }
 
-        [Fact]
-        public async Task NonExistingTableSql()
+        //[Theory, CombinatorialData]
+        [Theory, PairwiseData]
+        public async Task HandlesCompileErrors(
+        [CombinatorialValues(
+            "select * from NonExistentTable FOR JSON PATH/Invalid object name 'NonExistentTable'.",
+            "select UnknownColumn from sys.objects FOR JSON PATH/Invalid column name 'UnknownColumn'.",
+            "select g= geometry::STGeomFromText('LINESTRING (100 100, 20 180, 180 180)', 0) from sys.objects FOR JSON PATH/FOR JSON cannot serialize CLR objects. Cast CLR types explicitly into one of the supported types in FOR JSON queries.")]
+            string query_error,
+        [CombinatorialValues(false, true)] bool async,
+        [CombinatorialValues("query", "mapper", "command")] string client,
+        [CombinatorialValues(true, false)] bool useCommandAsPipe,
+        [CombinatorialValues("?", "N/A", null, "")] string defaultValue,
+        [CombinatorialValues("<s>", "{", "<!--", null, "")] string prefix,
+        [CombinatorialValues(null, "</s>", "}", "", "-->")] string suffix)
         {
+            var pair = query_error.Split('/');
+            var query = pair[0];
+            var error = pair[1];
             bool exceptionThrown = false;
+
             using (MemoryStream ms = new MemoryStream())
             {
-                await sut
-                    .OnError(ex => {
-                        Assert.True(ex.GetType().Name == "SqlException");
-                        Assert.Equal("Invalid object name 'NonExistentTable'.", ex.Message);
-                        exceptionThrown = true;
-                    })
-                    .Stream("select * from NonExistentTable FOR JSON PATH", ms);
+                Task t = null;
+                switch(client)
+                {
+                    case "query":
+                        t = sut
+                            .OnError(ex =>
+                            {
+                                Assert.True(ex.GetType().Name == "SqlException");
+                                Assert.Equal(error, ex.Message);
+                                exceptionThrown = true;
+                            })
+                            .Stream(query, ms,
+                                new Options() { Prefix = prefix, DefaultOutput = defaultValue, Suffix = suffix });
+                        break;
+
+                    case "mapper":
+                        t = mapper
+                            .OnError(ex =>
+                            {
+                                Assert.True(ex.GetType().Name == "SqlException");
+                                Assert.Equal(error, ex.Message);
+                                exceptionThrown = true;
+                            })
+                            .ExecuteReader(query, r => { throw new Exception("Should not execute callback!"); });
+                        break;
+
+                    case "command":
+                        if (useCommandAsPipe)
+                        {
+                            t = command
+                                .OnError(ex =>
+                                {
+                                    Assert.True(ex.GetType().Name == "SqlException");
+                                    Assert.Equal(error, ex.Message);
+                                    exceptionThrown = true;
+                                })
+                                .Stream(query, ms,
+                                    new Options() { Prefix = prefix, DefaultOutput = defaultValue, Suffix = suffix });
+                        } else
+                        {
+                            t = command.OnError(ex =>
+                            {
+                                Assert.True(ex.GetType().Name == "SqlException");
+                                Assert.Equal("Could not find stored procedure 'NON_EXISTING_PROCEDURE'.", ex.Message);
+                                exceptionThrown = true;
+                            }).ExecuteNonQuery("EXEC NON_EXISTING_PROCEDURE");
+                        }
+                        break;
+                }
+                if (async)
+                    await t;
+                else
+                    t.Wait();
+
                 Assert.True(exceptionThrown);
+                if (client == "query" || client == "command" && useCommandAsPipe)
+                {
+                    ms.Position = 0;
+                    var text = new StreamReader(ms).ReadToEnd();
+                    Assert.Equal("", text);
+                }
             }
         }
-
-        [Fact]
-        public async Task NonExistingColumn()
-        {
-            bool exceptionThrown = false;
-            using (MemoryStream ms = new MemoryStream())
-            {
-                await sut
-                    .OnError(ex => {
-                        Assert.True(ex.GetType().Name == "SqlException");
-                        Assert.Equal("Invalid column name 'UnknownColumn'.", ex.Message);
-                        exceptionThrown = true;
-                    })
-                    .Stream("select UnknownColumn, * from sys.objects FOR JSON PATH", ms);
-                Assert.True(exceptionThrown);
-            }
-        }
-
-
-        [Fact]
-        public async Task GeometryColumn()
-        {
-            bool exceptionThrown = false;
-            using (MemoryStream ms = new MemoryStream())
-            {
-                await sut
-                    .OnError(ex => {
-                        Assert.True(ex.GetType().Name == "SqlException");
-                        Assert.Equal("FOR JSON cannot serialize CLR objects. Cast CLR types explicitly into one of the supported types in FOR JSON queries.", ex.Message);
-                        exceptionThrown = true;
-                    })
-                    .Stream("select g= geometry::STGeomFromText('LINESTRING (100 100, 20 180, 180 180)', 0), * from sys.objects FOR JSON PATH", ms);
-                Assert.True(exceptionThrown);
-            }
-        }
-
+        
         [Fact]
         public void ClosedStream()
         {

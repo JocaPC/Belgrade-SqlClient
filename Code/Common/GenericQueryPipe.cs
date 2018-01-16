@@ -50,12 +50,13 @@ namespace Belgrade.SqlClient.Common
         /// <param name="command">SQL command that will be executed.</param>
         /// <param name="stream">Output stream where results will be written.</param>
         /// <returns>Task</returns>
-        public async Task Stream(DbCommand command, Stream stream)
+        public async Task Stream(DbCommand command, Stream stream, Options options = null)
         {
             command.Connection = this.Connection;
-            await this.SqlResultsToStream(command, stream, null);
+            await this.SqlResultsToStream(command, stream, options);
         }
 
+        /*
         /// <summary>
         /// Executes SQL command and puts results into stream.
         /// </summary>
@@ -76,15 +77,15 @@ namespace Belgrade.SqlClient.Common
             else
                 throw new ArgumentException();
         }
-
-        private Task SqlResultsToStream(DbCommand command, Stream stream, byte[] defaultOutput)
+        */
+        private Task SqlResultsToStream(DbCommand command, Stream stream, Options options /*byte[] defaultOutput*/)
         {
             if (stream == null)
                 throw new ArgumentNullException("stream", "Stream provided to SqlResultToStream is not defined!");
             if (!stream.CanWrite)
                 throw new ArgumentException("Cannot write to the stream in SqlResultToStream", "stream");
 
-            return FlushSqlResultsToStream<Stream>(command, stream, defaultOutput);
+            return FlushSqlResultsToStream<Stream>(command, stream, options/*defaultOutput*/);
 
         }
 
@@ -96,9 +97,9 @@ namespace Belgrade.SqlClient.Common
         /// <param name="writer">TextWriter where results will be written.</param>
         /// <param name="defaultOutput">Default content that will be written into TextWriter if there are no results.</param>
         /// <returns>Task</returns>
-        public Task Stream(DbCommand command, TextWriter writer, string defaultOutput)
+        public Task Stream(DbCommand command, TextWriter writer, Options options /*string[] defaultOutput*/)
         {
-            return FlushSqlResultsToStream<TextWriter>(command, writer, defaultOutput);
+            return FlushSqlResultsToStream<TextWriter>(command, writer, options);
         }
 
         /// <summary>
@@ -109,7 +110,7 @@ namespace Belgrade.SqlClient.Common
         /// <param name="stream"></param>
         /// <param name="defaultOutput"></param>
         /// <returns></returns>
-        private async Task FlushSqlResultsToStream<TOutput>(DbCommand command, TOutput stream, object defaultOutput)
+        private async Task FlushSqlResultsToStream<TOutput>(DbCommand command, TOutput stream, Options options /*byte[] defaultOutput*/)
         {
             bool outputIsGenerated = false;
             try
@@ -119,6 +120,10 @@ namespace Belgrade.SqlClient.Common
                     {
                         if (reader.HasRows)
                         {
+                            if(!outputIsGenerated && options != null && options.Prefix != null)
+                            {
+                                await FlushContent<TOutput>(stream, options.Prefix);
+                            }
                             if (reader.FieldCount != 1)
                                 throw new ArgumentException("SELECT query should not have " + reader.FieldCount + " columns (expected 1).", "reader");
                             string buffer = null;
@@ -149,10 +154,9 @@ namespace Belgrade.SqlClient.Common
                         }
                         else
                         {
-                            if (defaultOutput != null)
+                            if (options != null && options.DefaultOutput != null)
                             {
-                                
-                                await FlushContent<TOutput>(stream, defaultOutput, ((defaultOutput is byte[])? (defaultOutput as byte[]).Length : (-1) ));
+                                await FlushContent<TOutput>(stream, options.DefaultOutput, ((options.DefaultOutput is byte[])? (options.DefaultOutput as byte[]).Length : (-1) ));
                                 outputIsGenerated = true;
                             }
                         }
@@ -160,6 +164,8 @@ namespace Belgrade.SqlClient.Common
             }
             catch (Exception ex)
             {
+                if (options != null)
+                    options.DefaultOutput = null; // Don't generate default output if error is raised.
                 try
                 {
                     var errorHandler = base.GetErrorHandlerBuilder().SetCommand(command).CreateErrorHandler();
@@ -167,20 +173,21 @@ namespace Belgrade.SqlClient.Common
                         throw;
                     else
                         errorHandler(ex);
-                } catch {
-                    defaultOutput = null; // Don't generate default output if error is raised.
-                }
+                } catch {  }
             }
             finally
             {
                 /// If the output is not generated by DataReader we need to generate default value.
-                if (!outputIsGenerated && defaultOutput != null)
+                if (!outputIsGenerated && options != null && options.DefaultOutput != null)
                 {
-                    await FlushContent<TOutput>(stream, defaultOutput, ((defaultOutput is byte[]) ? (defaultOutput as byte[]).Length : (-1)));
+                    await FlushContent<TOutput>(stream, options.DefaultOutput, ((options.DefaultOutput is byte[]) ? (options.DefaultOutput as byte[]).Length : (-1)));
+                }
+                if (outputIsGenerated && options != null && options.Suffix != null)
+                {
+                    await FlushContent<TOutput>(stream, options.Suffix);
                 }
                 command.Connection.Close();
             }
-
         }
 
         /// <summary>

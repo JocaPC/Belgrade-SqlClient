@@ -12,7 +12,15 @@ namespace Belgrade.SqlClient
         {
             if (!(pipe is QueryPipe))
                 throw new ArgumentException("Argument pipe must be derived from QueryPipe", "pipe");
-            return QueryPipeExtensions.Stream((pipe as QueryPipe), sql, writer, defaultOutput);
+            SqlCommand cmd = new SqlCommand(sql);
+            return pipe.Stream(cmd, writer, new Options() { DefaultOutput = defaultOutput });
+        }
+        
+        public static Task Stream(this IQueryPipe pipe, SqlCommand sql, TextWriter writer, string defaultOutput)
+        {
+            if (!(pipe is QueryPipe))
+                throw new ArgumentException("Argument pipe must be derived from QueryPipe", "pipe");
+            return pipe.Stream(sql, writer, new Options() { DefaultOutput = defaultOutput });
         }
 
         /// <summary>
@@ -25,7 +33,8 @@ namespace Belgrade.SqlClient
         {
             if (!(pipe is QueryPipe))
                 throw new ArgumentException("Argument pipe must be derived from QueryPipe", "pipe");
-            return QueryPipeExtensions.Stream((pipe as QueryPipe), sql, stream);
+            SqlCommand cmd = new SqlCommand(sql);
+            return pipe.Stream(cmd, stream);
         }
 
         /// <summary>
@@ -35,11 +44,72 @@ namespace Belgrade.SqlClient
         /// <param name="stream">Output stream where results will be written.</param>
         /// <param name="defaultOutput">Default content that will be written into stream if there are no results.</param>
         /// <returns>Task</returns>
-        public static Task Stream<T>(this IQueryPipe pipe, string sql, Stream stream, T defaultOutput)
+        public static Task Stream(this IQueryPipe pipe, string sql, Stream stream, string defaultOutput)
         {
             if (!(pipe is QueryPipe))
                 throw new ArgumentException("Argument pipe must be derived from QueryPipe", "pipe");
-            return QueryPipeExtensions.Stream<T>((pipe as QueryPipe), sql, stream, defaultOutput);
+            SqlCommand cmd = new SqlCommand(sql);
+            return (pipe as QueryPipe).Stream(cmd, stream, new Options() { DefaultOutput = defaultOutput });
+        }
+
+        /// <summary>
+        /// Executes SQL query and put results into stream.
+        /// </summary>
+        /// <param name="sql">SQL query that will be executed.</param>
+        /// <param name="stream">Output stream where results will be written.</param>
+        /// <param name="defaultOutput">Default content that will be written into stream if there are no results.</param>
+        /// <returns>Task</returns>
+        public static Task Stream(this IQueryPipe pipe, SqlCommand sql, Stream stream, string defaultOutput)
+        {
+            if (!(pipe is QueryPipe))
+                throw new ArgumentException("Argument pipe must be derived from QueryPipe", "pipe");
+            return pipe.Stream(sql, stream, new Options() { DefaultOutput = defaultOutput });
+        }
+
+        /// <summary>
+        /// Executes SQL query and put results into stream.
+        /// </summary>
+        /// <param name="sql">SQL query that will be executed.</param>
+        /// <param name="stream">Output stream where results will be written.</param>
+        /// <param name="defaultOutput">Default content that will be written into stream if there are no results.</param>
+        /// <returns>Task</returns>
+        public static Task Stream(this IQueryPipe pipe, string sql, Stream stream, byte[] defaultOutput)
+        {
+            if (!(pipe is QueryPipe))
+                throw new ArgumentException("Argument pipe must be derived from QueryPipe", "pipe");
+            SqlCommand cmd = new SqlCommand(sql);
+            return (pipe as QueryPipe).Stream(cmd, stream, new Options() { DefaultOutput = defaultOutput });
+        }
+
+        /// <summary>
+        /// Executes SQL query and put results into stream.
+        /// </summary>
+        /// <param name="sql">SQL query that will be executed.</param>
+        /// <param name="stream">Output stream where results will be written.</param>
+        /// <param name="defaultOutput">Default content that will be written into stream if there are no results.</param>
+        /// <returns>Task</returns>
+        public static Task Stream(this IQueryPipe pipe, SqlCommand sql, Stream stream, byte[] defaultOutput)
+        {
+            if (!(pipe is QueryPipe))
+                throw new ArgumentException("Argument pipe must be derived from QueryPipe", "pipe");
+            return (pipe as QueryPipe).Stream(sql, stream, new Options() { DefaultOutput = defaultOutput });
+        }
+
+        public static Task Stream(this IQueryPipe pipe, string sql, Stream stream, Options options)
+        {
+            if (!(pipe is QueryPipe))
+                throw new ArgumentException("Argument pipe must be derived from QueryPipe", "pipe");
+            SqlCommand cmd = new SqlCommand(sql);
+            return (pipe as QueryPipe).Stream(cmd, stream, options);
+        }
+
+
+        public static Task Stream(this IQueryPipe pipe, string sql, TextWriter writer, Options options)
+        {
+            if (!(pipe is QueryPipe))
+                throw new ArgumentException("Argument pipe must be derived from QueryPipe", "pipe");
+            SqlCommand cmd = new SqlCommand(sql);
+            return (pipe as QueryPipe).Stream(cmd, writer, options);
         }
     }
 }

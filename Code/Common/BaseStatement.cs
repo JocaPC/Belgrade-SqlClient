@@ -36,7 +36,7 @@ namespace Belgrade.SqlClient.Common
         /// </summary>
         /// <param name="builder">The object that will build an error handler.</param>
         /// <returns>The current instance of command.</returns>
-        internal BaseStatement AddErrorHandler(ErrorHandlerBuilder builder)
+        internal virtual BaseStatement AddErrorHandler(ErrorHandlerBuilder builder)
         {
             if (this.ErrorHandlerBuilder == null)
                 this.ErrorHandlerBuilder = builder;

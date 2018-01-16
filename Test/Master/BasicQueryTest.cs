@@ -142,5 +142,23 @@ namespace Basic
                 AssertEx.IsValidJson(text);
             }
         }
+
+        [Fact]
+        public async Task WrapResults()
+        {
+            // Action
+            using (MemoryStream ms = new MemoryStream())
+            {
+                await sut.Stream("select a = 2 for json path",
+                                    ms,
+                                    new Options() { Prefix = "{\"data\":", Suffix="}" });
+                ms.Position = 0;
+                var text = new StreamReader(ms).ReadToEnd();
+
+                // Assert
+                AssertEx.IsValidJson(text);
+                Assert.Equal("{\"data\":[{\"a\":2}]}", text);
+            }
+        }
     }
 }

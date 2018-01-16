@@ -29,7 +29,7 @@ namespace Basic
             List<Task> tasks = new List<Task>();
             var client =  new string[] { "stream", "writer", "mapper", "command" };
             for (int i = 0; i <= 100; i++)
-                tasks.Add(Task.Run(() => ReturnsJson(client[i%4], (i%2==0)?"1":"1000", "path", "", i%3==0)));
+                tasks.Add(Task.Run(() => ReturnsJson(client[i%4], (i%2==0)?"1":"1000", "path", "", i%3==0,useAsync: i%3>0, wrapper: "[/]", defaultValue:"1")));
 
             Task.WaitAll(tasks.ToArray());
 
@@ -41,12 +41,17 @@ namespace Basic
             }
         }
 
+        //[Theory, CombinatorialData]
         [Theory, PairwiseData]
         public async Task ReturnsJson( [CombinatorialValues("stream", "writer", "mapper", "command")] string client,
                                        [CombinatorialValues(1, 5, 500, 1000)] string top, 
                                        [CombinatorialValues("auto","path")] string mode1,
                                        [CombinatorialValues(",include_null_values", ",root('test')", ",root")] string mode2,
-                                       [CombinatorialValues(true, false)] bool useCommand)
+                                       [CombinatorialValues(true, false)] bool useCommand,
+                                       [CombinatorialValues(true, false)] bool useAsync,
+                                       [CombinatorialValues("1", null)] string defaultValue,
+                                       [CombinatorialValues("[/]", "{\"a\":/}", "/")] string wrapper
+                                )
         {
             // Arrange
             var pipe = new Belgrade.SqlClient.SqlDb.QueryPipe(Util.Settings.ConnectionString)
@@ -57,16 +62,28 @@ namespace Basic
                 .OnError(ex => { throw ex; });
             var sql = "select top " + top + " o.object_id tid, o.name t_name, o.schema_id, o.type t, o.type_desc, o.create_date cd, o.modify_date md, c.* from sys.objects o, sys.columns c for json " + mode1 + mode2;
             string json = "INVALID JSON";
+            var pair = wrapper.Split('/');
+            string prefix = pair[0];
+            string suffix = pair[1];
 
             // Action
             if (client == "stream")
             {
                 using (MemoryStream ms = new MemoryStream())
                 {
-                    if (useCommand)
-                        await pipe.Stream(new SqlCommand(sql), ms);
-                    else
-                        await pipe.Stream(sql, ms);
+                    if (useAsync)
+                    {
+                        if (useCommand)
+                            await pipe.Stream(new SqlCommand(sql), ms);
+                        else
+                            await pipe.Stream(sql, ms);
+                    } else
+                    {
+                        if (useCommand)
+                            pipe.Stream(new SqlCommand(sql), ms).Wait();
+                        else
+                            pipe.Stream(sql, ms).Wait();
+                    }
                     ms.Position = 0;
                     json = new StreamReader(ms).ReadToEnd();
                 }
@@ -74,25 +91,45 @@ namespace Basic
             {
                 using (var sw = new StringWriter())
                 {
-                    if (useCommand)
-                        await pipe.Stream(new SqlCommand(sql), sw, "[]");
-                    else
-                        await pipe.Stream(sql, sw, "[]");
+                    if (useAsync)
+                    {
+                        if (useCommand)
+                            await pipe.Stream(new SqlCommand(sql), sw, new Options() { Prefix = prefix, DefaultOutput = defaultValue, Suffix = suffix});
+                        else
+                            await pipe.Stream(sql, sw, new Options() { Prefix = prefix, DefaultOutput = defaultValue, Suffix = suffix });
+                    } else
+                    {
+                        if (useCommand)
+                            pipe.Stream(new SqlCommand(sql), sw, new Options() { Prefix = prefix, DefaultOutput = defaultValue, Suffix = suffix }).Wait();
+                        else
+                            pipe.Stream(sql, sw, new Options() { Prefix = prefix, DefaultOutput = defaultValue, Suffix = suffix }).Wait();
+                    }
                     json = sw.ToString();
                 }
             } else if (client == "command")
             {
                 using (MemoryStream ms = new MemoryStream())
                 {
-                    if (useCommand)
-                        await command.Stream(new SqlCommand(sql), ms, "");
-                    else
-                        await command.Stream(sql, ms, "");
+                    if (useAsync)
+                    {
+                        if (useCommand)
+                            await command.Stream(new SqlCommand(sql), ms, "");
+                        else
+                            await command.Stream(sql, ms, "");
+                    } else
+                    {
+                        if (useCommand)
+                            command.Stream(new SqlCommand(sql), ms, "").Wait();
+                        else
+                            command.Stream(sql, ms, "").Wait();
+                    }
                     ms.Position = 0;
                     json = new StreamReader(ms).ReadToEnd();
                 }
             } else
             {
+                if (!useAsync)
+                    return;
                 if(useCommand)
                     json = await mapper.GetStringAsync(new SqlCommand(sql));
                 else

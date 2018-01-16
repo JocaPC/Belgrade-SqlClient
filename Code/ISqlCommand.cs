@@ -44,7 +44,7 @@ namespace Belgrade.SqlClient
         /// <param name="command">SQL command that will be executed.</param>
         /// <param name="callback">Callback function that will be called for each row.</param>
         /// <returns>Task</returns>
-        Task Stream<D>(DbCommand command, Stream output, D defaultOutput);
+        Task Stream(DbCommand command, Stream output, Options options);
     }
     
 }

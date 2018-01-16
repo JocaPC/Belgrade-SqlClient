@@ -49,10 +49,10 @@ namespace Belgrade.SqlClient.SqlDb
         /// <param name="sql">SQL query that will be executed.</param>
         /// <param name="stream">Output stream where results will be written.</param>
         /// <returns>Task</returns>
-        public static Task Stream<D>(this Command command, string sql, Stream output, D defaultOutput)
+        public static Task Stream(this Command command, string sql, Stream output, string defaultOutput)
         {
             var cmd = new SqlCommand(sql);
-            return command.Stream(cmd, output, defaultOutput);
+            return command.Stream(cmd, output, new Options() { DefaultOutput = defaultOutput });
         }
     }
 }

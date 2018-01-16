@@ -19,7 +19,7 @@ namespace Belgrade.SqlClient
         {
             if (!(mapper is QueryMapper))
                 throw new ArgumentException("Argument mapper must be derived from QueryMapper", "mapper");
-            return QueryMapperExtensions.ExecuteReader((mapper as QueryMapper), sql, callback);
+            return (mapper as QueryMapper).ExecuteReader(sql, callback);
         }
 
         /// <summary>
