@@ -44,7 +44,7 @@ namespace Basic
         //[Theory, CombinatorialData]
         [Theory, PairwiseData]
         public async Task ReturnsJson( [CombinatorialValues("stream", "writer", "mapper", "command")] string client,
-                                       [CombinatorialValues(1, 5, 500, 1000)] string top, 
+                                       [CombinatorialValues(1, 50, 10000)] string top, 
                                        [CombinatorialValues("auto","path")] string mode1,
                                        [CombinatorialValues(",include_null_values", ",root('test')", ",root")] string mode2,
                                        [CombinatorialValues(true, false)] bool useCommand,
@@ -65,25 +65,23 @@ namespace Basic
             var pair = wrapper.Split('/');
             string prefix = pair[0];
             string suffix = pair[1];
+            Task t = null;
 
             // Action
             if (client == "stream")
             {
                 using (MemoryStream ms = new MemoryStream())
                 {
+                    if (useCommand)
+                        t = pipe.Stream(new SqlCommand(sql), ms);
+                    else
+                        t = pipe.Stream(sql, ms);
+
                     if (useAsync)
-                    {
-                        if (useCommand)
-                            await pipe.Stream(new SqlCommand(sql), ms);
-                        else
-                            await pipe.Stream(sql, ms);
-                    } else
-                    {
-                        if (useCommand)
-                            pipe.Stream(new SqlCommand(sql), ms).Wait();
-                        else
-                            pipe.Stream(sql, ms).Wait();
-                    }
+                        await t;
+                    else
+                        t.Wait();
+
                     ms.Position = 0;
                     json = new StreamReader(ms).ReadToEnd();
                 }
@@ -91,38 +89,32 @@ namespace Basic
             {
                 using (var sw = new StringWriter())
                 {
+                    if (useCommand)
+                        t = pipe.Stream(new SqlCommand(sql), sw, new Options() { Prefix = prefix, DefaultOutput = defaultValue, Suffix = suffix });
+                    else
+                        t = pipe.Stream(sql, sw, new Options() { Prefix = prefix, DefaultOutput = defaultValue, Suffix = suffix });
+
                     if (useAsync)
-                    {
-                        if (useCommand)
-                            await pipe.Stream(new SqlCommand(sql), sw, new Options() { Prefix = prefix, DefaultOutput = defaultValue, Suffix = suffix});
-                        else
-                            await pipe.Stream(sql, sw, new Options() { Prefix = prefix, DefaultOutput = defaultValue, Suffix = suffix });
-                    } else
-                    {
-                        if (useCommand)
-                            pipe.Stream(new SqlCommand(sql), sw, new Options() { Prefix = prefix, DefaultOutput = defaultValue, Suffix = suffix }).Wait();
-                        else
-                            pipe.Stream(sql, sw, new Options() { Prefix = prefix, DefaultOutput = defaultValue, Suffix = suffix }).Wait();
-                    }
+                        await t;
+                    else
+                        t.Wait();
+
                     json = sw.ToString();
                 }
             } else if (client == "command")
             {
                 using (MemoryStream ms = new MemoryStream())
                 {
+                    if (useCommand)
+                        t = command.Stream(new SqlCommand(sql), ms, "");
+                    else
+                        t = command.Stream(sql, ms, "");
+
                     if (useAsync)
-                    {
-                        if (useCommand)
-                            await command.Stream(new SqlCommand(sql), ms, "");
-                        else
-                            await command.Stream(sql, ms, "");
-                    } else
-                    {
-                        if (useCommand)
-                            command.Stream(new SqlCommand(sql), ms, "").Wait();
-                        else
-                            command.Stream(sql, ms, "").Wait();
-                    }
+                        await t;
+                    else
+                        t.Wait();
+
                     ms.Position = 0;
                     json = new StreamReader(ms).ReadToEnd();
                 }
@@ -141,7 +133,6 @@ namespace Basic
         }
 
         [Theory, PairwiseData]
-
         public async Task ReturnsXml(  [CombinatorialValues("stream", "writer","mapper", "command")] string client, 
                                        [CombinatorialValues(1, 5, 500, 1000)] string top,
                                        [CombinatorialValues("auto", "path", "raw")] string mode,
@@ -218,14 +209,20 @@ namespace Basic
 
         [Theory, PairwiseData]
         public async Task ReturnsDefaultValue(
-                [CombinatorialValues(0, 1, 100, 3500, 10000)] int length,
+                [CombinatorialValues(0, 1, 50, 10000)] int length,
                 [CombinatorialValues(false, true)] bool STRING,
+                [CombinatorialValues("[/]", "{\"a\":/}", "/")] string wrapper,
                 [CombinatorialValues("writer", "stream", "command-stream")] string client,
-                [CombinatorialValues(true, false)] bool useCommand)
+                [CombinatorialValues(true, false)] bool useCommand,
+                [CombinatorialValues(true, false)] bool useAsync)
         {
             // Arrange
             var sql = "select * from sys.all_objects where 1 = 0";
             string defaultValue = length==0 ? "" : GenerateChar(length), text = "INITIAL_VALUE";
+            var pair = wrapper.Split('/');
+            string prefix = pair[0];
+            string suffix = pair[1];
+            Task t = null;
 
             // Action
             if (client == "stream")
@@ -235,24 +232,29 @@ namespace Basic
                     if (length == 0)
                     {
                         if (useCommand)
-                            await pipe.Stream(new SqlCommand(sql), ms);
+                            t = pipe.Stream(new SqlCommand(sql), ms, new Options() { DefaultOutput = defaultValue, Prefix = prefix, Suffix = suffix });
                         else
-                            await pipe.Stream(sql, ms);
+                            t = pipe.Stream(sql, ms, new Options() { DefaultOutput = defaultValue, Prefix = prefix, Suffix = suffix });
                     }
                     else if (STRING)
                     {
                         if (useCommand)
-                            await pipe.Stream(new SqlCommand(sql), ms, defaultValue);
+                            t = pipe.Stream(new SqlCommand(sql), ms, new Options() { DefaultOutput = defaultValue, Prefix = prefix, Suffix = suffix });
                         else
-                            await pipe.Stream(sql, ms, defaultValue);
+                            t = pipe.Stream(sql, ms, new Options() { DefaultOutput = defaultValue, Prefix = prefix, Suffix = suffix });
                     }
                     else
                     {
                         if (useCommand)
-                            await pipe.Stream(new SqlCommand(sql), ms, Encoding.UTF8.GetBytes(defaultValue));
+                            t = pipe.Stream(new SqlCommand(sql), ms, new Options() { DefaultOutput = Encoding.UTF8.GetBytes(defaultValue), Prefix = prefix, Suffix = suffix });
                         else
-                            await pipe.Stream(sql, ms, Encoding.UTF8.GetBytes(defaultValue));
+                            t = pipe.Stream(sql, ms, new Options() { DefaultOutput = Encoding.UTF8.GetBytes(defaultValue), Prefix = prefix, Suffix = suffix });
                     }
+
+                    if (useAsync)
+                        await t;
+                    else
+                        t.Wait();
 
                     ms.Position = 0;
                     text = new StreamReader(ms).ReadToEnd();
@@ -265,16 +267,16 @@ namespace Basic
                     if (length == 0)
                     {
                         if (useCommand)
-                            await pipe.Stream(new SqlCommand(sql), ms, "");
+                            t = pipe.Stream(new SqlCommand(sql), ms, new Options() { DefaultOutput = "", Prefix = prefix, Suffix = suffix });
                         else
-                            await pipe.Stream(sql, ms, "");
+                            t = pipe.Stream(sql, ms, new Options() { DefaultOutput = "", Prefix = prefix, Suffix = suffix });
                     }
                     else if (STRING)
                     {
                         if (useCommand)
-                            await pipe.Stream(new SqlCommand(sql), ms, defaultValue);
+                            t = pipe.Stream(new SqlCommand(sql), ms, new Options() { DefaultOutput = defaultValue, Prefix = prefix, Suffix = suffix });
                         else
-                            await pipe.Stream(sql, ms, defaultValue);
+                            t = pipe.Stream(sql, ms, new Options() { DefaultOutput = defaultValue, Prefix = prefix, Suffix = suffix });
                     }
                     else
                     {
@@ -282,6 +284,11 @@ namespace Basic
                         // Invalid test case => abort test
                         return;
                     }
+
+                    if (useAsync)
+                        await t;
+                    else
+                        t.Wait();
 
                     text = ms.ToString();
                 }
@@ -293,24 +300,29 @@ namespace Basic
                     if (length == 0)
                     {
                         if (useCommand)
-                            await command.Stream(new SqlCommand(sql), ms, "");
+                            t = command.Stream(new SqlCommand(sql), ms, new Options() { DefaultOutput = "", Prefix = prefix, Suffix = suffix });
                         else
-                            await command.Stream(sql, ms, "");
+                            t = command.Stream(sql, ms, new Options() { DefaultOutput = "", Prefix = prefix, Suffix = suffix });
                     }
                     else if (STRING)
                     {
                         if (useCommand)
-                            await command.Stream(new SqlCommand(sql), ms, defaultValue);
+                            t = command.Stream(new SqlCommand(sql), ms, new Options() { DefaultOutput = defaultValue, Prefix = prefix, Suffix = suffix });
                         else
-                            await command.Stream(sql, ms, defaultValue);
+                            t = command.Stream(sql, ms, new Options() { DefaultOutput = defaultValue, Prefix = prefix, Suffix = suffix });
                     }
                     else
                     {
                         if (useCommand)
-                            await command.Stream(new SqlCommand(sql), ms, Encoding.UTF8.GetBytes(defaultValue));
+                            t = command.Stream(new SqlCommand(sql), ms, new Options() { DefaultOutput = Encoding.UTF8.GetBytes(defaultValue), Prefix = prefix, Suffix = suffix });
                         else
-                            await command.Stream(sql, ms, Encoding.UTF8.GetBytes(defaultValue));
+                            t = command.Stream(sql, ms, new Options() { DefaultOutput = Encoding.UTF8.GetBytes(defaultValue), Prefix = prefix, Suffix = suffix });
                     }
+
+                    if (useAsync)
+                        await t;
+                    else
+                        t.Wait();
 
                     ms.Position = 0;
                     text = new StreamReader(ms).ReadToEnd();
@@ -318,7 +330,7 @@ namespace Basic
             }
 
             // Assert
-            Assert.Equal(defaultValue, text);
+            Assert.Equal(prefix + defaultValue + suffix, text);
         }
 
         public string GenerateChar()

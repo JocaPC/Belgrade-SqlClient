@@ -9,47 +9,38 @@ namespace Basic
 {
     public class Mapper
     {
-        IQueryMapper sut;
+        IQueryMapper mapper;
         public Mapper()
         {
-            sut = new QueryMapper(Util.Settings.ConnectionString);
+            mapper = new QueryMapper(Util.Settings.ConnectionString);
         }
-
-        [Fact]
-        public async Task ReturnConstantSync()
+        
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public async Task ReturnsConstant(bool useAsync)
         {
             // Arrange
             int constant = new Random().Next();
             constant = constant % 10000;
             int result = 0;
+            var sql = String.Format("select {0} 'a'", constant);
 
             // Action
-            var sql = String.Format("select {0} 'a'", constant);
-            await sut.ExecuteReader(sql, reader => result = reader.GetInt32(0));
+            var t = mapper.ExecuteReader(sql, (reader) => { result = reader.GetInt32(0); });
+            if (useAsync)
+                await t;
+            else
+                t.Wait();
 
             // Assert
             Assert.Equal(constant, result);
         }
 
-
-        [Fact]
-        public async Task ReturnConstantAsync()
-        {
-            // Arrange
-            int constant = new Random().Next();
-            constant = constant % 10000;
-            int result = 0;
-
-            // Action
-            var sql = String.Format("select {0} 'a'", constant);
-            await sut.ExecuteReader(sql, (reader) => { result = reader.GetInt32(0); });
-
-            // Assert
-            Assert.Equal(constant, result);
-        }
-
-        [Fact]
-        public async Task ReturnsExpectedNumberOfRows()
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public async Task ReturnsExpectedNumberOfRows(bool useAsync)
         {
             // Arrange
             int count = new Random().Next();
@@ -59,16 +50,23 @@ namespace Basic
             using (MemoryStream ms = new MemoryStream())
             {
                 count = count % 10000;
-                await sut.ExecuteReader(String.Format("select top {0} 'a' from sys.all_objects, sys.all_parameters", count), 
+                var t = mapper.ExecuteReader(String.Format("select top {0} 'a' from sys.all_objects, sys.all_parameters", count), 
                     _=> i++);
+
+                if (useAsync)
+                    await t;
+                else
+                    t.Wait();
             }
 
             // Assert
             Assert.Equal(count, i);
         }
 
-        [Fact]
-        public async Task WilNotExecuteCallbackOnNoResults()
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public async Task WilNotExecuteCallbackOnNoResults(bool useAsync)
         {
             // Arrange
             bool callbackExecuted = false;
@@ -76,8 +74,13 @@ namespace Basic
             // Action
             using (MemoryStream ms = new MemoryStream())
             {
-                await sut.ExecuteReader("select * from sys.all_objects where 1 = 0",
+                var t = mapper.ExecuteReader("select * from sys.all_objects where 1 = 0",
                     _ => callbackExecuted = true);
+
+                if (useAsync)
+                    await t;
+                else
+                    t.Wait();
             }
 
             // Assert
@@ -85,14 +88,13 @@ namespace Basic
         }
 
         [Fact]
-        public async Task ReturnsEmptyResult()
+        public async Task ReturnsEmptyString()
         {
             // Action
-            var response = await sut.GetStringAsync("select * from sys.all_objects where 1 = 0");
+            var response = await mapper.GetStringAsync("select * from sys.all_objects where 1 = 0");
 
             // Assert
             Assert.Equal("", response);
         }
-       
     }
 }
