@@ -158,12 +158,6 @@ namespace Basic
                 var b = JArray.Parse(json).SelectTokens("..v1");
                 var f = b.First();
                 v1 = (string)f;
-                /*
-                if (f is JValue)
-                    v1 = (string)f;
-                else
-                    v1 = f.Value<string>();
-                    */
                 Assert.Equal(sessionContext1, v1);
             } else
             {
@@ -172,36 +166,8 @@ namespace Basic
                 var b = a.SelectTokens("..v1");
                 var f = b.First();
                 v1 = (string)f;
-                /*
-                if (f is JValue)
-                    v1 = (string)f;
-                else
-                    v1 = f.Value<string>();
-                    */
                 Assert.Equal(sessionContext1, v1);
             }
-            /*
-            JObject obj = null;
-            try
-            {
-                obj = JObject.Parse(json);
-            } catch(Exception ex)
-            {
-                Assert.True(false, json + " cannot be parsed: " + ex);
-            }
-            try
-            {
-                var token = obj.SelectTokens("..v1");
-                if(token is JValue)
-                    Assert.Equal(sessionContext1, token.Value<string>());
-                else
-                    Assert.Equal(sessionContext1, token.Values<string>().First());
-            } catch(Exception ex)
-            {
-                throw;
-            }
-            */
-            //Assert.Equal(sessionContext2, obj.SelectToken("..v2").First.Value<string>());
         }
 
         [Theory, PairwiseData]
