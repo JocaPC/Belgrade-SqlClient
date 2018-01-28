@@ -3,6 +3,7 @@ using System.Data.SqlClient;
 using System.IO;
 using System.Threading.Tasks;
 using Belgrade.SqlClient.SqlDb;
+using Belgrade.SqlClient.Common;
 
 namespace Belgrade.SqlClient
 {
@@ -110,6 +111,13 @@ namespace Belgrade.SqlClient
                 throw new ArgumentException("Argument pipe must be derived from QueryPipe", "pipe");
             SqlCommand cmd = new SqlCommand(sql);
             return (pipe as QueryPipe).Stream(cmd, writer, options);
+        }
+
+        public static IQueryPipe AddContextVariable(this IQueryPipe pipe, string key, Func<string> value)
+        {
+            var stmt = pipe as BaseStatement;
+            stmt.SetCommandModifier(c => SqlDb.Rls.RlsExtension.AddContextVariables(key, value, c));
+            return pipe;
         }
     }
 }

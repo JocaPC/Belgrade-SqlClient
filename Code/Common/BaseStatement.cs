@@ -4,6 +4,7 @@
 //  WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 //  or FITNESS FOR A PARTICULAR PURPOSE.See the license files for details.
 using System;
+using System.Collections.Generic;
 using System.Data.Common;
 
 namespace Belgrade.SqlClient.Common
@@ -15,7 +16,16 @@ namespace Belgrade.SqlClient.Common
         /// </summary>
         protected DbConnection Connection;
 
-        protected Func<DbCommand, DbCommand> CommandModifier = c => c;
+        protected List<Func<DbCommand, DbCommand>> CommandModifierList = new List<Func<DbCommand, DbCommand>>();
+
+        protected DbCommand CommandModifier(DbCommand command) {
+            for(int i = 0; i< CommandModifierList.Count; i++)
+            {
+                var commandModifier = CommandModifierList[i];
+                command = commandModifier(command);
+            }
+            return command;
+        }
 
         protected ErrorHandlerBuilder ErrorHandlerBuilder;
 
@@ -27,7 +37,7 @@ namespace Belgrade.SqlClient.Common
         /// <param name="value">Function that will modify command.</param>
         internal virtual BaseStatement SetCommandModifier(Func<DbCommand, DbCommand> value)
         {
-            this.CommandModifier = value;
+            this.CommandModifierList.Add(value);
             return this;
         }
 
