@@ -50,6 +50,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Remove="SqlDb\Extensions\CommandExtensions.cs" />
+    <Compile Remove="SqlDb\Extensions\QueryMapperExtensions.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="System.Data.SqlClient" Version="4.4.2" />
   </ItemGroup>
 

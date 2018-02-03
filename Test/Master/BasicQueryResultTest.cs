@@ -27,7 +27,8 @@ namespace Basic
             command = new Belgrade.SqlClient.SqlDb.Command(Util.Settings.ConnectionString);
         }
 
-        [Theory, PairwiseData]
+        [Theory, CombinatorialData]
+        //[Theory, PairwiseData]
         public void ReturnsJsonParallel([CombinatorialValues("stream", "writer", "mapper", "command")] string client,
                                        [CombinatorialValues("auto", "path")] string mode1,
                                        [CombinatorialValues(",include_null_values", ",root('test')", ",root")] string mode2,
@@ -50,8 +51,8 @@ namespace Basic
             }
         }
 
-        //[Theory, CombinatorialData]
-        [Theory, PairwiseData]
+        [Theory, CombinatorialData]
+        //[Theory, PairwiseData]
         public async Task ReturnsJson( [CombinatorialValues("stream", "writer", "mapper", "command")] string client,
                                        [CombinatorialValues(1, 50, 10000)] string top, 
                                        [CombinatorialValues("auto","path")] string mode1,
@@ -145,9 +146,9 @@ namespace Basic
                 if (!useAsync)
                     return;
                 if(useCommand)
-                    json = await mapper.GetStringAsync(new SqlCommand(sql));
+                    json = await mapper.GetString(new SqlCommand(sql));
                 else
-                    json = await mapper.GetStringAsync(sql);
+                    json = await mapper.GetString(sql);
             }
 
             // Assert
@@ -170,7 +171,8 @@ namespace Basic
             }
         }
 
-        [Theory, PairwiseData]
+        [Theory, CombinatorialData]
+        //[Theory, PairwiseData]
         public async Task ReturnsXml(  [CombinatorialValues("stream", "writer","mapper", "command")] string client, 
                                        [CombinatorialValues(1, 5, 500, 1000)] string top,
                                        [CombinatorialValues("auto", "path", "raw")] string mode,
@@ -217,9 +219,9 @@ namespace Basic
             } else
             {
                 if (useCommand)
-                    xml.LoadXml(await mapper.GetStringAsync(new SqlCommand(sql)));
+                    xml.LoadXml(await mapper.GetString(new SqlCommand(sql)));
                 else
-                    xml.LoadXml(await mapper.GetStringAsync(sql));
+                    xml.LoadXml(await mapper.GetString(sql));
             }
 
             // Assert
@@ -245,7 +247,8 @@ namespace Basic
             Assert.NotEmpty(xml.SelectSingleNode("//" + prefix + "tid").InnerText);
         }
 
-        [Theory, PairwiseData]
+        [Theory, CombinatorialData]
+        //[Theory, PairwiseData]
         public async Task ReturnsDefaultValue(
                 [CombinatorialValues(0, 1, 50, 10000)] int length,
                 [CombinatorialValues(false, true)] bool STRING,

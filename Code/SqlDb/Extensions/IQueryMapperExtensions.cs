@@ -15,11 +15,42 @@ namespace Belgrade.SqlClient
         /// <param name="sql">SQL query that will be executed.</param>
         /// <param name="callback">Callback function that will be called for each row.</param>
         /// <returns>Task</returns>
+        public static Task Map(this IQueryMapper mapper, string sql, Action<DbDataReader> callback)
+        {
+            return mapper.ExecuteReader(sql, callback);
+        }
+
+        /// <summary>
+        /// Executes sql statement and provides each row to the callback function.
+        /// </summary>
+        /// <param name="sql">SQL query that will be executed.</param>
+        /// <param name="callback">Callback function that will be called for each row.</param>
+        /// <returns>Task</returns>
+        public static Task Map(this IQueryMapper mapper, SqlCommand cmd, Action<DbDataReader> callback)
+        {
+            return mapper.ExecuteReader(cmd, callback);
+        }
+
+        public static Task Map(this IQueryMapper mapper, SqlCommand cmd, Func<DbDataReader, Task> callback)
+        {
+            return mapper.ExecuteReader(cmd, callback);
+        }
+
+        public static Task Map(this IQueryMapper mapper, string sql, Func<DbDataReader, Task> callback)
+        {
+            return mapper.ExecuteReader(sql, callback);
+        }
+
+        /// <summary>
+        /// Executes sql statement and provides each row to the callback function.
+        /// </summary>
+        /// <param name="sql">SQL query that will be executed.</param>
+        /// <param name="callback">Callback function that will be called for each row.</param>
+        /// <returns>Task</returns>
         public static Task ExecuteReader(this IQueryMapper mapper, string sql, Action<DbDataReader> callback)
         {
-            if (!(mapper is QueryMapper))
-                throw new ArgumentException("Argument mapper must be derived from QueryMapper", "mapper");
-            return (mapper as QueryMapper).ExecuteReader(sql, callback);
+            var cmd = new SqlCommand(sql);
+            return mapper.ExecuteReader(cmd, callback);
         }
 
         /// <summary>
@@ -30,9 +61,8 @@ namespace Belgrade.SqlClient
         /// <returns>Task</returns>
         public static Task ExecuteReader(this IQueryMapper mapper, string sql, Func<DbDataReader, Task> callback)
         {
-            if (!(mapper is QueryMapper))
-                throw new ArgumentException("Argument mapper must be derived from QueryMapper", "mapper");
-            return QueryMapperExtensions.ExecuteReader((mapper as QueryMapper), sql, callback);
+            var cmd = new SqlCommand(sql);
+            return mapper.ExecuteReader(cmd, callback);
         }
 
         /// <summary>
@@ -41,11 +71,11 @@ namespace Belgrade.SqlClient
         /// <param name="sql">SQL query that will be executed.</param>
         /// <param name="callback">Async callback function that will be called for each row.</param>
         /// <returns>Task</returns>
-        public static async Task<string> GetStringAsync(this IQueryMapper mapper, SqlCommand cmd)
+        public static async Task<string> GetString(this IQueryMapper mapper, SqlCommand cmd)
         {
-            if (!(mapper is QueryMapper))
-                throw new ArgumentException("Argument mapper must be derived from QueryMapper", "mapper");
-            return await QueryMapperExtensions.GetStringAsync((mapper as QueryMapper), cmd);
+            var sb = new StringBuilder();
+            await mapper.ExecuteReader(cmd, reader => sb.Append(reader[0]));
+            return sb.ToString();
         }
 
         /// <summary>
@@ -53,11 +83,10 @@ namespace Belgrade.SqlClient
         /// </summary>
         /// <param name="sql">SQL query that will be executed.</param>
         /// <returns>Task</returns>
-        public static async Task<string> GetStringAsync(this IQueryMapper mapper, string sql)
+        public static async Task<string> GetString(this IQueryMapper mapper, string sql)
         {
-            if (!(mapper is QueryMapper))
-                throw new ArgumentException("Argument mapper must be derived from QueryMapper", "mapper");
-            return await QueryMapperExtensions.GetStringAsync((mapper as QueryMapper), sql);
+            var cmd = new SqlCommand(sql);
+            return await mapper.GetString(cmd);
         }
     }
 }

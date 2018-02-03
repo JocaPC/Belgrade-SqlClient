@@ -91,7 +91,7 @@ namespace Basic
         public async Task ReturnsEmptyString()
         {
             // Action
-            var response = await mapper.GetStringAsync("select * from sys.all_objects where 1 = 0");
+            var response = await mapper.GetString("select * from sys.all_objects where 1 = 0");
 
             // Assert
             Assert.Equal("", response);

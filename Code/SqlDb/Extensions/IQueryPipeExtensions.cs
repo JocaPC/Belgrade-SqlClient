@@ -104,7 +104,6 @@ namespace Belgrade.SqlClient
             return (pipe as QueryPipe).Stream(cmd, stream, options);
         }
 
-
         public static Task Stream(this IQueryPipe pipe, string sql, TextWriter writer, Options options)
         {
             if (!(pipe is QueryPipe))
