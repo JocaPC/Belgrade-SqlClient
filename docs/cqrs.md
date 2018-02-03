@@ -1,4 +1,4 @@
-# CLR-Belgrade-SqlClient 
+# Command-Query Responsibility Segregation
 
 **Belgrade Sql Client** is follows a Command-Query Responsibility Segregation (CQRS) pattern. Data access classes are divided in two classes:
 - Commands that will execute SQL commands that update database.

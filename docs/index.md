@@ -1,4 +1,4 @@
-# CLR-Belgrade-SqlClient 
+# Belgrade SqlClient Data Access library
 
 **Belgrade Sql Client** is a lightweight data access library that supports the latest features that are available in SQL Server 2016 and Azure SQL Database such as:
 - JSON support
