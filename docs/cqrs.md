@@ -16,7 +16,7 @@ This library is used in SQL Server 2016/Azure SQL Database samples.
 <a name="init"></a>
 ## Initializing data access components
 
-In order to initialize data access components, you can provide standard *SqlConnection8 as a constructor:
+In order to initialize data access components, you can provide standard *SqlConnection* as a constructor:
 
 ```javascript
 const string ConnString = "Server=<SERVER NAME>;Database=<DB NAME>;Integrated Security=true";
@@ -50,7 +50,7 @@ Method *Stream* in *QueryPipe* class may accept two or three parameters:
 
 ## Command
 
-Command is data-access component that executes a query or stored procedure that don�t return any results. Commands are used in update statements. 
+Command is data-access component that executes a query or stored procedure that don't return any results. Commands are used in update statements. 
 ```javascript
 var cmd = new SqlCommand("InsertProduct");
 cmd.CommandType = System.Data.CommandType.StoredProcedure;

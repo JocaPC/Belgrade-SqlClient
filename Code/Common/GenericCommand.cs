@@ -46,7 +46,7 @@ namespace Belgrade.SqlClient.Common
             using (DbCommand command = new T())
             {
                 command.CommandText = sql;
-                await this.ExecuteNonQuery(command);
+                await this.Exec(command);
             }
         }
 
@@ -55,7 +55,7 @@ namespace Belgrade.SqlClient.Common
         /// </summary>
         /// <param name="command">SqlCommand that will be executed.</param>
         /// <returns>Generic task.</returns>
-        public async Task ExecuteNonQuery(DbCommand command)
+        public async Task Exec(DbCommand command)
         {
             if (command == null)
                 throw new ArgumentNullException("Command is not defined.");
@@ -136,7 +136,7 @@ namespace Belgrade.SqlClient.Common
             using (DbCommand command = new T())
             {
                 command.CommandText = sql;
-                await this.ExecuteReader(command, callback);
+                await this.Map(command, callback);
             }
         }
 
@@ -146,13 +146,13 @@ namespace Belgrade.SqlClient.Common
         /// <param name="command">SQL command that will be executed.</param>
         /// <param name="callback">Callback function that will be called for each row.</param>
         /// <returns>Task</returns>
-        public async Task ExecuteReader(DbCommand command, Func<DbDataReader, Task> callback)
+        public async Task Map(DbCommand command, Func<DbDataReader, Task> callback)
         {
             command = this.CommandModifier(command);
             if (command.Connection == null)
                 command.Connection = this.Connection;
 
-            await this.Mapper.ExecuteReader(command, callback);
+            await this.Mapper.Map(command, callback);
         }
         
         /// <summary>
@@ -161,13 +161,13 @@ namespace Belgrade.SqlClient.Common
         /// <param name="command">SQL command that will be executed.</param>
         /// <param name="callback">Callback function that will be called for each row.</param>
         /// <returns>Task</returns>
-        public async Task ExecuteReader(DbCommand command, Action<DbDataReader> callback)
+        public async Task Map(DbCommand command, Action<DbDataReader> callback)
         {
             command = this.CommandModifier(command);
             if (command.Connection == null)
                 command.Connection = this.Connection;
 
-            await this.Mapper.ExecuteReader(command, callback);
+            await this.Mapper.Map(command, callback);
         }
 
         /// <summary>
@@ -181,7 +181,7 @@ namespace Belgrade.SqlClient.Common
             using (DbCommand command = new T())
             {
                 command.CommandText = sql;
-                await this.ExecuteReader(command, callback);
+                await this.Map(command, callback);
             }
         }
 

@@ -1,5 +1,6 @@
 ﻿using Belgrade.SqlClient;
 using System;
+using System.Data.SqlClient;
 using System.IO;
 using System.Threading.Tasks;
 using Xunit;
@@ -45,7 +46,7 @@ namespace Errors
                 Assert.True(exceptionThrown);
             }
         }
-
+        
         //[Theory, CombinatorialData]
         [Theory, PairwiseData]
         public async Task HandlesCompileErrors(

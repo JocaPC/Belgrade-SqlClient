@@ -65,19 +65,19 @@ namespace CQRS
             sqlCmd.CommandText = "select count(*) from Company where CompanyId = @ID";
             sqlCmd.Parameters.Clear();
             sqlCmd.Parameters.AddWithValue("ID", ID);
-            await mapper.ExecuteReader(sqlCmd, reader => count = reader.GetInt32(0));
+            await mapper.Map(sqlCmd, reader => count = reader.GetInt32(0));
             Assert.Equal(0, count);
 
             sqlCmd.CommandText = "insert into Company(companyId, Name) values(@ID, @NAME)";
             sqlCmd.Parameters.Clear();
             sqlCmd.Parameters.AddWithValue("ID", ID);
             sqlCmd.Parameters.AddWithValue("NAME", NAME);
-            await command.ExecuteNonQuery(sqlCmd);
+            await command.Exec(sqlCmd);
 
             sqlCmd.CommandText = "select count(*) from Company where CompanyId = @ID";
             sqlCmd.Parameters.Clear();
             sqlCmd.Parameters.AddWithValue("ID", ID);
-            await mapper.ExecuteReader(sqlCmd, reader => count = reader.GetInt32(0));
+            await mapper.Map(sqlCmd, reader => count = reader.GetInt32(0));
             Assert.Equal(1, count);
 
             int? id = null;
@@ -85,7 +85,7 @@ namespace CQRS
             sqlCmd.CommandText = "select CompanyId, Name from Company where CompanyId = @ID";
             sqlCmd.Parameters.Clear();
             sqlCmd.Parameters.AddWithValue("ID", ID);
-            await mapper.ExecuteReader(sqlCmd, 
+            await mapper.Map(sqlCmd, 
                         reader => { id = reader.GetInt32(0); name = reader.GetString(1); });
 
             Assert.Equal(ID, id);
@@ -96,7 +96,7 @@ namespace CQRS
             sqlCmd.CommandText = "select Name from Company where CompanyId = @ID";
             sqlCmd.Parameters.Clear();
             sqlCmd.Parameters.AddWithValue("ID", ID);
-            await mapper.ExecuteReader(sqlCmd,
+            await mapper.Map(sqlCmd,
                         reader => { name = reader.GetString(0); });
             Assert.Equal(NAME2, name);
 
@@ -104,33 +104,33 @@ namespace CQRS
             sqlCmd.CommandText = "delete Company where CompanyId = @ID";
             sqlCmd.Parameters.Clear();
             sqlCmd.Parameters.AddWithValue("ID", ID);
-            await command.ExecuteNonQuery(sqlCmd);
+            await command.Exec(sqlCmd);
 
 
             sqlCmd.CommandText = "select count(*) from Company where CompanyId = @ID";
             sqlCmd.Parameters.Clear();
             sqlCmd.Parameters.AddWithValue("ID", ID);
-            await mapper.ExecuteReader(sqlCmd, reader => count = reader.GetInt32(0));
+            await mapper.Map(sqlCmd, reader => count = reader.GetInt32(0));
             Assert.Equal(0, count);
 
             id = null;
             sqlCmd.CommandText = "insert into Company(Name) output inserted.CompanyId values(@NAME)";
             sqlCmd.Parameters.Clear();
             sqlCmd.Parameters.AddWithValue("NAME", NAME3);
-            await command.ExecuteReader(sqlCmd, reader => id = reader.GetInt32(0));
+            await command.Map(sqlCmd, reader => id = reader.GetInt32(0));
 
 
             sqlCmd.CommandText = "select count(*) from Company where CompanyId = @ID";
             sqlCmd.Parameters.Clear();
             sqlCmd.Parameters.AddWithValue("ID", id);
-            await mapper.ExecuteReader(sqlCmd, reader => count = reader.GetInt32(0));
+            await mapper.Map(sqlCmd, reader => count = reader.GetInt32(0));
             Assert.Equal(1, count);
 
 
             sqlCmd.CommandText = "select Name from Company where CompanyId = @ID";
             sqlCmd.Parameters.Clear();
             sqlCmd.Parameters.AddWithValue("ID", id);
-            await mapper.ExecuteReader(sqlCmd, reader => name = reader.GetString(0));
+            await mapper.Map(sqlCmd, reader => name = reader.GetString(0));
             Assert.Equal(NAME3, name);
 
             string oldname = null;
@@ -145,7 +145,7 @@ namespace CQRS
             sqlCmd.CommandText = "delete Company output deleted.CompanyId, deleted.Name where CompanyId = @ID";
             sqlCmd.Parameters.Clear();
             sqlCmd.Parameters.AddWithValue("ID", id);
-            await command.ExecuteReader(sqlCmd, 
+            await command.Map(sqlCmd, 
                 reader => { deletedId = reader.GetInt32(0); name = reader.GetString(1); });
 
             Assert.Equal(NAME4, name);

@@ -94,7 +94,7 @@ namespace Belgrade.SqlClient.Common
             bool isErrorDetected = false;
             try
             {
-                await this.Mapper.ExecuteReader(command,
+                await this.Mapper.Map(command,
                     async reader =>
                     {
                         if (isFirstChunk && options != null && options.Prefix != null)

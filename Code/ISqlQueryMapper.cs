@@ -20,7 +20,7 @@ namespace Belgrade.SqlClient
         /// <param name="command">SQL command that will be executed.</param>
         /// <param name="callback">Callback function that will be called for each row.</param>
         /// <returns>Task</returns>
-        Task ExecuteReader(DbCommand command, Action<DbDataReader> callback);
+        Task Map(DbCommand command, Action<DbDataReader> callback);
 
         /// <summary>
         /// Executes sql command and provides each row to the async callback function.
@@ -28,7 +28,7 @@ namespace Belgrade.SqlClient
         /// <param name="command">SQL command that will be executed.</param>
         /// <param name="callback">Async callback function that will be called for each row.</param>
         /// <returns>Task</returns>
-        Task ExecuteReader(DbCommand command, Func<DbDataReader, Task> callback);
+        Task Map(DbCommand command, Func<DbDataReader, Task> callback);
 
     }
 }

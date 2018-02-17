@@ -30,7 +30,7 @@ namespace Basic
             p.Size = 4000;
 
             // Action
-            await sut.ExecuteNonQuery(SQLCmd);
+            await sut.Exec(SQLCmd);
 
             // Assert
             Assert.Equal("Hello World", p.Value);

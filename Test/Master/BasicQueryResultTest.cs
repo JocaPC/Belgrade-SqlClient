@@ -66,18 +66,20 @@ namespace Basic
                                 )
         {
             // Arrange
+            bool isExceptionThrown = false;
+
             var pipe = new Belgrade.SqlClient.SqlDb.QueryPipe(Util.Settings.ConnectionString)
                 .AddContextVariable("v1", () => sessionContext1)
                 .AddContextVariable("v2", () => sessionContext2)
-                .OnError(ex=> { throw ex; });
+                .OnError(ex=> { isExceptionThrown = true; Console.WriteLine(ex); });
             var mapper = new Belgrade.SqlClient.SqlDb.QueryMapper(Util.Settings.ConnectionString)
                 .AddContextVariable("v1", () => sessionContext1)
                 .AddContextVariable("v2", () => sessionContext2)
-                .OnError(ex => { throw ex; });
+                .OnError(ex => { isExceptionThrown = true; Console.WriteLine(ex); });
             var command = new Belgrade.SqlClient.SqlDb.Command(Util.Settings.ConnectionString)
                 .AddContextVariable("v1", () => sessionContext1)
                 .AddContextVariable("v2", () => sessionContext2)
-                .OnError(ex => { throw ex; });
+                .OnError(ex => { isExceptionThrown = true; Console.WriteLine(ex); });
 
             var sql = @"select top " + top + @" v1 = cast(SESSION_CONTEXT(N'v1') as varchar(500)), 
                                                 v2 = cast(SESSION_CONTEXT(N'v2') as varchar(500)),
@@ -89,7 +91,6 @@ namespace Basic
             string prefix = pair[0];
             string suffix = pair[1];
             Task t = null;
-
             // Action
             if (client == "stream")
             {
@@ -152,6 +153,10 @@ namespace Basic
             }
 
             // Assert
+            if (isExceptionThrown)
+            {
+                return;
+            }
             AssertEx.IsValidJson(json);
             if (json.StartsWith("["))
             {
