@@ -8,7 +8,28 @@ namespace Belgrade.SqlClient
 {
     public static class ICommandExtensions
     {
+        /// <summary>
+        /// Executes SQL command text.
+        /// </summary>
+        /// <returns>Generic task.</returns>
+        public static Task Exec(this ICommand command, DbCommand cmd)
+        {
+            command.Sql(cmd);
+            return command.Exec();
+        }
+
         #region "Text command extensions"
+
+        /// <summary>
+        /// Set the query text on the command.
+        /// </summary>
+        /// <returns>Command.</returns>
+        public static ICommand Sql(this ICommand command, string query)
+        {
+            var cmd = new SqlCommand(query);
+            return command.Sql(cmd);
+        }
+
         /// <summary>
         /// Executes SQL command text.
         /// </summary>

@@ -114,7 +114,7 @@ namespace Errors
                                 Assert.True(ex.GetType().Name == "SqlException");
                                 Assert.Equal("Could not find stored procedure 'NON_EXISTING_PROCEDURE'.", ex.Message);
                                 exceptionThrown = true;
-                            }).ExecuteNonQuery("EXEC NON_EXISTING_PROCEDURE");
+                            }).Exec("EXEC NON_EXISTING_PROCEDURE");
                         }
                         break;
                 }

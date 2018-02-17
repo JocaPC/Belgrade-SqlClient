@@ -4,6 +4,7 @@
 //  WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 //  or FITNESS FOR A PARTICULAR PURPOSE. See the license files for details.
 using System;
+using System.Data;
 using System.Data.Common;
 using System.IO;
 using System.Text;
@@ -50,20 +51,29 @@ namespace Belgrade.SqlClient.Common
         /// <param name="command">SQL command that will be executed.</param>
         /// <param name="stream">Output stream where results will be written.</param>
         /// <returns>Task</returns>
-        public async Task Stream(DbCommand command, Stream stream, Options options = null)
+        public async Task Stream(Stream stream, Options options = null)
         {
+            DbCommand command = base.Command;
+            if(command == null)
+            {
+                throw new InvalidOperationException("Cannot stream results while command is not defined.");
+            }
             command.Connection = this.Connection;
             await this.SqlResultsToStream(command, stream, options);
         }
         
-        private Task SqlResultsToStream(DbCommand command, Stream stream, Options options /*byte[] defaultOutput*/)
+        private Task SqlResultsToStream(DbCommand command, Stream stream, Options options)
         {
+            if (command == null)
+            {
+                throw new InvalidOperationException("Cannot stream results while command is not defined.");
+            }
             if (stream == null)
                 throw new ArgumentNullException("stream", "Stream provided to SqlResultToStream is not defined!");
             if (!stream.CanWrite)
                 throw new ArgumentException("Cannot write to the stream in SqlResultToStream", "stream");
 
-            return FlushSqlResultsToStream<Stream>(command, stream, options/*defaultOutput*/);
+            return FlushSqlResultsToStream<Stream>(command, stream, options);
 
         }
 
@@ -74,8 +84,13 @@ namespace Belgrade.SqlClient.Common
         /// <param name="writer">TextWriter where results will be written.</param>
         /// <param name="defaultOutput">Default content that will be written into TextWriter if there are no results.</param>
         /// <returns>Task</returns>
-        public Task Stream(DbCommand command, TextWriter writer, Options options /*string[] defaultOutput*/)
+        public Task Stream(TextWriter writer, Options options)
         {
+            DbCommand command = base.Command;
+            if (command == null)
+            {
+                throw new InvalidOperationException("Cannot stream results while command is not defined.");
+            }
             return FlushSqlResultsToStream<TextWriter>(command, writer, options);
         }
 
@@ -89,6 +104,10 @@ namespace Belgrade.SqlClient.Common
         /// <returns></returns>
         private async Task FlushSqlResultsToStream<TOutput>(DbCommand command, TOutput stream, Options options /*byte[] defaultOutput*/)
         {
+            if (command == null)
+            {
+                throw new InvalidOperationException("Cannot stream results while command is not defined.");
+            }
             bool outputIsGenerated = false;
             bool isFirstChunk = true;
             bool isErrorDetected = false;
@@ -97,48 +116,66 @@ namespace Belgrade.SqlClient.Common
                 await this.Mapper.Map(command,
                     async reader =>
                     {
-                        if (isFirstChunk && options != null && options.Prefix != null)
+                        try
                         {
-                            await FlushContent<TOutput>(stream, options.Prefix);
-                            isFirstChunk = false;
-                        }
-                        if (reader.HasRows)
-                        {
-                            if (reader.FieldCount != 1)
-                                throw new ArgumentException("SELECT query should not have " + reader.FieldCount + " columns (expected 1).", "reader");
-                            string buffer = null;
-                            if(reader[0].GetType().Name == "String")
+                            if (isFirstChunk && options != null && options.Prefix != null)
                             {
-                                buffer = reader.GetString(0);
-                                await FlushContent<TOutput>(stream, buffer);
-                                outputIsGenerated = true;
+                                await FlushContent<TOutput>(stream, options.Prefix);
+                                isFirstChunk = false;
                             }
-                            else if (reader[0].GetType().Name == "Byte[]")
+                            if (reader.HasRows)
                             {
-                                byte[] binary = new byte[2048];
-                                int amount = (int)reader.GetBytes(0, 0, binary, 0, 2048);
-                                int pos = amount;
-                                do
+                                if (reader.FieldCount != 1)
+                                    throw new ArgumentException("SELECT query should not have " + reader.FieldCount + " columns (expected 1).", "reader");
+                                string buffer = null;
+                                if (reader[0].GetType().Name == "String")
                                 {
-                                    await FlushContent<TOutput>(stream, binary, amount);
+                                    buffer = reader.GetString(0);
+                                    await FlushContent<TOutput>(stream, buffer);
                                     outputIsGenerated = true;
-                                    amount = (int)reader.GetBytes(0, pos, binary, 0, 2048);
-                                    pos += amount;
                                 }
-                                while (amount > 0);
+                                else if (reader[0].GetType().Name == "Byte[]")
+                                {
+                                    byte[] binary = new byte[2048];
+                                    int amount = (int)reader.GetBytes(0, 0, binary, 0, 2048);
+                                    int pos = amount;
+                                    do
+                                    {
+                                        await FlushContent<TOutput>(stream, binary, amount);
+                                        outputIsGenerated = true;
+                                        amount = (int)reader.GetBytes(0, pos, binary, 0, 2048);
+                                        pos += amount;
+                                    }
+                                    while (amount > 0);
+                                }
+                                else
+                                {
+                                    throw new ArgumentException("Return type " + reader[0].GetType().Name + " cannot be streamed.", "reader");
+                                }
                             }
                             else
                             {
-                                throw new ArgumentException("Return type " + reader[0].GetType().Name + " cannot be streamed.", "reader");
+                                if (options != null && options.DefaultOutput != null)
+                                {
+                                    await FlushContent<TOutput>(stream, options.DefaultOutput, ((options.DefaultOutput is byte[]) ? (options.DefaultOutput as byte[]).Length : (-1)));
+                                    outputIsGenerated = true;
+                                }
                             }
                         }
-                        else
+                        catch (Exception ex)
                         {
-                            if (options != null && options.DefaultOutput != null)
+                            isErrorDetected = true;
+                            if (options != null)
+                                options.DefaultOutput = null; // Don't generate default output if error is raised.
+                            try
                             {
-                                await FlushContent<TOutput>(stream, options.DefaultOutput, ((options.DefaultOutput is byte[])? (options.DefaultOutput as byte[]).Length : (-1) ));
-                                outputIsGenerated = true;
+                                var errorHandler = base.GetErrorHandlerBuilder().SetCommand(command).CreateErrorHandler();
+                                if (errorHandler == null)
+                                    throw;
+                                else
+                                    errorHandler(ex);
                             }
+                            catch { }
                         }
                     });
             }
@@ -218,6 +255,16 @@ namespace Belgrade.SqlClient.Common
                     await writer.FlushAsync();
                 }
             }
+        }
+        
+        public IQueryPipe Sql(DbCommand cmd)
+        {
+            return base.SetCommand(cmd) as IQueryPipe;
+        }
+
+        public IQueryPipe Param(string name, DbType type, object value, int size = 0)
+        {
+            return base.AddParameter(name, type, value, size) as IQueryPipe;
         }
     }
 }

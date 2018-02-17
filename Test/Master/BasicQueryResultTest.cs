@@ -27,19 +27,20 @@ namespace Basic
             command = new Belgrade.SqlClient.SqlDb.Command(Util.Settings.ConnectionString);
         }
 
-        [Theory, CombinatorialData]
-        //[Theory, PairwiseData]
+        //[Theory, CombinatorialData] -> do not use combinatorial too much cases
+        [Theory, PairwiseData]
         public void ReturnsJsonParallel([CombinatorialValues("stream", "writer", "mapper", "command")] string client,
                                        [CombinatorialValues("auto", "path")] string mode1,
                                        [CombinatorialValues(",include_null_values", ",root('test')", ",root")] string mode2,
                                        [CombinatorialValues("1", null)] string defaultValue,
                                        [CombinatorialValues("[/]", "{\"a\":/}", "/")] string wrapper,
                                        [CombinatorialValues("TEST", "2")] string sessionContext1,
-                                       [CombinatorialValues("TEST", "1")] string sessionContext2)
+                                       [CombinatorialValues("TEST", "1")] string sessionContext2,
+                                       [CombinatorialValues(2, 10, 50)] int numberOfThreads)
         {
             List<Task> tasks = new List<Task>();            
-            for (int i = 0; i <= 100; i++)
-                tasks.Add(Task.Run(() => ReturnsJson(client, (i%2==0)?"1":"1000", mode1, mode2, i%3==0, i%3>0, defaultValue, wrapper, sessionContext1, sessionContext2)));
+            for (int i = 0; i <= numberOfThreads; i++)
+                tasks.Add(Task.Run(() => ReturnsJson(client, (i%2==0)?"1":"50", mode1, mode2, i%3==0, i%3>0, defaultValue, wrapper, sessionContext1, sessionContext2)));
 
             Task.WaitAll(tasks.ToArray());
 

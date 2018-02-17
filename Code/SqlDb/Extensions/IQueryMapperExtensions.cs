@@ -8,7 +8,22 @@ namespace Belgrade.SqlClient
 {
     public static class IQueryMapperExtensions
     {
+        public static Task Map(this IQueryMapper mapper, DbCommand cmd, Action<DbDataReader> callback)
+        {
+            return mapper.Sql(cmd).Map(callback);
+        }
         #region "Text command extensions"
+
+        /// <summary>
+        /// Set the query text on the mapper.
+        /// </summary>
+        /// <returns>Query Mapper.</returns>
+        public static IQueryMapper Sql(this IQueryMapper mapper, string query)
+        {
+            var cmd = new SqlCommand(query);
+            return mapper.Sql(cmd);
+        }
+
         /// <summary>
         /// Executes sql statement and provides each row to the callback function.
         /// </summary>
@@ -30,7 +45,7 @@ namespace Belgrade.SqlClient
         public static Task Map(this IQueryMapper mapper, string sql, Func<DbDataReader, Task> callback)
         {
             var cmd = new SqlCommand(sql);
-            return mapper.Map(cmd, callback);
+            return mapper.Sql(cmd).Map(callback);
         }
 
         #endregion
@@ -60,7 +75,7 @@ namespace Belgrade.SqlClient
 
         public static Task ExecuteReader(this IQueryMapper mapper, SqlCommand cmd, Func<DbDataReader, Task> callback)
         {
-            return mapper.Map(cmd, callback);
+            return mapper.Sql(cmd).Map(callback);
         }
 
         public static Task ExecuteReader(this IQueryMapper mapper, string sql, Func<DbDataReader, Task> callback)

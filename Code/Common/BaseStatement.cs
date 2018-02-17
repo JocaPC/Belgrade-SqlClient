@@ -5,16 +5,22 @@
 //  or FITNESS FOR A PARTICULAR PURPOSE.See the license files for details.
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Data.Common;
 
 namespace Belgrade.SqlClient.Common
 {
-    public class BaseStatement
+    public abstract class BaseStatement
     {
         /// <summary>
         /// Connection to Sql Database.
         /// </summary>
         protected DbConnection Connection;
+
+        /// <summary>
+        /// Sql Command that will be executed.
+        /// </summary>
+        protected DbCommand Command;
 
         protected List<Func<DbCommand, DbCommand>> CommandModifierList = new List<Func<DbCommand, DbCommand>>();
 
@@ -59,6 +65,31 @@ namespace Belgrade.SqlClient.Common
         internal ErrorHandlerBuilder GetErrorHandlerBuilder()
         {
             return this.ErrorHandlerBuilder?? DefaultErrorHandlerBuilder;
+        }
+
+        internal BaseStatement SetCommand(DbCommand command)
+        {
+            this.Command = command;
+            return this;
+        }
+
+        internal BaseStatement AddParameter(string name, DbType type, object value, int size = 0)
+        {
+            var p = this.Command.CreateParameter();
+            p.ParameterName = name;
+            p.DbType = type;
+            p.Value = value;
+            p.Size = size;
+            if(size == 0)
+            {
+                if(type == DbType.AnsiString || type == DbType.String)
+                {
+                    p.Size = 100 * (value.ToString().Length / 100 + 1);
+                }
+            } else {
+                p.Size = size;
+            }
+            return this;
         }
     }
 }

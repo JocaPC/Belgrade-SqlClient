@@ -4,6 +4,7 @@
 //  WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 //  or FITNESS FOR A PARTICULAR PURPOSE.See the license files for details.
 using System;
+using System.Data;
 using System.Data.Common;
 using System.Threading.Tasks;
 
@@ -30,6 +31,7 @@ namespace Belgrade.SqlClient.Common
             this.Connection = connection;
         }
 
+        /*
         /// <summary>
         /// Executes sql statement and provides each row to the callback function.
         /// </summary>
@@ -47,6 +49,7 @@ namespace Belgrade.SqlClient.Common
                 await this.Map(command, callback);
             }
         }
+        */
 
         /// <summary>
         /// Executes sql command and provides each row to the callback function.
@@ -54,10 +57,11 @@ namespace Belgrade.SqlClient.Common
         /// <param name="command">SQL command that will be executed.</param>
         /// <param name="callback">Callback function that will be called for each row.</param>
         /// <returns>Task</returns>
-        public async Task Map(DbCommand command, Action<DbDataReader> callback)
+        public async Task Map(Action<DbDataReader> callback)
         {
+            DbCommand command = base.Command;
             if (command == null)
-                throw new ArgumentNullException("Command is not defined.");
+                throw new InvalidOperationException("Command is not defined.");
 
             if (string.IsNullOrWhiteSpace(command.CommandText))
                 throw new ArgumentNullException("Command SQL text is not set.");
@@ -94,7 +98,7 @@ namespace Belgrade.SqlClient.Common
         //{
         //    return command;
         //}
-
+        /*
         /// <summary>
         /// Executes sql statement and provides each row to the async callback function.
         /// </summary>
@@ -109,15 +113,22 @@ namespace Belgrade.SqlClient.Common
                 await this.Map(command, callback);
             }
         }
-
+        */
         /// <summary>
         /// Executes sql command and provides each row to the async callback function.
         /// </summary>
         /// <param name="command">SQL command that will be executed.</param>
         /// <param name="callback">Async callback function that will be called for each row.</param>
         /// <returns>Task</returns>
-        public async Task Map(DbCommand command, Func<DbDataReader, Task> callback)
-        { 
+        public async Task Map(Func<DbDataReader, Task> callback)
+        {
+            DbCommand command = base.Command;
+            if (command == null)
+                throw new InvalidOperationException("Command is not defined.");
+
+            if (string.IsNullOrWhiteSpace(command.CommandText))
+                throw new ArgumentNullException("Command SQL text is not set.");
+
             command = base.CommandModifier(command);
             if (command.Connection == null)
                 command.Connection = this.Connection;
@@ -144,6 +155,16 @@ namespace Belgrade.SqlClient.Common
             {
                 command.Connection.Close();
             }
+        }
+
+        public IQueryMapper Param(string name, DbType type, object value, int size = 0)
+        {
+            return base.AddParameter(name, type, value, size) as IQueryMapper;
+        }
+
+        public IQueryMapper Sql(DbCommand cmd)
+        {
+            return base.SetCommand(cmd) as IQueryMapper;
         }
     }
 }

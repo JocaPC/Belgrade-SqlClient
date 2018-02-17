@@ -65,7 +65,7 @@ for json path, include_null_values, without_array_wrapper", key);
             string result = null;
             
             // Action
-            sut.ExecuteReader( sql, reader => result = reader.GetString(0) ).Wait();
+            sut.Map( sql, reader => result = reader.GetString(0) ).Wait();
 
             // Assert
             Assert.Equal("{\"sc\":\"" + value + "\"}", result);

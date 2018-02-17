@@ -50,7 +50,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Remove="IQuery.cs" />
     <Compile Remove="SqlDb\Extensions\CommandExtensions.cs" />
+    <Compile Remove="SqlDb\Extensions\IQueryExtensions.cs" />
     <Compile Remove="SqlDb\Extensions\QueryMapperExtensions.cs" />
   </ItemGroup>
 

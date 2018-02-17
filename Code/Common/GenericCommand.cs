@@ -4,6 +4,7 @@
 //  WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 //  or FITNESS FOR A PARTICULAR PURPOSE. See the license files for details.
 using System;
+using System.Data;
 using System.Data.Common;
 using System.IO;
 using System.Threading.Tasks;
@@ -32,7 +33,7 @@ namespace Belgrade.SqlClient.Common
             this.Pipe = new GenericQueryPipe<T>(connection);
             this.Mapper = new GenericQueryMapper<T>(connection);
         }
-
+        /*
         /// <summary>
         /// Executes SQL command text.
         /// </summary>
@@ -49,14 +50,15 @@ namespace Belgrade.SqlClient.Common
                 await this.Exec(command);
             }
         }
-
+        */
         /// <summary>
         /// Executes Sql command.
         /// </summary>
         /// <param name="command">SqlCommand that will be executed.</param>
         /// <returns>Generic task.</returns>
-        public async Task Exec(DbCommand command)
+        public async Task Exec()
         {
+            var command = base.Command;
             if (command == null)
                 throw new ArgumentNullException("Command is not defined.");
 
@@ -90,6 +92,7 @@ namespace Belgrade.SqlClient.Common
         /// </summary>
         private GenericQueryPipe<T> Pipe;
 
+        /*
         /// <summary>
         /// Executes SQL query and put results into stream.
         /// </summary>
@@ -104,7 +107,7 @@ namespace Belgrade.SqlClient.Common
                 await this.Stream(command, output, options);
             }
         }
-
+        */
         /// <summary>
         /// Executes sql statement and provides each row to the callback function.
         /// </summary>
@@ -125,13 +128,14 @@ namespace Belgrade.SqlClient.Common
         /// </summary>
         private GenericQueryMapper<T> Mapper;
 
+        /*
         /// <summary>
         /// Executes sql statement and provides each row to the callback function.
         /// </summary>
         /// <param name="sql">SQL query that will be executed.</param>
         /// <param name="callback">Callback function that will be called for each row.</param>
         /// <returns>Task</returns>
-        public async Task ExecuteReader(string sql, Func<DbDataReader, Task> callback)
+        public async Task Map(string sql, Func<DbDataReader, Task> callback)
         {
             using (DbCommand command = new T())
             {
@@ -139,6 +143,7 @@ namespace Belgrade.SqlClient.Common
                 await this.Map(command, callback);
             }
         }
+        */
 
         /// <summary>
         /// Executes sql statement and provides each row to the callback function.
@@ -152,7 +157,7 @@ namespace Belgrade.SqlClient.Common
             if (command.Connection == null)
                 command.Connection = this.Connection;
 
-            await this.Mapper.Map(command, callback);
+            await (this.Mapper.SetCommand(command) as IQueryMapper).Map(callback);
         }
         
         /// <summary>
@@ -170,13 +175,14 @@ namespace Belgrade.SqlClient.Common
             await this.Mapper.Map(command, callback);
         }
 
+        /*
         /// <summary>
         /// Executes sql statement and provides each row to the callback function.
         /// </summary>
         /// <param name="sql">SQL query that will be executed.</param>
         /// <param name="callback">Callback function that will be called for each row.</param>
         /// <returns>Task</returns>
-        public async Task ExecuteReader(string sql, Action<DbDataReader> callback)
+        public async Task Map(string sql, Action<DbDataReader> callback)
         {
             using (DbCommand command = new T())
             {
@@ -184,13 +190,23 @@ namespace Belgrade.SqlClient.Common
                 await this.Map(command, callback);
             }
         }
-
+        */
         internal override BaseStatement AddErrorHandler(ErrorHandlerBuilder builder)
         {
             if (this.Mapper != null) this.Mapper.AddErrorHandler(builder);
             if (this.Pipe != null) this.Pipe.AddErrorHandler(builder);
 
             return base.AddErrorHandler(builder);
+        }
+
+        public ICommand Sql(DbCommand cmd)
+        {
+            return base.SetCommand(cmd) as ICommand;
+        }
+
+        public ICommand Param(string name, DbType type, object value, int size = 0)
+        {
+            return base.AddParameter(name, type, value, size) as ICommand;
         }
     }
 }

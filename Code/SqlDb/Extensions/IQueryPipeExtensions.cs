@@ -4,11 +4,34 @@ using System.IO;
 using System.Threading.Tasks;
 using Belgrade.SqlClient.SqlDb;
 using Belgrade.SqlClient.Common;
+using System.Data.Common;
 
 namespace Belgrade.SqlClient
 {
     public static class IQueryPipeExtensions
     {
+        /// <summary>
+        /// Set the query text on the query pipe.
+        /// </summary>
+        /// <returns>Query Pipe.</returns>
+        public static IQueryPipe Sql(this IQueryPipe pipe, string query)
+        {
+            var cmd = new SqlCommand(query);
+            return pipe.Sql(cmd);
+        }
+
+        public static Task Stream(this IQueryPipe pipe, DbCommand cmd, Stream stream, Options options = null)
+        {
+            pipe.Sql(cmd);
+            return pipe.Stream(stream, options);
+        }
+
+        public static Task Stream(this IQueryPipe pipe, DbCommand cmd, TextWriter writer, Options options = null)
+        {
+            pipe.Sql(cmd);
+            return pipe.Stream(writer, options);
+        }
+
         public static Task Stream(this IQueryPipe pipe, string sql, TextWriter writer, string defaultOutput)
         {
             if (!(pipe is QueryPipe))

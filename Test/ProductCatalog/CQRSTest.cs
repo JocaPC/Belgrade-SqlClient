@@ -19,7 +19,7 @@ namespace CQRS
         {
             var command = new Command(Util.Settings.ConnectionString.Replace("Database=master;", "Database=ProductCatalogDemo;"));
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-            command.ExecuteNonQuery("DELETE Company WHERE companyId >= 4");
+            command.Exec("DELETE Company WHERE companyId >= 4");
 #pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
         }
 
@@ -91,7 +91,7 @@ namespace CQRS
             Assert.Equal(ID, id);
             Assert.Equal(NAME, name);
 
-            await command.ExecuteNonQuery("update Company set Name = '"+NAME2+"' where CompanyId = " + ID);
+            await command.Exec("update Company set Name = '"+NAME2+"' where CompanyId = " + ID);
 
             sqlCmd.CommandText = "select Name from Company where CompanyId = @ID";
             sqlCmd.Parameters.Clear();
@@ -135,7 +135,7 @@ namespace CQRS
 
             string oldname = null;
             string newname = null;
-            await command.ExecuteReader("update Company SET Name = '" + NAME4 + "' output deleted.Name, inserted.Name where CompanyId = " + id, reader => { oldname = reader.GetString(0); newname = reader.GetString(1); });
+            await command.Map("update Company SET Name = '" + NAME4 + "' output deleted.Name, inserted.Name where CompanyId = " + id, reader => { oldname = reader.GetString(0); newname = reader.GetString(1); });
             Assert.Equal(NAME3, oldname);
             Assert.Equal(NAME4, newname);
 
