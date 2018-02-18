@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("Belgrade.SqlClient")]
-[assembly: AssemblyDescription("Lightweight data access component.")]
+[assembly: AssemblyDescription("Lightweight async data access component.")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("Belgrade.SqlClient")]
