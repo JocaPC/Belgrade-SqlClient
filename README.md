@@ -50,13 +50,12 @@ await cmd.Exec("EXEC dbo.CalculateResults");
 ```
 This command will open a connection, execute the procedure, and close the connection when it finishes.
 
-Usually you would need to pass the parameters to some stored procedure when you execute it. Command object enables you to create standard **SqlCommand**, assign parameters and execute the command:
+Usually you would need to pass the parameters to some stored procedure when you execute it. You can set the T-SQL query text, add parameters to the command, and execute it.
 
 ```javascript
-var sqlCmd = new SqlCommand("InsertProduct");
-sqlCmd.CommandType = System.Data.CommandType.StoredProcedure;
-sqlCmd.Parameters.AddWithValue("Product", product);
-await sql.Exec(sqlCmd);
+command.Sql("EXEC InsertProduct @Product");
+command.Param("Product", DbType.String, product);
+await command.Exec();
 ```
 It is just an async wrapper around standard SqlComand that handles errors and manage connection.
 
