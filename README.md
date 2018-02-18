@@ -53,9 +53,10 @@ This command will open a connection, execute the procedure, and close the connec
 Usually you would need to pass the parameters to some stored procedure when you execute it. You can set the T-SQL query text, add parameters to the command, and execute it.
 
 ```javascript
-command.Sql("EXEC InsertProduct @Product");
-command.Param("Product", DbType.String, product);
-await command.Exec();
+cmd.Sql("EXEC UpdateProduct @Id, @Product");
+cmd.Param("Id", DbType.Int32, id);
+cmd.Param("Product", DbType.String, product);
+await cmd.Exec();
 ```
 It is just an async wrapper around standard SqlComand that handles errors and manage connection.
 
@@ -78,7 +79,7 @@ You can provide a function that accepts *DataReader* as an argument and populate
 
 *Stream()* is a method that executes a query against database and stream the results into an output stream. 
 ```javascript
-await sqlQuery.Stream("SELECT * FROM Product FOR JSON PATH", Response.Body);
+await cmd.Stream("SELECT * FROM Product FOR JSON PATH", Response.Body);
 ```
 Method *Stream* may accept two or three parameters:
 - First parameter is a T-SQL query that will be executed. Usually this is a query that returns chunked response data from SQL Server that should e concatenated and sent to output.
