@@ -89,6 +89,7 @@ namespace Belgrade.SqlClient.Common
             } else {
                 p.Size = size;
             }
+            this.Command.Parameters.Add(p);
             return this;
         }
     }

@@ -46,9 +46,12 @@ namespace Errors
                 Assert.True(exceptionThrown);
             }
         }
-        
-        //[Theory, CombinatorialData]
+
+#if EXTENSIVE_TEST
+        [Theory, CombinatorialData]
+#else
         [Theory, PairwiseData]
+#endif
         public async Task HandlesCompileErrors(
         [CombinatorialValues(
             "select * from NonExistentTable FOR JSON PATH/Invalid object name 'NonExistentTable'.",

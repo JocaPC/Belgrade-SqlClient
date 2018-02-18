@@ -18,6 +18,38 @@ namespace Belgrade.SqlClient
             return command.Exec();
         }
 
+        /// <summary>
+        /// Maps results of SQL command to callback.
+        /// </summary>
+        /// <returns>Generic task.</returns>
+        public static Task Map(this ICommand command, DbCommand cmd, Action<DbDataReader> callback)
+        {
+            command.Sql(cmd);
+            return command.Map(callback);
+        }
+
+        /// <summary>
+        /// Maps results of SQL command to callback.
+        /// </summary>
+        /// <returns>Generic task.</returns>
+        public static Task Map(this ICommand command, DbCommand cmd, Func<DbDataReader, Task> callback)
+        {
+            command.Sql(cmd);
+            return command.Map(callback);
+        }
+
+
+        /// <summary>
+        /// Maps results of SQL command to callback.
+        /// </summary>
+        /// <returns>Generic task.</returns>
+        public static Task Stream(this ICommand command, DbCommand cmd, Stream output, Options options = null)
+        {
+            command.Sql(cmd);
+            return command.Stream(output, options);
+        }
+
+
         #region "Text command extensions"
 
         /// <summary>

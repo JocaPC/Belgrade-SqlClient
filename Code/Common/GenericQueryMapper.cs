@@ -31,26 +31,6 @@ namespace Belgrade.SqlClient.Common
             this.Connection = connection;
         }
 
-        /*
-        /// <summary>
-        /// Executes sql statement and provides each row to the callback function.
-        /// </summary>
-        /// <param name="sql">SQL query that will be executed.</param>
-        /// <param name="callback">Callback function that will be called for each row.</param>
-        /// <returns>Task</returns>
-        public async Task ExecuteReader(string sql, Func<DbDataReader, Task> callback)
-        {
-            if (string.IsNullOrWhiteSpace(sql))
-                throw new ArgumentNullException("Command SQL text is not set.");
-
-            using (DbCommand command = new T())
-            {
-                command.CommandText = sql;                
-                await this.Map(command, callback);
-            }
-        }
-        */
-
         /// <summary>
         /// Executes sql command and provides each row to the callback function.
         /// </summary>
@@ -93,27 +73,7 @@ namespace Belgrade.SqlClient.Common
                 command.Connection.Close();
             }
         }
-
-        //protected virtual DbCommand ModifyCommand(DbCommand command)
-        //{
-        //    return command;
-        //}
-        /*
-        /// <summary>
-        /// Executes sql statement and provides each row to the async callback function.
-        /// </summary>
-        /// <param name="sql">SQL query that will be executed.</param>
-        /// <param name="callback">Async callback function that will be called for each row.</param>
-        /// <returns>Task</returns>
-        public async Task ExecuteReader(string sql, Action<DbDataReader> callback)
-        {
-            using (DbCommand command = new T())
-            {
-                command.CommandText = sql;
-                await this.Map(command, callback);
-            }
-        }
-        */
+        
         /// <summary>
         /// Executes sql command and provides each row to the async callback function.
         /// </summary>

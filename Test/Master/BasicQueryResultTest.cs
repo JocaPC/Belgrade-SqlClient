@@ -52,8 +52,11 @@ namespace Basic
             }
         }
 
-        [Theory, CombinatorialData]
-        //[Theory, PairwiseData]
+#if EXTENSIVE_TEST
+    [Theory, CombinatorialData]
+#else
+    [Theory, PairwiseData]
+#endif
         public async Task ReturnsJson( [CombinatorialValues("stream", "writer", "mapper", "command")] string client,
                                        [CombinatorialValues(1, 50, 10000)] string top, 
                                        [CombinatorialValues("auto","path")] string mode1,
@@ -177,8 +180,11 @@ namespace Basic
             }
         }
 
+#if EXTENSIVE_TEST
         [Theory, CombinatorialData]
-        //[Theory, PairwiseData]
+#else
+        [Theory, PairwiseData]
+#endif
         public async Task ReturnsXml(  [CombinatorialValues("stream", "writer","mapper", "command")] string client, 
                                        [CombinatorialValues(1, 5, 500, 1000)] string top,
                                        [CombinatorialValues("auto", "path", "raw")] string mode,
@@ -253,8 +259,11 @@ namespace Basic
             Assert.NotEmpty(xml.SelectSingleNode("//" + prefix + "tid").InnerText);
         }
 
+#if EXTENSIVE_TEST
         [Theory, CombinatorialData]
-        //[Theory, PairwiseData]
+#else
+        [Theory, PairwiseData]
+#endif
         public async Task ReturnsDefaultValue(
                 [CombinatorialValues(0, 1, 50, 10000)] int length,
                 [CombinatorialValues(false, true)] bool STRING,

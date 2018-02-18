@@ -33,24 +33,7 @@ namespace Belgrade.SqlClient.Common
             this.Pipe = new GenericQueryPipe<T>(connection);
             this.Mapper = new GenericQueryMapper<T>(connection);
         }
-        /*
-        /// <summary>
-        /// Executes SQL command text.
-        /// </summary>
-        /// <param name="sql">Sql text that will be executed.</param>
-        /// <returns>Generic task.</returns>
-        public async Task ExecuteNonQuery(string sql)
-        {
-            if (string.IsNullOrWhiteSpace(sql))
-                throw new ArgumentNullException("Command SQL text is not set.");
 
-            using (DbCommand command = new T())
-            {
-                command.CommandText = sql;
-                await this.Exec(command);
-            }
-        }
-        */
         /// <summary>
         /// Executes Sql command.
         /// </summary>
@@ -91,31 +74,18 @@ namespace Belgrade.SqlClient.Common
         /// Query pipe used to stream results.
         /// </summary>
         private GenericQueryPipe<T> Pipe;
-
-        /*
-        /// <summary>
-        /// Executes SQL query and put results into stream.
-        /// </summary>
-        /// <param name="sql">SQL query that will be executed.</param>
-        /// <param name="stream">Output stream where results will be written.</param>
-        /// <returns>Task</returns>
-        public async Task Stream(string sql, Stream output, Options options)
-        {
-            using (DbCommand command = new T())
-            {
-                command.CommandText = sql;
-                await this.Stream(command, output, options);
-            }
-        }
-        */
+        
         /// <summary>
         /// Executes sql statement and provides each row to the callback function.
         /// </summary>
         /// <param name="command">SQL command that will be executed.</param>
         /// <param name="callback">Callback function that will be called for each row.</param>
         /// <returns>Task</returns>
-        public async Task Stream(DbCommand command, Stream output, Options options)
+        public async Task Stream(Stream output, Options options)
         {
+            DbCommand command = base.Command;
+            if (command == null)
+                throw new InvalidOperationException("Command is not set in SqlCommand.");
             command = this.CommandModifier(command);
             if (command.Connection == null)
                 command.Connection = this.Connection;
@@ -128,31 +98,17 @@ namespace Belgrade.SqlClient.Common
         /// </summary>
         private GenericQueryMapper<T> Mapper;
 
-        /*
-        /// <summary>
-        /// Executes sql statement and provides each row to the callback function.
-        /// </summary>
-        /// <param name="sql">SQL query that will be executed.</param>
-        /// <param name="callback">Callback function that will be called for each row.</param>
-        /// <returns>Task</returns>
-        public async Task Map(string sql, Func<DbDataReader, Task> callback)
-        {
-            using (DbCommand command = new T())
-            {
-                command.CommandText = sql;
-                await this.Map(command, callback);
-            }
-        }
-        */
-
         /// <summary>
         /// Executes sql statement and provides each row to the callback function.
         /// </summary>
         /// <param name="command">SQL command that will be executed.</param>
         /// <param name="callback">Callback function that will be called for each row.</param>
         /// <returns>Task</returns>
-        public async Task Map(DbCommand command, Func<DbDataReader, Task> callback)
+        public async Task Map(Func<DbDataReader, Task> callback)
         {
+            DbCommand command = base.Command;
+            if (command == null)
+                throw new InvalidOperationException("Command is not set in SqlCommand.");
             command = this.CommandModifier(command);
             if (command.Connection == null)
                 command.Connection = this.Connection;
@@ -166,31 +122,18 @@ namespace Belgrade.SqlClient.Common
         /// <param name="command">SQL command that will be executed.</param>
         /// <param name="callback">Callback function that will be called for each row.</param>
         /// <returns>Task</returns>
-        public async Task Map(DbCommand command, Action<DbDataReader> callback)
+        public async Task Map(Action<DbDataReader> callback)
         {
+            DbCommand command = base.Command;
+            if (command == null)
+                throw new InvalidOperationException("Command is not set in SqlCommand.");
             command = this.CommandModifier(command);
             if (command.Connection == null)
                 command.Connection = this.Connection;
 
             await this.Mapper.Map(command, callback);
         }
-
-        /*
-        /// <summary>
-        /// Executes sql statement and provides each row to the callback function.
-        /// </summary>
-        /// <param name="sql">SQL query that will be executed.</param>
-        /// <param name="callback">Callback function that will be called for each row.</param>
-        /// <returns>Task</returns>
-        public async Task Map(string sql, Action<DbDataReader> callback)
-        {
-            using (DbCommand command = new T())
-            {
-                command.CommandText = sql;
-                await this.Map(command, callback);
-            }
-        }
-        */
+        
         internal override BaseStatement AddErrorHandler(ErrorHandlerBuilder builder)
         {
             if (this.Mapper != null) this.Mapper.AddErrorHandler(builder);
