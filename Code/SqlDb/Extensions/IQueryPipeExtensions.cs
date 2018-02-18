@@ -14,6 +14,24 @@ namespace Belgrade.SqlClient
         /// Set the query text on the query pipe.
         /// </summary>
         /// <returns>Query Pipe.</returns>
+        public static IQueryPipe Sql(this IQueryPipe pipe, DbCommand cmd)
+        {
+            if (pipe is BaseStatement)
+                (pipe as BaseStatement).SetCommand(cmd);
+            return pipe;
+        }
+
+        public static IQueryPipe Param(this IQueryPipe pipe, string name, System.Data.DbType type, object value, int size = 0)
+        {
+            if (pipe is BaseStatement)
+                (pipe as BaseStatement).AddParameter(name, type, value, size);
+            return pipe;
+        }
+
+        /// <summary>
+        /// Set the query text on the query pipe.
+        /// </summary>
+        /// <returns>Query Pipe.</returns>
         public static IQueryPipe Sql(this IQueryPipe pipe, string query)
         {
             var cmd = new SqlCommand(query);

@@ -94,6 +94,24 @@ namespace Belgrade.SqlClient.Common
         }
 
         /// <summary>
+        /// Executes sql statement and provides each row to the callback function.
+        /// </summary>
+        /// <param name="command">SQL command that will be executed.</param>
+        /// <param name="callback">Callback function that will be called for each row.</param>
+        /// <returns>Task</returns>
+        public async Task Stream(TextWriter writer, Options options)
+        {
+            DbCommand command = base.Command;
+            if (command == null)
+                throw new InvalidOperationException("Command is not set in SqlCommand.");
+            command = this.CommandModifier(command);
+            if (command.Connection == null)
+                command.Connection = this.Connection;
+
+            await this.Pipe.Stream(command, writer, options);
+        }
+
+        /// <summary>
         /// Query mapper used to stream results.
         /// </summary>
         private GenericQueryMapper<T> Mapper;

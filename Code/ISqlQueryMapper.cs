@@ -15,13 +15,6 @@ namespace Belgrade.SqlClient
     public interface IQueryMapper
     {
         /// <summary>
-        /// Set the query that should be executed.
-        /// </summary>
-        /// <param name="query">Query that will be executed.</param>
-        /// <returns>Command.</returns>
-        IQueryMapper Sql(DbCommand cmd);
-
-        /// <summary>
         /// Executes sql command and provides each row to the callback function.
         /// </summary>
         /// <param name="callback">Callback function that will be called for each row.</param>
@@ -34,15 +27,5 @@ namespace Belgrade.SqlClient
         /// <param name="callback">Async callback function that will be called for each row.</param>
         /// <returns>Task</returns>
         Task Map(Func<DbDataReader, Task> callback);
-
-        /// <summary>
-        /// Assigns a parameter with value to the query.
-        /// </summary>
-        /// <param name="name">Name of the parameter.</param>
-        /// <param name="type">Type of the parameter.</param>
-        /// <param name="value">Parameter value.</param>
-        /// <returns>Command.</returns>
-        IQueryMapper Param(string name, System.Data.DbType type, object value, int size = 0);
-
     }
 }

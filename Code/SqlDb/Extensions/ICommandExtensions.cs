@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Belgrade.SqlClient.Common;
+using System;
 using System.Data.Common;
 using System.Data.SqlClient;
 using System.IO;
@@ -9,13 +10,30 @@ namespace Belgrade.SqlClient
     public static class ICommandExtensions
     {
         /// <summary>
+        /// Set the query text on the query pipe.
+        /// </summary>
+        /// <returns>Query Pipe.</returns>
+        public static ICommand Sql(this ICommand command, DbCommand cmd)
+        {
+            if (command is BaseStatement)
+                (command as BaseStatement).SetCommand(cmd);
+            return command;
+        }
+
+        public static ICommand Param(this ICommand command, string name, System.Data.DbType type, object value, int size = 0)
+        {
+            if (command is BaseStatement)
+                (command as BaseStatement).AddParameter(name, type, value, size);
+            return command;
+        }
+
+        /// <summary>
         /// Executes SQL command text.
         /// </summary>
         /// <returns>Generic task.</returns>
         public static Task Exec(this ICommand command, DbCommand cmd)
         {
-            command.Sql(cmd);
-            return command.Exec();
+            return command.Sql(cmd).Exec();
         }
 
         /// <summary>
@@ -24,8 +42,7 @@ namespace Belgrade.SqlClient
         /// <returns>Generic task.</returns>
         public static Task Map(this ICommand command, DbCommand cmd, Action<DbDataReader> callback)
         {
-            command.Sql(cmd);
-            return command.Map(callback);
+            return command.Sql(cmd).Map(callback);
         }
 
         /// <summary>
@@ -34,21 +51,17 @@ namespace Belgrade.SqlClient
         /// <returns>Generic task.</returns>
         public static Task Map(this ICommand command, DbCommand cmd, Func<DbDataReader, Task> callback)
         {
-            command.Sql(cmd);
-            return command.Map(callback);
+            return command.Sql(cmd).Map(callback);
         }
-
-
+        
         /// <summary>
         /// Maps results of SQL command to callback.
         /// </summary>
         /// <returns>Generic task.</returns>
         public static Task Stream(this ICommand command, DbCommand cmd, Stream output, Options options = null)
         {
-            command.Sql(cmd);
-            return command.Stream(output, options);
+            return command.Sql(cmd).Stream(output, options);
         }
-
 
         #region "Text command extensions"
 

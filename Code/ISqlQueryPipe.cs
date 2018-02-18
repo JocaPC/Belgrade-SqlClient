@@ -16,13 +16,6 @@ namespace Belgrade.SqlClient
     public interface IQueryPipe
     {
         /// <summary>
-        /// Set the query text that should be executed.
-        /// </summary>
-        /// <param name="query">Query that will be executed.</param>
-        /// <returns>Query pipe.</returns>
-        IQueryPipe Sql(DbCommand cmd);
-
-        /// <summary>
         /// Executes SQL command and put results into stream.
         /// </summary>
         /// <param name="command">SQL command that will be executed.</param>
@@ -38,7 +31,5 @@ namespace Belgrade.SqlClient
         /// <param name="defaultOutput">Default content that will be written into TextWriter if there are no results.</param>
         /// <returns>Task</returns>
         Task Stream(TextWriter writer, Options options = null);
-
-        IQueryPipe Param(string name, DbType type, object value, int size = 0);
     }
 }
