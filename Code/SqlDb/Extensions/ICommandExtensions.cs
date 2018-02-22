@@ -1,4 +1,5 @@
 ﻿using Belgrade.SqlClient.Common;
+using Code.SqlDb.Extensions;
 using System;
 using System.Data.Common;
 using System.Data.SqlClient;
@@ -27,6 +28,12 @@ namespace Belgrade.SqlClient
             return command;
         }
 
+        public static ICommand AddWithValue(this ICommand command, string name, object value)
+        {
+            Util.AddParameterWithValue(command, name, value);
+            return command;
+        }
+        
         /// <summary>
         /// Executes SQL command text.
         /// </summary>

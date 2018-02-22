@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Belgrade.SqlClient.SqlDb;
 using Belgrade.SqlClient.Common;
 using System.Data.Common;
+using Code.SqlDb.Extensions;
 
 namespace Belgrade.SqlClient
 {
@@ -28,6 +29,11 @@ namespace Belgrade.SqlClient
             return pipe;
         }
 
+        public static IQueryPipe AddWithValue(this IQueryPipe pipe, string name, object value)
+        {
+            Util.AddParameterWithValue(pipe, name, value);
+            return pipe;
+        }
         /// <summary>
         /// Set the query text on the query pipe.
         /// </summary>
@@ -52,16 +58,12 @@ namespace Belgrade.SqlClient
 
         public static Task Stream(this IQueryPipe pipe, string sql, TextWriter writer, string defaultOutput)
         {
-            if (!(pipe is QueryPipe))
-                throw new ArgumentException("Argument pipe must be derived from QueryPipe", "pipe");
             SqlCommand cmd = new SqlCommand(sql);
             return pipe.Stream(cmd, writer, new Options() { DefaultOutput = defaultOutput });
         }
         
         public static Task Stream(this IQueryPipe pipe, SqlCommand sql, TextWriter writer, string defaultOutput)
         {
-            if (!(pipe is QueryPipe))
-                throw new ArgumentException("Argument pipe must be derived from QueryPipe", "pipe");
             return pipe.Stream(sql, writer, new Options() { DefaultOutput = defaultOutput });
         }
 
@@ -73,8 +75,6 @@ namespace Belgrade.SqlClient
         /// <returns>Task</returns>
         public static Task Stream(this IQueryPipe pipe, string sql, Stream stream)
         {
-            if (!(pipe is QueryPipe))
-                throw new ArgumentException("Argument pipe must be derived from QueryPipe", "pipe");
             SqlCommand cmd = new SqlCommand(sql);
             return pipe.Stream(cmd, stream);
         }
@@ -88,10 +88,8 @@ namespace Belgrade.SqlClient
         /// <returns>Task</returns>
         public static Task Stream(this IQueryPipe pipe, string sql, Stream stream, string defaultOutput)
         {
-            if (!(pipe is QueryPipe))
-                throw new ArgumentException("Argument pipe must be derived from QueryPipe", "pipe");
             SqlCommand cmd = new SqlCommand(sql);
-            return (pipe as QueryPipe).Stream(cmd, stream, new Options() { DefaultOutput = defaultOutput });
+            return pipe.Stream(cmd, stream, new Options() { DefaultOutput = defaultOutput });
         }
 
         /// <summary>
@@ -103,8 +101,6 @@ namespace Belgrade.SqlClient
         /// <returns>Task</returns>
         public static Task Stream(this IQueryPipe pipe, SqlCommand sql, Stream stream, string defaultOutput)
         {
-            if (!(pipe is QueryPipe))
-                throw new ArgumentException("Argument pipe must be derived from QueryPipe", "pipe");
             return pipe.Stream(sql, stream, new Options() { DefaultOutput = defaultOutput });
         }
 
@@ -117,8 +113,6 @@ namespace Belgrade.SqlClient
         /// <returns>Task</returns>
         public static Task Stream(this IQueryPipe pipe, string sql, Stream stream, byte[] defaultOutput)
         {
-            if (!(pipe is QueryPipe))
-                throw new ArgumentException("Argument pipe must be derived from QueryPipe", "pipe");
             SqlCommand cmd = new SqlCommand(sql);
             return (pipe as QueryPipe).Stream(cmd, stream, new Options() { DefaultOutput = defaultOutput });
         }
@@ -132,25 +126,19 @@ namespace Belgrade.SqlClient
         /// <returns>Task</returns>
         public static Task Stream(this IQueryPipe pipe, SqlCommand sql, Stream stream, byte[] defaultOutput)
         {
-            if (!(pipe is QueryPipe))
-                throw new ArgumentException("Argument pipe must be derived from QueryPipe", "pipe");
-            return (pipe as QueryPipe).Stream(sql, stream, new Options() { DefaultOutput = defaultOutput });
+            return pipe.Stream(sql, stream, new Options() { DefaultOutput = defaultOutput });
         }
 
         public static Task Stream(this IQueryPipe pipe, string sql, Stream stream, Options options)
         {
-            if (!(pipe is QueryPipe))
-                throw new ArgumentException("Argument pipe must be derived from QueryPipe", "pipe");
             SqlCommand cmd = new SqlCommand(sql);
-            return (pipe as QueryPipe).Stream(cmd, stream, options);
+            return pipe.Stream(cmd, stream, options);
         }
 
         public static Task Stream(this IQueryPipe pipe, string sql, TextWriter writer, Options options)
         {
-            if (!(pipe is QueryPipe))
-                throw new ArgumentException("Argument pipe must be derived from QueryPipe", "pipe");
             SqlCommand cmd = new SqlCommand(sql);
-            return (pipe as QueryPipe).Stream(cmd, writer, options);
+            return pipe.Stream(cmd, writer, options);
         }
 
         public static IQueryPipe AddContextVariable(this IQueryPipe pipe, string key, Func<string> value)

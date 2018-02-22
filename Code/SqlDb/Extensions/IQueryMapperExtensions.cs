@@ -1,4 +1,5 @@
 ﻿using Belgrade.SqlClient.Common;
+using Code.SqlDb.Extensions;
 using System;
 using System.Data.Common;
 using System.Data.SqlClient;
@@ -20,6 +21,12 @@ namespace Belgrade.SqlClient
         {
             if (mapper is BaseStatement)
                 (mapper as BaseStatement).AddParameter(name, type, value, size);
+            return mapper;
+        }
+
+        public static IQueryMapper AddWithValue(this IQueryMapper mapper, string name, object value)
+        {
+            Util.AddParameterWithValue(mapper, name, value);
             return mapper;
         }
 

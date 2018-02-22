@@ -20,7 +20,7 @@ namespace Belgrade.SqlClient.Common
         /// <summary>
         /// Sql Command that will be executed.
         /// </summary>
-        protected DbCommand Command;
+        private DbCommand command;
 
         protected List<Func<DbCommand, DbCommand>> CommandModifierList = new List<Func<DbCommand, DbCommand>>();
 
@@ -36,6 +36,8 @@ namespace Belgrade.SqlClient.Common
         protected ErrorHandlerBuilder ErrorHandlerBuilder;
 
         protected static readonly ErrorHandlerBuilder DefaultErrorHandlerBuilder = new DefaultErrorHandlerBuilder();
+
+        public DbCommand Command { get => command; internal set => command = value; }
 
         /// <summary>
         /// Set the object that will modify command.

@@ -97,7 +97,7 @@ namespace Belgrade.SqlClient.SqlDb.Rls
             command.CommandText = string.Format(
                 "EXEC sp_set_session_context @{0}, @{1}, @read_only = {2};"
                 + command.CommandText
-                + ";EXEC sp_set_session_context @{0}, NULL;",
+                + (isReadOnly ? "":";EXEC sp_set_session_context @{0}, NULL;"),
                 SESSION_KEY_NAME, SESSION_VALUE_NAME, isReadOnly? '1':'0');
 
             return command;
