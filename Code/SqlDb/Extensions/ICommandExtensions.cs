@@ -24,7 +24,12 @@ namespace Belgrade.SqlClient
         public static ICommand Param(this ICommand command, string name, System.Data.DbType type, object value, int size = 0)
         {
             if (command is BaseStatement)
-                (command as BaseStatement).AddParameter(name, type, value, size);
+            {
+                if(value != null)
+                    (command as BaseStatement).AddParameter(name, type, value, size);
+                else
+                    (command as BaseStatement).AddParameter(name, type, DBNull.Value, size);
+            }
             return command;
         }
 

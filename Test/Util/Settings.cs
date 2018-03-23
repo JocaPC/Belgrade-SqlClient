@@ -7,6 +7,6 @@ namespace Util
 {
     public class Settings
     {
-        public static string ConnectionString = "Server=.\\SQLEXPRESS;Database=master;Integrated Security=true";
+        public static string ConnectionString = "Server=.;Database=master;Integrated Security=true";
     }
 }

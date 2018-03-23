@@ -35,5 +35,24 @@ namespace Basic
             // Assert
             Assert.Equal("Hello World", p.Value);
         }
+
+
+        [Fact]
+        public void SelectNullAsParameter()
+        {
+            // Arrange
+            string sql = "SELECT TOP 1 a = 'OK' FROM sys.columns WHERE @p IS NULL";
+            string result = "DEFAULT";
+
+            // Action
+            sut
+                .Sql(sql)
+                .Param("@p", DbType.String, null)
+                .Map(r => result = r.GetString(0))
+                .Wait();
+
+            // Assert
+            Assert.Equal("OK", result);
+        }
     }
 }

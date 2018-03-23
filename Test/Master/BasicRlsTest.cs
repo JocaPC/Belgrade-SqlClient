@@ -21,12 +21,16 @@ namespace Basic
             string key = Guid.NewGuid().ToString();
             string value = Guid.NewGuid().ToString().Replace('-', '_');
             var sut = new Belgrade.SqlClient.SqlDb.QueryMapper(Util.Settings.ConnectionString).AddRls(key,() => value);
+            string result = null;
 
             // Action
-            await sut.ExecuteReader("select cast(SESSION_CONTEXT(N'"+key+"') as varchar(50))", 
-                reader => 
-                // Assert
-                Assert.Equal(value, reader.GetString(0)));   
+            await sut
+                    .Sql("select cast(SESSION_CONTEXT(N'"+key+"') as varchar(50))")
+                    .OnError(ex=> Assert.True(false, "Exception should not be thrown: " + ex))
+                    .Map(reader => {result = reader.GetString(0);});  
+            
+            // Assert
+            Assert.Equal(value, result); 
         }
 
         [Fact]
@@ -41,7 +45,9 @@ namespace Basic
             // Action
             using (MemoryStream ms = new MemoryStream())
             {
-                await sut.Stream("select cast(SESSION_CONTEXT(N'" + key + "') as varchar(50)) as ctx for json path", ms);
+                await sut
+                    .OnError(ex=> Assert.True(false, "Exception should not be thrown: " + ex))
+                    .Stream("select cast(SESSION_CONTEXT(N'" + key + "') as varchar(50)) as ctx for json path", ms);
                 ms.Position = 0;
                 result = new StreamReader(ms).ReadToEnd();
             }
