@@ -141,6 +141,26 @@ namespace Belgrade.SqlClient
             return pipe.Stream(cmd, writer, options);
         }
 
+        /// <summary>
+        /// Executes SQL query and puts results into stream.
+        /// </summary>
+        /// <param name="stream">Output stream where results will be written.</param>
+        /// <returns>Task</returns>
+        public static Task Stream(this IQueryPipe pipe, Stream stream, string defaultOutput)
+        {
+            return pipe.Stream(stream, new Options() { DefaultOutput = defaultOutput });
+        }
+
+        /// <summary>
+        /// Executes SQL query and puts results into stream.
+        /// </summary>
+        /// <param name="stream">Output stream where results will be written.</param>
+        /// <returns>Task</returns>
+        public static Task Stream(this IQueryPipe pipe, TextWriter writer, string defaultOutput)
+        {
+            return pipe.Stream(writer, new Options() { DefaultOutput = defaultOutput });
+        }
+
         public static IQueryPipe AddContextVariable(this IQueryPipe pipe, string key, Func<string> value)
         {
             var stmt = pipe as BaseStatement;
