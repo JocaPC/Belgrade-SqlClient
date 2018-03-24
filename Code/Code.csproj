@@ -18,7 +18,7 @@
     <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Authors>Jovan Popovic</Authors>
-    <Version>0.9.2</Version>
+    <Version>0.9.3</Version>
     <PackageProjectUrl>https://github.com/JocaPC/CLR-Belgrade-SqlClient</PackageProjectUrl>
     <PackageTags>C#, .NET, SqlServer</PackageTags>
     <RepositoryUrl>https://github.com/JocaPC/CLR-Belgrade-SqlClient</RepositoryUrl>
