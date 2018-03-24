@@ -30,6 +30,7 @@ namespace Belgrade.SqlClient
             return mapper;
         }
 
+        [Obsolete("Use mapper.Sql(...).Map(callback) instead.")]
         public static Task Map(this IQueryMapper mapper, DbCommand cmd, Action<DbDataReader> callback)
         {
             return mapper.Sql(cmd).Map(callback);
@@ -53,6 +54,7 @@ namespace Belgrade.SqlClient
         /// <param name="sql">SQL query that will be executed.</param>
         /// <param name="callback">Callback function that will be called for each row.</param>
         /// <returns>Task</returns>
+        [Obsolete("Use mapper.Sql(...).Map(callback) instead.")]
         public static Task Map(this IQueryMapper mapper, string sql, Action<DbDataReader> callback)
         {
             var cmd = new SqlCommand(sql);
@@ -65,6 +67,7 @@ namespace Belgrade.SqlClient
         /// <param name="sql">SQL query that will be executed.</param>
         /// <param name="callback">Async callback function that will be called for each row.</param>
         /// <returns>Task</returns>
+        [Obsolete("Use mapper.Sql(...).Map(callback) instead.")]
         public static Task Map(this IQueryMapper mapper, string sql, Func<DbDataReader, Task> callback)
         {
             var cmd = new SqlCommand(sql);
@@ -80,6 +83,7 @@ namespace Belgrade.SqlClient
         /// <param name="sql">SQL query that will be executed.</param>
         /// <param name="callback">Callback function that will be called for each row.</param>
         /// <returns>Task</returns>
+        [Obsolete("Use mapper.Sql(...).Map(callback) instead.")]
         public static Task ExecuteReader(this IQueryMapper mapper, string sql, Action<DbDataReader> callback)
         {
             return mapper.Map(sql, callback);
@@ -91,20 +95,24 @@ namespace Belgrade.SqlClient
         /// <param name="sql">SQL query that will be executed.</param>
         /// <param name="callback">Callback function that will be called for each row.</param>
         /// <returns>Task</returns>
+        [Obsolete("Use mapper.Sql(...).Map(callback) instead.")]
         public static Task ExecuteReader(this IQueryMapper mapper, SqlCommand cmd, Action<DbDataReader> callback)
         {
             return mapper.Map(cmd, callback);
         }
 
+        [Obsolete("Use mapper.Sql(...).Map(callback) instead.")]
         public static Task ExecuteReader(this IQueryMapper mapper, SqlCommand cmd, Func<DbDataReader, Task> callback)
         {
             return mapper.Sql(cmd).Map(callback);
         }
 
+        [Obsolete("Use mapper.Sql(...).Map(callback) instead.")]
         public static Task ExecuteReader(this IQueryMapper mapper, string sql, Func<DbDataReader, Task> callback)
         {
             return mapper.Map(sql, callback);
         }
+
         #endregion
 
         /// <summary>
@@ -116,7 +124,7 @@ namespace Belgrade.SqlClient
         public static async Task<string> GetString(this IQueryMapper mapper, SqlCommand cmd)
         {
             var sb = new StringBuilder();
-            await mapper.Map(cmd, reader => sb.Append(reader[0]));
+            await mapper.Sql(cmd).Map(reader => sb.Append(reader[0]));
             return sb.ToString();
         }
 

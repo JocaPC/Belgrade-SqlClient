@@ -113,7 +113,7 @@ namespace Belgrade.SqlClient.Common
             bool isErrorDetected = false;
             try
             {
-                await this.Mapper.Map(command,
+                await this.Mapper.Sql(command).Map(
                     async reader =>
                     {
                         try

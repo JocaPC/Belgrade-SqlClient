@@ -90,7 +90,7 @@ namespace Belgrade.SqlClient.Common
             if (command.Connection == null)
                 command.Connection = this.Connection;
 
-            await this.Pipe.Stream(command, output, options);
+            await this.Pipe.Sql(command).Stream(output, options);
         }
 
         /// <summary>
@@ -108,7 +108,7 @@ namespace Belgrade.SqlClient.Common
             if (command.Connection == null)
                 command.Connection = this.Connection;
 
-            await this.Pipe.Stream(command, writer, options);
+            await this.Pipe.Sql(command).Stream(writer, options);
         }
 
         /// <summary>
