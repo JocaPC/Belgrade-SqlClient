@@ -1,4 +1,13 @@
-﻿DROP TABLE IF EXISTS Product
+﻿DROP DATABASE IF EXISTS ProductCatalogDemo;
+GO
+
+CREATE DATABASE ProductCatalogDemo;
+GO
+
+USE ProductCatalogDemo;
+GO
+
+DROP TABLE IF EXISTS Product
 DROP SEQUENCE IF EXISTS ProductId
 GO
 

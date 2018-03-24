@@ -34,6 +34,7 @@ namespace Belgrade.SqlClient
         {
             return mapper.Sql(cmd).Map(callback);
         }
+
         #region "Text command extensions"
 
         /// <summary>

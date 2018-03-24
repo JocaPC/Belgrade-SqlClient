@@ -22,10 +22,24 @@ namespace Belgrade.SqlClient
         Task Map(Action<DbDataReader> callback);
 
         /// <summary>
+        /// Executes sql command and provides each row to the callback function.
+        /// </summary>
+        /// <param name="callback">Callback function that will be called for each row.</param>
+        /// <returns>Task</returns>
+        Task Map(Action<DbDataReader, Exception> callback);
+
+        /// <summary>
         /// Executes sql command and provides each row to the async callback function.
         /// </summary>
         /// <param name="callback">Async callback function that will be called for each row.</param>
         /// <returns>Task</returns>
         Task Map(Func<DbDataReader, Task> callback);
+
+        /// <summary>
+        /// Executes sql command and provides each row to the async callback function.
+        /// </summary>
+        /// <param name="callback">Async callback function that will be called for each row.</param>
+        /// <returns>Task</returns>
+        Task Map(Func<DbDataReader, Exception, Task> callback);
     }
 }

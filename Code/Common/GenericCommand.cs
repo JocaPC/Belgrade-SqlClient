@@ -133,7 +133,25 @@ namespace Belgrade.SqlClient.Common
 
             await (this.Mapper.SetCommand(command) as IQueryMapper).Map(callback);
         }
-        
+
+        /// <summary>
+        /// Executes sql statement and provides each row to the callback function.
+        /// </summary>
+        /// <param name="command">SQL command that will be executed.</param>
+        /// <param name="callback">Callback function that will be called for each row.</param>
+        /// <returns>Task</returns>
+        public async Task Map(Func<DbDataReader, Exception, Task> callback)
+        {
+            DbCommand command = base.Command;
+            if (command == null)
+                throw new InvalidOperationException("Command is not set in SqlCommand.");
+            command = this.CommandModifier(command);
+            if (command.Connection == null)
+                command.Connection = this.Connection;
+
+            await (this.Mapper.SetCommand(command) as IQueryMapper).Map(callback);
+        }
+
         /// <summary>
         /// Executes sql statement and provides each row to the callback function.
         /// </summary>
@@ -149,9 +167,27 @@ namespace Belgrade.SqlClient.Common
             if (command.Connection == null)
                 command.Connection = this.Connection;
 
-            await this.Mapper.Map(command, callback);
+            await this.Mapper.Sql(command).Map(callback);
         }
-        
+
+        /// <summary>
+        /// Executes sql statement and provides each row to the callback function.
+        /// </summary>
+        /// <param name="command">SQL command that will be executed.</param>
+        /// <param name="callback">Callback function that will be called for each row.</param>
+        /// <returns>Task</returns>
+        public async Task Map(Action<DbDataReader, Exception> callback)
+        {
+            DbCommand command = base.Command;
+            if (command == null)
+                throw new InvalidOperationException("Command is not set in SqlCommand.");
+            command = this.CommandModifier(command);
+            if (command.Connection == null)
+                command.Connection = this.Connection;
+
+            await this.Mapper.Sql(command).Map(callback);
+        }
+
         internal override BaseStatement AddErrorHandler(ErrorHandlerBuilder builder)
         {
             if (this.Mapper != null) this.Mapper.AddErrorHandler(builder);

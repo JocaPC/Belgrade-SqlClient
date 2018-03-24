@@ -63,7 +63,8 @@ namespace Errors
         [CombinatorialValues(true, false)] bool useCommandAsPipe,
         [CombinatorialValues("?", "N/A", null, "")] string defaultValue,
         [CombinatorialValues("<s>", "{", "<!--", null, "")] string prefix,
-        [CombinatorialValues(null, "</s>", "}", "", "-->")] string suffix)
+        [CombinatorialValues(null, "</s>", "}", "", "-->")] string suffix,
+        [CombinatorialValues(true, false)] bool executeCallbackOnError)
         {
             var pair = query_error.Split('/');
             var query = pair[0];
@@ -88,14 +89,23 @@ namespace Errors
                         break;
 
                     case "mapper":
-                        t = mapper
+                        var m = mapper
                             .OnError(ex =>
                             {
                                 Assert.True(ex.GetType().Name == "SqlException");
                                 Assert.Equal(error, ex.Message);
                                 exceptionThrown = true;
-                            })
-                            .ExecuteReader(query, r => { throw new Exception("Should not execute callback!"); });
+                            });
+                        if(executeCallbackOnError)
+                            t = m.Sql(query)
+                                .Map((r,ex) => {
+                                    Assert.Null(r);
+                                    Assert.NotNull(ex);
+                                    Assert.True(ex.GetType().Name == "SqlException");
+                                    Assert.Equal(error, ex.Message);
+                                });
+                        else
+                            t = m.Map(query, r => { throw new Exception("Should not execute callback!"); });
                         break;
 
                     case "command":
@@ -158,8 +168,8 @@ namespace Errors
         }
         
         [Theory]
-        [InlineData("Server=.\\SQLEXPRESS", "Server=.\\NONEXISTINGSERVER")]
-        [InlineData("Database=master;", "Database=INVALIDDTABASE;")]
+        [InlineData("Server=.", "Server=.\\NONEXISTINGSERVER")]
+        [InlineData("Database=master;", "Database=INVALIDDATABASE;")]
         [InlineData("Integrated Security=true", "User Id=sa;Password=invalidpassword")]
         public async Task InvalidConnection(string ConnStringToken, string NewValue)
         {
