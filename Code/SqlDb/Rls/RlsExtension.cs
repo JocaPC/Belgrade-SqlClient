@@ -1,11 +1,7 @@
-﻿using Belgrade.SqlClient;
-using Belgrade.SqlClient.Common;
+﻿using Belgrade.SqlClient.Common;
 using System;
-using System.Collections.Generic;
 using System.Data.Common;
 using System.Data.SqlClient;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace Belgrade.SqlClient.SqlDb.Rls
 {
@@ -32,25 +28,25 @@ namespace Belgrade.SqlClient.SqlDb.Rls
             return cmd;
         }
 
-        public static IQueryMapper AddContextVariable(this IQueryMapper mapper, string key, Func<string> value)
+        public static IQueryMapper AddContextVariable(this IQueryMapper mapper, string key, Func<string> value, bool isReadOnly = true)
         {
             var stmt = mapper as BaseStatement;
-            stmt.SetCommandModifier(CreateSessionContextCommandModifier(key, value));
+            stmt.SetCommandModifier(CreateSessionContextCommandModifier(key, value, isReadOnly));
             return mapper;
         }
 
-        public static ICommand AddContextVariable(this ICommand cmd, string key, Func<string> value)
+        public static ICommand AddContextVariable(this ICommand cmd, string key, Func<string> value, bool isReadOnly = true)
         {
             var stmt = cmd as BaseStatement;
-            stmt.SetCommandModifier(CreateSessionContextCommandModifier(key, value));
+            stmt.SetCommandModifier(CreateSessionContextCommandModifier(key, value, isReadOnly));
             return cmd;
         }
 
-        private static Func<DbCommand, DbCommand> CreateSessionContextCommandModifier(string key, Func<string> value)
+        private static Func<DbCommand, DbCommand> CreateSessionContextCommandModifier(string key, Func<string> value, bool isReadOnly = true)
         {
             return command =>
             {
-                AddContextVariables(key, value, command);
+                AddContextVariables(key, value, command, isReadOnly);
                 return command;
             };
         }
@@ -65,7 +61,7 @@ namespace Belgrade.SqlClient.SqlDb.Rls
                 }
                 else
                 {
-                    AddContextVariables(key, value, command);
+                    AddContextVariables(key, value, command, isReadOnly: true);
                 }
 
                 return command;
