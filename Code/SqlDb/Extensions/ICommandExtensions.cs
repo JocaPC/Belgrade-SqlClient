@@ -30,9 +30,19 @@ namespace Belgrade.SqlClient
             return command.Sql(cmd);
         }
 
+        /// <summary>
+        /// Initializes a stored procedure (no need for explicit EXEC in command text.)
+        /// </summary>
+        /// <param name="command">Sql command initialized as stored procedure.</param>
+        /// <param name="procedure">Name of the stored procedure.</param>
+        /// <returns>Command with initialized stored procedure.</returns>
+        public static ICommand Proc(this ICommand command, string procedure)
+        {
+            var cmd = new SqlCommand(procedure);
+            cmd.CommandType = System.Data.CommandType.StoredProcedure;
+            return command.Sql(cmd);
+        }
 
         #endregion
-
-
     }
 }
