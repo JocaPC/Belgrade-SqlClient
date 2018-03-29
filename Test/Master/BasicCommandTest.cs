@@ -36,6 +36,26 @@ namespace Basic
             Assert.Equal("Hello World", p.Value);
         }
 
+        [Theory]
+        [InlineData("sys", "columns")]
+        [InlineData("sys", "objects")]
+        public async Task ExecuteProc(string schema, string view)
+        {
+            // Arrange
+            string rSchema = "", rView = "";
+
+            // Action
+            await sut.Proc("sp_help")
+                        .Param("objname", schema+"."+view)
+                        .OnError(ex => Assert.False(true, "Unexpected exception: " + ex))
+                        .Map(r => { rView = r["Name"].ToString();
+                                    rSchema = r["Owner"].ToString();
+                        });
+
+            // Assert
+            Assert.Equal(view, rView);
+            Assert.Equal(schema, rSchema);
+        }
 
         [Fact]
         public void SelectNullAsParameter()

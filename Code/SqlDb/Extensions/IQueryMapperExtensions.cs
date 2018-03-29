@@ -1,6 +1,4 @@
 ﻿using Code.SqlDb.Extensions;
-using System;
-using System.Data.Common;
 using System.Data.SqlClient;
 using System.Text;
 using System.Threading.Tasks;
@@ -9,12 +7,18 @@ namespace Belgrade.SqlClient
 {
     public static partial class IQueryMapperExtensions
     {
-        public static IQueryMapper AddWithValue(this IQueryMapper mapper, string name, object value)
+        /// <summary>
+        /// Add a parameter with specified value to the mapper.
+        /// </summary>
+        /// <param name="mapper">Mapper where the parameter will be added.</param>
+        /// <param name="name">Name of the parameter.</param>
+        /// <param name="value">Value of the parameter.</param>
+        /// <returns>Mapper object.</returns>
+        public static IQueryMapper Param(this IQueryMapper mapper, string name, object value)
         {
             Util.AddParameterWithValue(mapper, name, value);
             return mapper;
         }
-
 
         #region "Text command extensions"
 
@@ -31,10 +35,9 @@ namespace Belgrade.SqlClient
         #endregion
         
         /// <summary>
-        /// Executes sql statement and provides each row to the async callback function.
+        /// Executes sql statement and returns concatenated result as string.
         /// </summary>
         /// <param name="sql">SQL query that will be executed.</param>
-        /// <param name="callback">Async callback function that will be called for each row.</param>
         /// <returns>Task</returns>
         public static async Task<string> GetString(this IQueryMapper mapper, SqlCommand cmd)
         {
@@ -44,7 +47,7 @@ namespace Belgrade.SqlClient
         }
 
         /// <summary>
-        /// Executes sql statement and provides each row to the async callback function.
+        /// Executes sql statement and returns concatenated result as string.
         /// </summary>
         /// <param name="sql">SQL query that will be executed.</param>
         /// <returns>Task</returns>

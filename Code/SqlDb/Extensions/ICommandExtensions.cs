@@ -6,13 +6,13 @@ namespace Belgrade.SqlClient
     public static partial class ICommandExtensions
     {
         /// <summary>
-        /// Add a paramater with value, with an inferred type.
+        /// Add a paramater to the command with a value and inferred type.
         /// </summary>
         /// <param name="command">The command object.</param>
         /// <param name="name">The name of the parameter.</param>
         /// <param name="value">The value of the parameter.</param>
-        /// <returns></returns>
-        public static ICommand AddWithValue(this ICommand command, string name, object value)
+        /// <returns>The command object with added prameter.</returns>
+        public static ICommand Param(this ICommand command, string name, object value)
         {
             Util.AddParameterWithValue(command, name, value);
             return command;

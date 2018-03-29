@@ -27,7 +27,7 @@ namespace Basic
             var sql = String.Format("select {0} 'a'", constant);
 
             // Action
-            var t = mapper.ExecuteReader(sql, (reader) => { result = reader.GetInt32(0); });
+            var t = mapper.Sql(sql).Map(reader => { result = reader.GetInt32(0); });
             if (useAsync)
                 await t;
             else

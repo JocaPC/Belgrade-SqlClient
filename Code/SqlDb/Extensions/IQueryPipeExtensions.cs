@@ -1,17 +1,18 @@
-﻿using System;
+﻿using Code.SqlDb.Extensions;
 using System.Data.SqlClient;
-using System.IO;
-using System.Threading.Tasks;
-using Belgrade.SqlClient.SqlDb;
-using Belgrade.SqlClient.Common;
-using System.Data.Common;
-using Code.SqlDb.Extensions;
 
 namespace Belgrade.SqlClient
 {
     public static partial class IQueryPipeExtensions
     {
-        public static IQueryPipe AddWithValue(this IQueryPipe pipe, string name, object value)
+        /// <summary>
+        /// Add a paramater to the pipe with a value and inferred type.
+        /// </summary>
+        /// <param name="pipe">The pipe object.</param>
+        /// <param name="name">The name of the parameter.</param>
+        /// <param name="value">The value of the parameter.</param>
+        /// <returns>The pipe object with the added parameter.</returns>
+        public static IQueryPipe Param(this IQueryPipe pipe, string name, object value)
         {
             Util.AddParameterWithValue(pipe, name, value);
             return pipe;
