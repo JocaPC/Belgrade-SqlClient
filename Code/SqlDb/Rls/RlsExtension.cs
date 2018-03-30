@@ -70,6 +70,8 @@ namespace Belgrade.SqlClient.SqlDb.Rls
 
         internal static DbCommand AddContextVariables(string key, Func<string> value, DbCommand command, bool isReadOnly = true)
         {
+            if (command.CommandType == System.Data.CommandType.StoredProcedure)
+                throw new InvalidOperationException("Cannot add row level security on stored procedure. ");
             var guid = Guid.NewGuid();
             /// Name of the sql parameter that will contain key name.
             string SESSION_KEY_NAME = guid.ToString().Replace('-', 'k');
