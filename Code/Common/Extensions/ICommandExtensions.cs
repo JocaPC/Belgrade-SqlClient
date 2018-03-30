@@ -1,4 +1,5 @@
 ﻿using Belgrade.SqlClient.Common;
+using Common.Logging;
 using System;
 using System.Data.Common;
 using System.IO;
@@ -89,17 +90,16 @@ namespace Belgrade.SqlClient
 
         #endregion
 
-#if NETCOREAPP2_0
         /// <summary>
         /// Adds a logger that will be used by SQL Command.
         /// </summary>
-        /// <param name="logger">Microsoft.Extensions.Logging.ILogger where log records will be written.</param>
+        /// <param name="logger">Common.Logging.ILog where log records will be written.</param>
         /// <returns>This statement.</returns>
-        public static ICommand AddLogger(this ICommand command, Microsoft.Extensions.Logging.ILogger logger)
+        public static ICommand AddLogger(this ICommand command, ILog logger)
         {
             (command as BaseStatement).AddLogger(logger);
             return command;
         }
-#endif
+
     }
 }

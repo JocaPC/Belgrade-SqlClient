@@ -3,6 +3,7 @@
 //  This source file is distributed in the hope that it will be useful, but
 //  WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 //  or FITNESS FOR A PARTICULAR PURPOSE. See the license files for details.
+using Common.Logging;
 using System;
 using System.Data;
 using System.Data.Common;
@@ -74,7 +75,6 @@ namespace Belgrade.SqlClient.Common
                 throw new ArgumentException("Cannot write to the stream in SqlResultToStream", "stream");
 
             return FlushSqlResultsToStream<Stream>(command, stream, options);
-
         }
 
         /// <summary>
@@ -120,7 +120,7 @@ namespace Belgrade.SqlClient.Common
                         {
                             if (isFirstChunk && options != null && options.Prefix != null)
                             {
-                                await FlushContent<TOutput>(stream, options.Prefix);
+                                await FlushContent<TOutput>(stream, options.Prefix, _logger);
                                 isFirstChunk = false;
                             }
                             if (reader.HasRows)
@@ -131,7 +131,7 @@ namespace Belgrade.SqlClient.Common
                                 if (reader[0].GetType().Name == "String")
                                 {
                                     buffer = reader.GetString(0);
-                                    await FlushContent<TOutput>(stream, buffer);
+                                    await FlushContent<TOutput>(stream, buffer, _logger);
                                     outputIsGenerated = true;
                                 }
                                 else if (reader[0].GetType().Name == "Byte[]")
@@ -141,7 +141,7 @@ namespace Belgrade.SqlClient.Common
                                     int pos = amount;
                                     do
                                     {
-                                        await FlushContent<TOutput>(stream, binary, amount);
+                                        await FlushContent<TOutput>(stream, binary, _logger, amount);
                                         outputIsGenerated = true;
                                         amount = (int)reader.GetBytes(0, pos, binary, 0, 2048);
                                         pos += amount;
@@ -150,75 +150,79 @@ namespace Belgrade.SqlClient.Common
                                 }
                                 else
                                 {
-                                    throw new ArgumentException("Return type " + reader[0].GetType().Name + " cannot be streamed.", "reader");
+                                    if (_logger != null)
+                                        _logger.Fatal("Column type " + reader[0].GetType().Name + " cannot be sent to the streamed.");
+
+                                    throw new ArgumentException("The column type returned by the query cannot be sent to the stream.", reader[0].GetType().Name);
                                 }
                             }
                             else
                             {
                                 if (options != null && options.DefaultOutput != null)
                                 {
-                                    await FlushContent<TOutput>(stream, options.DefaultOutput, ((options.DefaultOutput is byte[]) ? (options.DefaultOutput as byte[]).Length : (-1)));
+                                    await FlushContent<TOutput>(stream, options.DefaultOutput, _logger, ((options.DefaultOutput is byte[]) ? (options.DefaultOutput as byte[]).Length : (-1)));
                                     outputIsGenerated = true;
                                 }
                             }
                         }
                         catch (Exception ex)
                         {
+                            if (_logger != null)
+                                _logger.Error("Error occured while trying to flush results of SQL query to the stream.", ex);
                             isErrorDetected = true;
                             if (options != null)
                                 options.DefaultOutput = null; // Don't generate default output if error is raised.
                             try
                             {
-                                var errorHandler = base.GetErrorHandlerBuilder().SetCommand(command).CreateErrorHandler(
-#if NETCOREAPP2_0
-                                    base._logger
-#endif
-                                    );
-                                if (errorHandler == null)
-                                    throw;
-                                else
-                                    errorHandler(ex);
+                                var errorHandler = base.GetErrorHandlerBuilder().SetCommand(command).CreateErrorHandler(base._logger);
+                                errorHandler(ex, outputIsGenerated);
                             }
-                            catch { }
+                            catch (Exception ex2){
+                                if (_logger != null)
+                                    _logger.Warn("Error occured while trying to handle error in query pipe error handler.", ex2);
+                                throw;
+                            }
                         }
                     });
             }
             catch (Exception ex)
             {
+                if (_logger != null)
+                    _logger.Error("Error occured while trying to map results to output.", ex);
+
                 isErrorDetected = true;
                 if (options != null)
                     options.DefaultOutput = null; // Don't generate default output if error is raised.
                 try
                 {
-                    var errorHandler = base.GetErrorHandlerBuilder().SetCommand(command).CreateErrorHandler(
-#if NETCOREAPP2_0
-                                    base._logger
-#endif
-                        );
-                    if (errorHandler == null)
-                        throw;
-                    else
-                        errorHandler(ex);
-                } catch {  }
+                    var errorHandler = base.GetErrorHandlerBuilder().SetCommand(command).CreateErrorHandler(base._logger);
+                    errorHandler(ex, outputIsGenerated);
+                }
+                catch (Exception ex2)
+                {
+                    if (_logger != null)
+                        _logger.Warn("Error occured while trying to handle error in query pipe error handler(2).", ex2);
+                    throw;
+                }
             }
             finally
             {
                 if ( !isErrorDetected && isFirstChunk && options != null && options.Prefix != null)
                 {
-                    await FlushContent<TOutput>(stream, options.Prefix);
+                    await FlushContent<TOutput>(stream, options.Prefix, _logger);
                     isFirstChunk = false;
                 }
 
                 /// If the output is not generated by DataReader we need to generate default value.
                 if (!outputIsGenerated && options != null && options.DefaultOutput != null)
                 {
-                    await FlushContent<TOutput>(stream, options.DefaultOutput, ((options.DefaultOutput is byte[]) ? (options.DefaultOutput as byte[]).Length : (-1)));
+                    await FlushContent<TOutput>(stream, options.DefaultOutput, _logger, ((options.DefaultOutput is byte[]) ? (options.DefaultOutput as byte[]).Length : (-1)));
                 }
 
                 // Add suffix if there was no error.
                 if (!isErrorDetected && options != null && options.Suffix != null)
                 {
-                    await FlushContent<TOutput>(stream, options.Suffix);
+                    await FlushContent<TOutput>(stream, options.Suffix, _logger);
                 }
                 command.Connection.Close();
             }
@@ -232,36 +236,47 @@ namespace Belgrade.SqlClient.Common
         /// <param name="content">Content that will be flushed into stream or text writer.</param>
         /// <param name="amount">Lengt of the bytes to be writted (-1 for string).</param>
         /// <returns>Task</returns>
-        private static async Task FlushContent<TOutput>(TOutput output, object content, int amount = -1)
+        private static async Task FlushContent<TOutput>(TOutput output, object content, ILog _logger, int amount = -1)
         {
-            if (amount > -1)
+            try
             {
-                if (output is TextWriter)
+                if (amount > -1)
                 {
-                    var writer = output as TextWriter;
-                    await writer.WriteAsync(Encoding.UTF8.GetString((content as byte[]), 0, amount)).ConfigureAwait(false);
-                    await writer.FlushAsync();
+                    if (output is TextWriter)
+                    {
+                        var writer = output as TextWriter;
+                        await writer.WriteAsync(Encoding.UTF8.GetString((content as byte[]), 0, amount)).ConfigureAwait(false);
+                        await writer.FlushAsync();
+                    }
+                    else
+                    {
+                        // Since default value is not changed,we are writing binary.
+                        var writer = output as Stream;
+                        await writer.WriteAsync((content as byte[]), 0, amount).ConfigureAwait(false);
+                        await writer.FlushAsync();
+                    }
                 }
                 else
                 {
-                    // Since default value is not changed,we are writing binary.
-                    var writer = output as Stream;
-                    await writer.WriteAsync((content as byte[]), 0, amount).ConfigureAwait(false);
-                    await writer.FlushAsync();
+                    if (output is TextWriter)
+                    {
+                        var writer = output as TextWriter;
+                        await writer.WriteAsync(content as string).ConfigureAwait(false);
+                        await writer.FlushAsync();
+                    }
+                    else if (output is Stream)
+                    {
+                        var writer = output as Stream;
+                        var binary = Encoding.UTF8.GetBytes(content as string);
+                        await writer.WriteAsync(binary, 0, binary.Length).ConfigureAwait(false);
+                        await writer.FlushAsync();
+                    }
                 }
-            } else {
-                if (output is TextWriter)
-                {
-                    var writer = output as TextWriter;
-                    await writer.WriteAsync(content as string).ConfigureAwait(false);
-                    await writer.FlushAsync();
-                } else if (output is Stream)
-                {
-                    var writer = output as Stream;
-                    var binary = Encoding.UTF8.GetBytes(content as string);
-                    await writer.WriteAsync(binary, 0, binary.Length).ConfigureAwait(false);
-                    await writer.FlushAsync();
-                }
+            } catch(Exception ex)
+            {
+                if (_logger != null)
+                    _logger.Warn("Error occured while trying to flush content " + content + " to output " + output.GetType().Name, ex);
+                throw;
             }
         }
         

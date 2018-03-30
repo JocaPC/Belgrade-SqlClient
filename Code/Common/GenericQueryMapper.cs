@@ -50,6 +50,7 @@ namespace Belgrade.SqlClient.Common
             if (command.Connection == null)
                 command.Connection = this.Connection;
             bool isExceptionReported = false;
+            bool isResultSentToCallback = false;
 
             try
             {
@@ -70,9 +71,12 @@ namespace Belgrade.SqlClient.Common
                                 await (callback as Func<DbDataReader, Exception, Task>)(reader, null);
                             else
                                 throw new ArgumentException("Cannot use " + callback.GetType().Name + "as a callback.");
+                            isResultSentToCallback = true;
                         }
                     } catch (Exception ex)
                     {
+                        if (_logger != null)
+                            _logger.Error("Error occurred while trying to provide query results to mapper function.", ex);
                         if (callback is Action<DbDataReader, Exception>)
                             (callback as Action<DbDataReader, Exception>)(reader, ex);
                         else if (callback is Func<DbDataReader, Exception, Task>)
@@ -88,20 +92,29 @@ namespace Belgrade.SqlClient.Common
                 {
                     // Do not call the callback that expects exception second time 
                     // if it is already called before the exception was re-thrown.
-                    if (callback is Action<DbDataReader, Exception>)
-                        (callback as Action<DbDataReader, Exception>)(null, ex);
-                    else if (callback is Func<DbDataReader, Exception, Task>)
-                        await (callback as Func<DbDataReader, Exception, Task>)(null, ex);
+                    try
+                    {
+                        if (callback is Action<DbDataReader, Exception>)
+                            (callback as Action<DbDataReader, Exception>)(null, ex);
+                        else if (callback is Func<DbDataReader, Exception, Task>)
+                            await (callback as Func<DbDataReader, Exception, Task>)(null, ex);
+                    } catch (Exception ex2)
+                    {
+                        if (_logger != null)
+                            _logger.Error("Callback provided to Map() thrown the error while trying to handle exception.", ex2);
+                        throw;
+                    }
                 }
-                var errorHandler = base.GetErrorHandlerBuilder().SetCommand(command).CreateErrorHandler(
-#if NETCOREAPP2_0
-           base._logger
-#endif
-                    );
-                if (errorHandler == null)
+                try
+                {
+                    var errorHandler = base.GetErrorHandlerBuilder().SetCommand(command).CreateErrorHandler(base._logger);
+                    errorHandler(ex, isResultSentToCallback);
+                } catch(Exception ex2)
+                {
+                    if (_logger != null)
+                        _logger.Error("Error occurred while trying to handle excpetion thrown during mapping phase.", ex2);
                     throw;
-                else
-                    errorHandler(ex);
+                }
             }
             finally
             {

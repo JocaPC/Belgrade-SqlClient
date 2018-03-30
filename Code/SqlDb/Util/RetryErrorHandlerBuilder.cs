@@ -4,6 +4,7 @@
 //  WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 //  or FITNESS FOR A PARTICULAR PURPOSE.See the license files for details.
 using Belgrade.SqlClient.Common;
+using Common.Logging;
 using System;
 using System.Data.SqlClient;
 using System.Threading.Tasks;
@@ -49,22 +50,21 @@ namespace Belgrade.SqlClient.SqlDb
         /// Function that creates error handler that will implement retry logic.
         /// </summary>
         /// <returns></returns>
-        public override Action<Exception> CreateErrorHandler(
-#if NETCOREAPP2_0
-            Microsoft.Extensions.Logging.ILogger logger
-#endif
-            )
+        public override Action<Exception, bool> CreateErrorHandler(ILog logger)
         {
-#if NETCOREAPP2_0
             base._logger = logger;
-#endif
 
-            return async delegate (Exception ex)
+            return async delegate (Exception ex, bool isResultSentToCallback)
             {
+                /// IMPORTANT: If at least one result is sent to the client
+                /// we cannot retry SQL query
+                /// beacuse client might get duplicate rows.
+                if (isResultSentToCallback)
+                    throw ex;
                 bool success = false;
                 SqlException sqlex = ex as SqlException;
                 if (ex == null)
-                    throw new ArgumentException("Exception type must be SqlException.");
+                    throw new ArgumentException("Exception type must be SqlException.", ex);
                 int retryIteration = 0;
                 while (!success && retryIteration < RETRY_COUNT)
                 {
@@ -74,12 +74,9 @@ namespace Belgrade.SqlClient.SqlDb
                         if (sqlex.Number == code)
                         {
                             isRetryErrorCode = true;
-#if NETCOREAPP2_0
                             if(logger!=null)
-                                logger.Log<string>(
-                                    Microsoft.Extensions.Logging.LogLevel.Warning,
-                                    code, "Retry (" + retryIteration + ") due to error: " + sqlex.Number, ex, (str, exc) => str + exc.Message);
-#endif
+                                logger.Warn("Immediate retry (" + retryIteration + ") due to error.", sqlex);
+
                             break;
                         }
                     }
@@ -88,24 +85,17 @@ namespace Belgrade.SqlClient.SqlDb
                         if (sqlex.Number == code)
                         {
                             isRetryErrorCode = true;
-#if NETCOREAPP2_0
                             if(logger!=null)
-                                logger.Log<string>(
-                                    Microsoft.Extensions.Logging.LogLevel.Warning,
-                                    code, "Retry (" + retryIteration + ") due to transient error: " + sqlex.Number, ex, (str, exc) => str + exc.Message);
-#endif
+                                logger.Warn("Delayed retry (" + retryIteration + ") due to transient error: ", sqlex);
+
                             await Task.Delay(5000 + 10000 * retryIteration);
                             break;
                         }
                     }
                     if (!isRetryErrorCode)
                     {
-#if NETCOREAPP2_0
                         if(logger!=null)
-                            logger.Log<string>(
-                                    Microsoft.Extensions.Logging.LogLevel.Error,
-                                    sqlex.Number, "Non-transient error occured: " + sqlex.Number, ex, (str, exc) => str + exc.Message);
-#endif
+                            logger.Error("Non-transient error occured - re-throwing exception.", sqlex);
                         throw sqlex;
                     }
                     
@@ -113,22 +103,14 @@ namespace Belgrade.SqlClient.SqlDb
                     {
                         await base.Command.ExecuteNonQueryAsync();
                         success = true;
-#if NETCOREAPP2_0
                         if(logger!=null)
-                            logger.Log<string>(
-                                    Microsoft.Extensions.Logging.LogLevel.Information,
-                                    0, "Retry attempt (" +  retryIteration + ") suceeded", null, (str, exc) => str);
-#endif
+                            logger.Info("Retry attempt (" +  retryIteration + ") suceeded");
                         break;
                     }
                     catch (SqlException innerEx)
                     {
-#if NETCOREAPP2_0
                         if(logger!=null)
-                            logger.Log<string>(
-                                    Microsoft.Extensions.Logging.LogLevel.Error,
-                                    innerEx.Number, "Retry attempt (" +  retryIteration + ") failed: " + innerEx.Number, ex, (str, exc) => str + exc.Message);
-#endif
+                            logger.Error("Final retry attempt (" +  retryIteration + ") failed: " + innerEx.Message);
                         sqlex = innerEx;
                     }
 
@@ -137,13 +119,9 @@ namespace Belgrade.SqlClient.SqlDb
 
                 if (!success && retryIteration == RETRY_COUNT)
                 {
-#if NETCOREAPP2_0
-                        if(logger!=null)
-                            logger.Log<string>(
-                                    Microsoft.Extensions.Logging.LogLevel.Error,
-                                    -1, "Query failed after " +  RETRY_COUNT + " retries.", null, (str, exc) => str);
-#endif
-                    this.HandleUnhandledException(sqlex);
+                    if(logger!=null)
+                        logger.Error("Query failed after " +  RETRY_COUNT + " retries.", sqlex);
+                    this.HandleUnhandledException(sqlex, isResultSentToCallback);
                 }
             };
         }

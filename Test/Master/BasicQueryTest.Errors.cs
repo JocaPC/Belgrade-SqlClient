@@ -26,8 +26,9 @@ namespace Errors
             bool exceptionThrown = false;
             using (MemoryStream ms = new MemoryStream())
             {
-                await sut.OnError(ex => { exceptionThrown = true; Assert.True(ex.GetType().Name == "SqlException"); })
-                    .Stream("select 1 as a, 1/0 as b for json path", ms);
+                await sut.Sql("select 1 as a, 1/0 as b for json path")
+                    .OnError(ex => { exceptionThrown = true; Assert.True(ex.GetType().Name == "SqlException"); })
+                    .Stream(ms);
                 Assert.True(exceptionThrown);
             }
         }
@@ -168,10 +169,10 @@ namespace Errors
         }
         
         [Theory]
-        [InlineData("Server=.", "Server=.\\NONEXISTINGSERVER")]
-        [InlineData("Database=master;", "Database=INVALIDDATABASE;")]
-        [InlineData("Integrated Security=true", "User Id=sa;Password=invalidpassword")]
-        public async Task InvalidConnection(string ConnStringToken, string NewValue)
+        [InlineData("Server=.", "Server=.\\NONEXISTINGSERVER", -1)]
+        [InlineData("Database=master;", "Database=INVALIDDATABASE;", 4060)]
+        [InlineData("Integrated Security=true", "User Id=sa;Password=invalidpassword", 18456)]
+        public async Task InvalidConnection(string ConnStringToken, string NewValue, int ErrorCode)
         {
             bool exceptionThrown = false;
             var connString = Util.Settings.ConnectionString.Replace(ConnStringToken, NewValue);
@@ -179,12 +180,13 @@ namespace Errors
             using (MemoryStream ms = new MemoryStream())
             {
                 await sut
+                    .Sql("select 1 as a for json path")
                     .OnError(ex => {
                         exceptionThrown = true;
-                        Assert.True(ex.GetType().Name == "SqlException");
-                        Assert.Equal("A network-related or instance-specific error occurred while establishing a connection to SQL Server.The server was not found or was not accessible.Verify that the instance name is correct and that SQL Server is configured to allow remote connections. (provider: SQL Network Interfaces, error: 26 - Error Locating Server/ Instance Specified)", ex.Message);
+                        Assert.True(ex is SqlException);
+                        Assert.Equal(ErrorCode, (ex as SqlException).Number);
                     })
-                    .Stream("select 1 as a for json path", ms);
+                    .Stream(ms);
                 Assert.True(exceptionThrown, "Exception should be thrown when using connection string: " + connString);
             }
         }

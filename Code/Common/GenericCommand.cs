@@ -58,15 +58,18 @@ namespace Belgrade.SqlClient.Common
             }
             catch (Exception ex)
             {
-                var errorHandler = base.GetErrorHandlerBuilder().SetCommand(command).CreateErrorHandler(
-#if NETCOREAPP2_0
-                    base._logger
-#endif
-                    );
-                if (errorHandler == null)
+                if (_logger != null)
+                    _logger.Error("Error occured while trying to execute the command.", ex);
+                try
+                {
+                    var errorHandler = base.GetErrorHandlerBuilder().SetCommand(command).CreateErrorHandler(base._logger);
+                    errorHandler(ex, false);
+                } catch (Exception ex2)
+                {
+                    if (_logger != null)
+                        _logger.Error("Error occured while trying to handle command error.", ex2);
                     throw;
-                else
-                    errorHandler(ex);
+                }
             }
             finally
             {

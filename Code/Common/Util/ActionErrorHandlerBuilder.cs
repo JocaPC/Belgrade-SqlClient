@@ -4,6 +4,7 @@
 //  WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 //  or FITNESS FOR A PARTICULAR PURPOSE.See the license files for details.
 using Belgrade.SqlClient.Common;
+using Common.Logging;
 using System;
 
 namespace Belgrade.SqlClient
@@ -13,20 +14,22 @@ namespace Belgrade.SqlClient
     /// </summary>
     public class ActionErrorHandlerBuilder : ErrorHandlerBuilder
     {
-        readonly Action<Exception> handler;
-        public ActionErrorHandlerBuilder(Action<Exception> handler) {
+        readonly Action<Exception, bool> handler;
+        public ActionErrorHandlerBuilder(Action<Exception, bool> handler) {
             this.handler = handler;
+        }
+
+        public ActionErrorHandlerBuilder(Action<Exception> handler)
+        {
+            this.handler = (ex, isResultSent) => handler(ex);
         }
         /// <summary>
         /// Function that creates error handler that will just re-throw exception.
         /// </summary>
         /// <returns>Action that re-throws the exception.</returns>
-        public override Action<Exception> CreateErrorHandler(
-#if NETCOREAPP2_0
-            Microsoft.Extensions.Logging.ILogger logger
-#endif
-            )
+        public override Action<Exception, bool> CreateErrorHandler(ILog logger)
         {
+            base._logger = logger;
             return this.handler;
         }
     }

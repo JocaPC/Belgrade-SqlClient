@@ -3,6 +3,7 @@
 //  This source file is distributed in the hope that it will be useful, but
 //  WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 //  or FITNESS FOR A PARTICULAR PURPOSE.See the license files for details.
+using Common.Logging;
 using System;
 using System.Data.Common;
 
@@ -18,11 +19,10 @@ namespace Belgrade.SqlClient.Common
         /// </summary>
         protected DbCommand Command;
 
-        protected Action<Exception> FallbackHandler = null;
+        protected Action<Exception, bool> FallbackHandler = null;
 
-#if NETCOREAPP2_0
-        protected Microsoft.Extensions.Logging.ILogger _logger = null;
-#endif
+        protected ILog _logger = null;
+
         /// <summary>
         /// Set the command that caused the error.
         /// </summary>
@@ -36,11 +36,7 @@ namespace Belgrade.SqlClient.Common
 
         public ErrorHandlerBuilder AddErrorHandlerBuilder(ErrorHandlerBuilder errorHandlerBuilder)
         {
-            this.FallbackHandler = errorHandlerBuilder.CreateErrorHandler(
-#if NETCOREAPP2_0
-                                    this._logger
-#endif
-                );
+            this.FallbackHandler = errorHandlerBuilder.CreateErrorHandler(this._logger);
             return this;
         }
 
@@ -48,22 +44,22 @@ namespace Belgrade.SqlClient.Common
         /// Creates error handler action.
         /// </summary>
         /// <returns>The action that will be executed on error.</returns>
-        public abstract Action<Exception> CreateErrorHandler(
-#if NETCOREAPP2_0
-            Microsoft.Extensions.Logging.ILogger logger
-#endif
-            );
+        public abstract Action<Exception, bool> CreateErrorHandler(ILog logger);
 
         /// <summary>
-        /// Function that will handle excpetions that are nto handled by 
+        /// Function that will handle exceptions that are not handled by error handler. 
         /// </summary>
         /// <param name="ex">The unhandled exception.</param>
-        internal virtual void HandleUnhandledException(Exception ex)
+        internal virtual void HandleUnhandledException(Exception ex, bool isResultSentToCallback)
         {
             if (this.FallbackHandler != null)
-                this.FallbackHandler(ex);
+                this.FallbackHandler(ex, isResultSentToCallback);
             else
+            {
+                if (_logger != null)
+                    _logger.Warn("No fallback error handler for the exception.", ex);
                 throw ex;
+            }
         }
     }
 }

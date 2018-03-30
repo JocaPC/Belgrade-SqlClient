@@ -3,6 +3,7 @@
 //  This source file is distributed in the hope that it will be useful, but
 //  WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 //  or FITNESS FOR A PARTICULAR PURPOSE.See the license files for details.
+using Common.Logging;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -95,19 +96,17 @@ namespace Belgrade.SqlClient.Common
             return this;
         }
 
-#if NETCOREAPP2_0
-        protected Microsoft.Extensions.Logging.ILogger _logger = null;
+        protected ILog _logger = null;
 
         /// <summary>
         /// Adds a logger that will be used by SQL client.
         /// </summary>
-        /// <param name="logger">Microsoft.Extensions.Logging.ILogger where log records will be written.</param>
+        /// <param name="logger">Common.Logging.ILog where log records will be written.</param>
         /// <returns>This statement.</returns>
-        public BaseStatement AddLogger(Microsoft.Extensions.Logging.ILogger logger)
+        public BaseStatement AddLogger(ILog logger)
         {
             this._logger = logger;
             return this;
         }
-#endif
     }
 }

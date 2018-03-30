@@ -93,15 +93,16 @@ namespace Basic
             // Action
             using (var ms = new MemoryStream())
             {
-                await sut
+                await sut.Sql("select 1")
                     .OnError(ex => {
                         isErrorThrown = true;
 
                         // Assert (refactor)
-                        Assert.Equal("DataReader returned unexpected type Int32", ex.Message);
-                        Assert.Equal("reader", (ex as ArgumentException).ParamName);
+                        Assert.Equal(@"The column type returned by the query cannot be sent to the stream.
+Parameter name: Int32", ex.Message);
+                        Assert.Equal("Int32", actual: (ex as ArgumentException).ParamName);
                     })
-                    .Stream("select 1", ms, System.Text.UTF8Encoding.Default.GetBytes("DEFAULT"));
+                    .Stream(ms, new Options() { DefaultOutput = System.Text.UTF8Encoding.Default.GetBytes("DEFAULT") });
                 text = new StreamReader(ms).ReadToEnd();
             }
 
