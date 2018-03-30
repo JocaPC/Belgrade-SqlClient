@@ -21,7 +21,11 @@ namespace Belgrade.SqlClient
         /// Function that creates error handler that will just re-throw exception.
         /// </summary>
         /// <returns>Action that re-throws the exception.</returns>
-        public override Action<Exception> CreateErrorHandler()
+        public override Action<Exception> CreateErrorHandler(
+#if NETCOREAPP2_0
+            Microsoft.Extensions.Logging.ILogger logger
+#endif
+            )
         {
             return this.handler;
         }

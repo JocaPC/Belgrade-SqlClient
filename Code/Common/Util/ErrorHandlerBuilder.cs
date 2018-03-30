@@ -20,6 +20,9 @@ namespace Belgrade.SqlClient.Common
 
         protected Action<Exception> FallbackHandler = null;
 
+#if NETCOREAPP2_0
+        protected Microsoft.Extensions.Logging.ILogger _logger = null;
+#endif
         /// <summary>
         /// Set the command that caused the error.
         /// </summary>
@@ -33,7 +36,11 @@ namespace Belgrade.SqlClient.Common
 
         public ErrorHandlerBuilder AddErrorHandlerBuilder(ErrorHandlerBuilder errorHandlerBuilder)
         {
-            this.FallbackHandler = errorHandlerBuilder.CreateErrorHandler();
+            this.FallbackHandler = errorHandlerBuilder.CreateErrorHandler(
+#if NETCOREAPP2_0
+                                    this._logger
+#endif
+                );
             return this;
         }
 
@@ -41,7 +48,11 @@ namespace Belgrade.SqlClient.Common
         /// Creates error handler action.
         /// </summary>
         /// <returns>The action that will be executed on error.</returns>
-        public abstract Action<Exception> CreateErrorHandler();
+        public abstract Action<Exception> CreateErrorHandler(
+#if NETCOREAPP2_0
+            Microsoft.Extensions.Logging.ILogger logger
+#endif
+            );
 
         /// <summary>
         /// Function that will handle excpetions that are nto handled by 

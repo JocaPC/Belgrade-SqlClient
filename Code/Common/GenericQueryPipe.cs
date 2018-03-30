@@ -169,7 +169,11 @@ namespace Belgrade.SqlClient.Common
                                 options.DefaultOutput = null; // Don't generate default output if error is raised.
                             try
                             {
-                                var errorHandler = base.GetErrorHandlerBuilder().SetCommand(command).CreateErrorHandler();
+                                var errorHandler = base.GetErrorHandlerBuilder().SetCommand(command).CreateErrorHandler(
+#if NETCOREAPP2_0
+                                    base._logger
+#endif
+                                    );
                                 if (errorHandler == null)
                                     throw;
                                 else
@@ -186,7 +190,11 @@ namespace Belgrade.SqlClient.Common
                     options.DefaultOutput = null; // Don't generate default output if error is raised.
                 try
                 {
-                    var errorHandler = base.GetErrorHandlerBuilder().SetCommand(command).CreateErrorHandler();
+                    var errorHandler = base.GetErrorHandlerBuilder().SetCommand(command).CreateErrorHandler(
+#if NETCOREAPP2_0
+                                    base._logger
+#endif
+                        );
                     if (errorHandler == null)
                         throw;
                     else

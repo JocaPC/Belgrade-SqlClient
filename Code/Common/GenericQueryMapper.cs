@@ -93,7 +93,11 @@ namespace Belgrade.SqlClient.Common
                     else if (callback is Func<DbDataReader, Exception, Task>)
                         await (callback as Func<DbDataReader, Exception, Task>)(null, ex);
                 }
-                var errorHandler = base.GetErrorHandlerBuilder().SetCommand(command).CreateErrorHandler();
+                var errorHandler = base.GetErrorHandlerBuilder().SetCommand(command).CreateErrorHandler(
+#if NETCOREAPP2_0
+           base._logger
+#endif
+                    );
                 if (errorHandler == null)
                     throw;
                 else

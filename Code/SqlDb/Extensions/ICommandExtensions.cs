@@ -31,7 +31,7 @@ namespace Belgrade.SqlClient
         }
 
         /// <summary>
-        /// Initializes a stored procedure (no need for explicit EXEC in command text.)
+        /// Initializes a stored procedure (no need for explicit EXEC in the command text.)
         /// </summary>
         /// <param name="command">Sql command initialized as stored procedure.</param>
         /// <param name="procedure">Name of the stored procedure.</param>

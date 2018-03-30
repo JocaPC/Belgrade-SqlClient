@@ -6,6 +6,7 @@
 using Belgrade.SqlClient.Common;
 using System;
 using System.Data.SqlClient;
+using System.Threading.Tasks;
 
 namespace Belgrade.SqlClient.SqlDb
 {
@@ -32,6 +33,14 @@ namespace Belgrade.SqlClient.SqlDb
         };
 
         /// <summary>
+        /// Sql error codes that indicate that retry acton is required.
+        /// </summary>
+        static readonly int[] TransientErrorCodes =
+            new int[8]{
+                4060, 40197, 40501, 40613, 49918, 49919, 49920, 11001
+        };
+
+        /// <summary>
         /// Default number of retry attempts.
         /// </summary>
         public static int RETRY_COUNT = 3;
@@ -40,36 +49,86 @@ namespace Belgrade.SqlClient.SqlDb
         /// Function that creates error handler that will implement retry logic.
         /// </summary>
         /// <returns></returns>
-        public override Action<Exception> CreateErrorHandler()
+        public override Action<Exception> CreateErrorHandler(
+#if NETCOREAPP2_0
+            Microsoft.Extensions.Logging.ILogger logger
+#endif
+            )
         {
-            return delegate (Exception ex)
+#if NETCOREAPP2_0
+            base._logger = logger;
+#endif
+
+            return async delegate (Exception ex)
             {
                 bool success = false;
                 SqlException sqlex = ex as SqlException;
                 if (ex == null)
                     throw new ArgumentException("Exception type must be SqlException.");
                 int retryIteration = 0;
-                while (retryIteration < RETRY_COUNT)
+                while (!success && retryIteration < RETRY_COUNT)
                 {
                     bool isRetryErrorCode = false;
                     foreach(int code in RetryErrorCodes)
                     {
                         if (sqlex.Number == code)
+                        {
                             isRetryErrorCode = true;
+#if NETCOREAPP2_0
+                            if(logger!=null)
+                                logger.Log<string>(
+                                    Microsoft.Extensions.Logging.LogLevel.Warning,
+                                    code, "Retry (" + retryIteration + ") due to error: " + sqlex.Number, ex, (str, exc) => str + exc.Message);
+#endif
+                            break;
+                        }
+                    }
+                    foreach (int code in TransientErrorCodes)
+                    {
+                        if (sqlex.Number == code)
+                        {
+                            isRetryErrorCode = true;
+#if NETCOREAPP2_0
+                            if(logger!=null)
+                                logger.Log<string>(
+                                    Microsoft.Extensions.Logging.LogLevel.Warning,
+                                    code, "Retry (" + retryIteration + ") due to transient error: " + sqlex.Number, ex, (str, exc) => str + exc.Message);
+#endif
+                            await Task.Delay(5000 + 10000 * retryIteration);
+                            break;
+                        }
                     }
                     if (!isRetryErrorCode)
                     {
+#if NETCOREAPP2_0
+                        if(logger!=null)
+                            logger.Log<string>(
+                                    Microsoft.Extensions.Logging.LogLevel.Error,
+                                    sqlex.Number, "Non-transient error occured: " + sqlex.Number, ex, (str, exc) => str + exc.Message);
+#endif
                         throw sqlex;
                     }
-
+                    
                     try
                     {
-                        base.Command.ExecuteNonQuery();
+                        await base.Command.ExecuteNonQueryAsync();
                         success = true;
+#if NETCOREAPP2_0
+                        if(logger!=null)
+                            logger.Log<string>(
+                                    Microsoft.Extensions.Logging.LogLevel.Information,
+                                    0, "Retry attempt (" +  retryIteration + ") suceeded", null, (str, exc) => str);
+#endif
                         break;
                     }
                     catch (SqlException innerEx)
                     {
+#if NETCOREAPP2_0
+                        if(logger!=null)
+                            logger.Log<string>(
+                                    Microsoft.Extensions.Logging.LogLevel.Error,
+                                    innerEx.Number, "Retry attempt (" +  retryIteration + ") failed: " + innerEx.Number, ex, (str, exc) => str + exc.Message);
+#endif
                         sqlex = innerEx;
                     }
 
@@ -77,7 +136,13 @@ namespace Belgrade.SqlClient.SqlDb
                 }
 
                 if (!success && retryIteration == RETRY_COUNT)
-                { 
+                {
+#if NETCOREAPP2_0
+                        if(logger!=null)
+                            logger.Log<string>(
+                                    Microsoft.Extensions.Logging.LogLevel.Error,
+                                    -1, "Query failed after " +  RETRY_COUNT + " retries.", null, (str, exc) => str);
+#endif
                     this.HandleUnhandledException(sqlex);
                 }
             };

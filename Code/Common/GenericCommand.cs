@@ -58,7 +58,11 @@ namespace Belgrade.SqlClient.Common
             }
             catch (Exception ex)
             {
-                var errorHandler = base.GetErrorHandlerBuilder().SetCommand(command).CreateErrorHandler();
+                var errorHandler = base.GetErrorHandlerBuilder().SetCommand(command).CreateErrorHandler(
+#if NETCOREAPP2_0
+                    base._logger
+#endif
+                    );
                 if (errorHandler == null)
                     throw;
                 else

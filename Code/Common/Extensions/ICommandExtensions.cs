@@ -88,5 +88,18 @@ namespace Belgrade.SqlClient
         }
 
         #endregion
+
+#if NETCOREAPP2_0
+        /// <summary>
+        /// Adds a logger that will be used by SQL Command.
+        /// </summary>
+        /// <param name="logger">Microsoft.Extensions.Logging.ILogger where log records will be written.</param>
+        /// <returns>This statement.</returns>
+        public static ICommand AddLogger(this ICommand command, Microsoft.Extensions.Logging.ILogger logger)
+        {
+            (command as BaseStatement).AddLogger(logger);
+            return command;
+        }
+#endif
     }
 }

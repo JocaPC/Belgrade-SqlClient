@@ -94,5 +94,20 @@ namespace Belgrade.SqlClient.Common
             this.Command.Parameters.Add(p);
             return this;
         }
+
+#if NETCOREAPP2_0
+        protected Microsoft.Extensions.Logging.ILogger _logger = null;
+
+        /// <summary>
+        /// Adds a logger that will be used by SQL client.
+        /// </summary>
+        /// <param name="logger">Microsoft.Extensions.Logging.ILogger where log records will be written.</param>
+        /// <returns>This statement.</returns>
+        public BaseStatement AddLogger(Microsoft.Extensions.Logging.ILogger logger)
+        {
+            this._logger = logger;
+            return this;
+        }
+#endif
     }
 }
