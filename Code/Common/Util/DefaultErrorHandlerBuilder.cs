@@ -18,7 +18,7 @@ namespace Belgrade.SqlClient
         /// Function that creates error handler that will just re-throw exception.
         /// </summary>
         /// <returns>Action that re-throws the exception.</returns>
-        public override Action<Exception, bool> CreateErrorHandler(ILog logger)
+        internal override Action<Exception, bool> CreateErrorHandler(ILog logger)
         {
             return (ex, isResultSentToCallback) => throw ex;
         }

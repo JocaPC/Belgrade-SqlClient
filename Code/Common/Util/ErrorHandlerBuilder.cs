@@ -28,13 +28,13 @@ namespace Belgrade.SqlClient.Common
         /// </summary>
         /// <param name="command">The command that caused the error.</param>
         /// <returns>Current instance of ErrorHandler object.</returns>
-        public ErrorHandlerBuilder SetCommand(DbCommand command)
+        internal ErrorHandlerBuilder SetCommand(DbCommand command)
         {
             this.Command = command;
             return this;
         }
 
-        public ErrorHandlerBuilder AddErrorHandlerBuilder(ErrorHandlerBuilder errorHandlerBuilder)
+        internal ErrorHandlerBuilder AddErrorHandlerBuilder(ErrorHandlerBuilder errorHandlerBuilder)
         {
             this.FallbackHandler = errorHandlerBuilder.CreateErrorHandler(this._logger);
             return this;
@@ -44,7 +44,7 @@ namespace Belgrade.SqlClient.Common
         /// Creates error handler action.
         /// </summary>
         /// <returns>The action that will be executed on error.</returns>
-        public abstract Action<Exception, bool> CreateErrorHandler(ILog logger);
+        internal abstract Action<Exception, bool> CreateErrorHandler(ILog logger);
 
         /// <summary>
         /// Function that will handle exceptions that are not handled by error handler. 

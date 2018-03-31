@@ -44,15 +44,45 @@ namespace Belgrade.SqlClient.SqlDb
         /// <summary>
         /// Default number of retry attempts.
         /// </summary>
-        public static int RETRY_COUNT = 3;
+        private static int RETRY_COUNT = 3;
+        
+
+        /// <summary>
+        /// Enables or disables retry handler.
+        /// </summary>
+        /// <param name="retry">Specifies should the retry logic be enabled (<code>true</code> by default).</param>
+        public static void Enable(bool retry)
+        {
+            RETRY_ERRORS = retry;
+        }
+
+        /// <summary>
+        /// Enables or disables retry handler that performs delayed retry on transient errors such as failover.
+        /// Retry handler will repeat command after 5, 10, and 15 seconds if some of the following errors occure:
+        /// 4060, 40197, 40501, 40613, 49918, 49919, 49920, 11001
+        /// </summary>
+        /// <param name="retry">Specifies should the retry logic be enabled (<code>true</code> by default).</param>
+        public static void EnableDelayedRetries(bool retry)
+        {
+            RETRY_TRANSIENT_ERRORS = retry;
+        }
+
+        private static bool RETRY_ERRORS = true;
+
+        private static bool RETRY_TRANSIENT_ERRORS = true;
 
         /// <summary>
         /// Function that creates error handler that will implement retry logic.
         /// </summary>
         /// <returns></returns>
-        public override Action<Exception, bool> CreateErrorHandler(ILog logger)
+        internal override Action<Exception, bool> CreateErrorHandler(ILog logger)
         {
             base._logger = logger;
+            if (!RETRY_ERRORS)
+            {
+                // if retry is disabled just re-throw the error
+                return (ex, flag) => throw ex;
+            }
 
             return async delegate (Exception ex, bool isResultSentToCallback)
             {
@@ -61,6 +91,13 @@ namespace Belgrade.SqlClient.SqlDb
                 /// beacuse client might get duplicate rows.
                 if (isResultSentToCallback)
                     throw ex;
+
+                if (!RETRY_ERRORS)
+                {
+                    // if retry is disabled just re-throw the error
+                    throw ex;
+                }
+
                 bool success = false;
                 SqlException sqlex = ex as SqlException;
                 if (ex == null)
@@ -80,16 +117,19 @@ namespace Belgrade.SqlClient.SqlDb
                             break;
                         }
                     }
-                    foreach (int code in TransientErrorCodes)
+                    if (RETRY_TRANSIENT_ERRORS)
                     {
-                        if (sqlex.Number == code)
+                        foreach (int code in TransientErrorCodes)
                         {
-                            isRetryErrorCode = true;
-                            if(logger!=null)
-                                logger.Warn("Delayed retry (" + retryIteration + ") due to transient error: ", sqlex);
+                            if (sqlex.Number == code)
+                            {
+                                isRetryErrorCode = true;
+                                if (logger != null)
+                                    logger.Warn("Delayed retry (" + retryIteration + ") due to transient error: ", sqlex);
 
-                            await Task.Delay(5000 + 10000 * retryIteration);
-                            break;
+                                await Task.Delay(5000 + 10000 * retryIteration);
+                                break;
+                            }
                         }
                     }
                     if (!isRetryErrorCode)

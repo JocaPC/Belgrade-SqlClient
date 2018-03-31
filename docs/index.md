@@ -55,7 +55,9 @@ ICommand cmd = new Command(new SqlConnection(ConnString));
 *Map* method executed a T-SQL query and executes a callback for every row returned by a data reader: 
 
 ```
-await cmd.Map(command, row => { /* Populate object using reader */ });
+await cmd
+        .Sql(command)
+        .Map(row => { /* Populate object using reader */ });
 ```
 You can provide a callback function that accepts *DataReader* as an argument and populates fields from *DataReader* into some object or collection of objects.
 
@@ -64,12 +66,13 @@ You can provide a callback function that accepts *DataReader* as an argument and
 
 **Stream** is method that executes a query against a database and stream results into an output stream. 
 ```
-await cmd.Stream("SELECT * FROM Product FOR JSON PATH", Response.Body);
+await cmd
+        .Sql("SELECT * FROM Product FOR JSON PATH")
+        .Stream(Response.Body);
 ```
-Method *Stream* may accept two or three parameters:
-- First parameter is a T-SQL query that will be executed.
-- Second parameter is an output stream where results of the query will be pushed. This can be response stream of web Http request, output stream that writes to file, or any other output stream.
-- Third (optional) parameter is a text content that should be sent to the output stream if query does not return any results. By default, "[]" will be sent to the output stream if there are no results from database.
+Method *Stream* may accept following parameters:
+- First parameter is  an output stream where results of the query will be pushed. This can be response stream of web Http request, output stream that writes to file, or any other output stream.
+- Second (optional) parameter is a text content that should be sent to the output stream if query does not return any results. By default, "[]" will be sent to the output stream if there are no results from database.
 
 <a name="exec"></a>
 
@@ -80,6 +83,6 @@ Method *Stream* may accept two or three parameters:
 var cmd = new SqlCommand("InsertProduct");
 cmd.CommandType = System.Data.CommandType.StoredProcedure;
 cmd.Parameters.AddWithValue("Product", product);
-await sqlCmd.Exec(cmd);
+await sqlCmd.Sql(cmd).Exec();
 ```
 It is just an async wrapper around standard SqlComand that handles errors and manages connection state.
