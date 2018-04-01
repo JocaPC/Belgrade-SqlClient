@@ -27,7 +27,7 @@ namespace Basic
             using (MemoryStream ms = new MemoryStream())
             {
                 count = count % 10000;
-                await sut.Stream(String.Format("select top {0} 'a' from sys.all_objects, sys.all_parameters", count), ms);
+                await sut.Sql(String.Format("select top {0} 'a' from sys.all_objects, sys.all_parameters", count)).Stream(ms);
 
                 // Assert
                 Assert.Equal(count, ms.Length);
@@ -43,7 +43,7 @@ namespace Basic
             // Action
             using (MemoryStream ms = new MemoryStream())
             {
-                await sut.Stream("select * from sys.all_objects where 1 = 0", ms, "DEFAULT");
+                await sut.Sql("select * from sys.all_objects where 1 = 0").Stream(ms, "DEFAULT");
                 ms.Position = 0;
                 text = new StreamReader(ms).ReadToEnd();
             }
@@ -58,7 +58,7 @@ namespace Basic
             // Action
             using (MemoryStream ms = new MemoryStream())
             {
-                await sut.Stream("select * from sys.all_objects where 1 = 0", ms, UTF8Encoding.Default.GetBytes("DEFAULT"));
+                await sut.Sql("select * from sys.all_objects where 1 = 0").Stream(ms, UTF8Encoding.Default.GetBytes("DEFAULT"));
                 ms.Position = 0;
                 var text = new StreamReader(ms).ReadToEnd();
 
@@ -74,7 +74,7 @@ namespace Basic
             // Action
             using (var ms = new MemoryStream())
             {
-                await sut.Stream("select cast('TEST' as varbinary)", ms, System.Text.UTF8Encoding.Default.GetBytes("DEFAULT"));
+                await sut.Sql("select cast('TEST' as varbinary)").Stream(ms, System.Text.UTF8Encoding.Default.GetBytes("DEFAULT"));
                 ms.Position = 0;
                 var text = new StreamReader(ms).ReadToEnd();
 
@@ -125,7 +125,7 @@ Parameter name: Int32", ex.Message);
             // Action
             using (var ms = new MemoryStream())
             {
-                await sut.Stream(sql, ms, System.Text.UTF8Encoding.Default.GetBytes("DEFAULT"));
+                await sut.Sql(sql).Stream(ms, System.Text.UTF8Encoding.Default.GetBytes("DEFAULT"));
                 ms.Position = 0;
                 using (var gz = new GZipStream(ms, CompressionMode.Decompress))
                 {
@@ -150,7 +150,7 @@ Parameter name: Int32", ex.Message);
             // Action
             using (MemoryStream ms = new MemoryStream())
             {
-                await sut.Stream("select a = 2 for json path",
+                await sut.Sql("select a = 2 for json path").Stream(
                                     ms,
                                     new Options() { Prefix = "{\"data\":", Suffix="}" });
                 ms.Position = 0;

@@ -26,7 +26,7 @@ namespace Belgrade.SqlClient
                 (pipe as BaseStatement).AddParameter(name, type, value, size);
             return pipe;
         }
- 
+
         /// <summary>
         /// Executes SQL query and puts results into stream.
         /// </summary>
@@ -47,6 +47,16 @@ namespace Belgrade.SqlClient
             return pipe.Stream(writer, new Options() { DefaultOutput = defaultOutput });
         }
 
+        /// <summary>
+        /// Executes SQL query and puts results into stream.
+        /// </summary>
+        /// <param name="stream">Output stream where results will be written.</param>
+        /// <returns>Task</returns>
+        public static Task Stream(this IQueryPipe pipe, Stream stream, byte[] defaultOutput)
+        {
+            return pipe.Stream(stream, new Options() { DefaultOutput = defaultOutput });
+        }
+        
         public static IQueryPipe AddContextVariable(this IQueryPipe pipe, string key, Func<string> value, bool isReadOnly = true)
         {
             var stmt = pipe as BaseStatement;

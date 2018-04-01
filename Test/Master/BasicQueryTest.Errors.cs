@@ -42,17 +42,18 @@ namespace Errors
                 await sut
                     .OnError(ex=> { exceptionThrown = true;
                                     Assert.True(ex.GetType().Name == "SqlException"); })
-                    .Stream("SELECT hrkljush", ms,
+                    .Sql("SELECT hrkljush").Stream(ms,
                                 new Options() { Prefix = "<start>", Suffix = "<end>" });
                 Assert.True(exceptionThrown);
             }
         }
 
-#if EXTENSIVE_TEST
-        [Theory, CombinatorialData]
-#else
+        //#if EXTENSIVE_TEST
+        //        [Theory, CombinatorialData]
+        //#else
+        //        [Theory, PairwiseData]
+        //#endif
         [Theory, PairwiseData]
-#endif
         public async Task HandlesCompileErrors(
         [CombinatorialValues(
             "select * from NonExistentTable FOR JSON PATH/Invalid object name 'NonExistentTable'.",
@@ -85,7 +86,8 @@ namespace Errors
                                 Assert.Equal(error, ex.Message);
                                 exceptionThrown = true;
                             })
-                            .Stream(query, ms,
+                            .Sql(query)
+                            .Stream(ms,
                                 new Options() { Prefix = prefix, DefaultOutput = defaultValue, Suffix = suffix });
                         break;
 
@@ -106,29 +108,32 @@ namespace Errors
                                     Assert.Equal(error, ex.Message);
                                 });
                         else
-                            t = m.Map(query, r => { throw new Exception("Should not execute callback!"); });
+                            t = m.Sql(query).Map(r => { throw new Exception("Should not execute callback!"); });
                         break;
 
                     case "command":
                         if (useCommandAsPipe)
                         {
                             t = command
+                                .Sql(query)
                                 .OnError(ex =>
                                 {
                                     Assert.True(ex.GetType().Name == "SqlException");
                                     Assert.Equal(error, ex.Message);
                                     exceptionThrown = true;
                                 })
-                                .Stream(query, ms,
+                                .Stream(ms,
                                     new Options() { Prefix = prefix, DefaultOutput = defaultValue, Suffix = suffix });
                         } else
                         {
-                            t = command.OnError(ex =>
+                            t = command
+                                .Sql("EXEC NON_EXISTING_PROCEDURE")
+                                .OnError(ex =>
                             {
                                 Assert.True(ex.GetType().Name == "SqlException");
                                 Assert.Equal("Could not find stored procedure 'NON_EXISTING_PROCEDURE'.", ex.Message);
                                 exceptionThrown = true;
-                            }).Exec("EXEC NON_EXISTING_PROCEDURE");
+                            }).Exec();
                         }
                         break;
                 }
@@ -162,7 +167,7 @@ namespace Errors
                                exceptionThrown = true;
                                Assert.True(false, "Exception should not be catched here.");
                            })
-                           .Stream("SELECT 1 as a for json path", ms);
+                           .Sql("SELECT 1 as a for json path").Stream(ms);
                        Assert.False(exceptionThrown, "Belgrade Sql client should fast fail on this exception.");
                    });
             }
