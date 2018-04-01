@@ -1,8 +1,15 @@
 # Belgrade SqlClient Data Access library
 
-**Belgrade SqlClient** is a lightweight data access library that wraps standard ADO.NET classes.
+**Belgrade SqlClient** is a lightweight data access library that wraps standard ADO.NET classes. It enables you to write .Net code where
+you need to write **one C# statement** to execute **one T-SQL statement** without need to deal with try/catch blocks, opening closing connections, etc. You can see how easily you can execute a T-SQL command in the following example: 
+```
+await sqlCmd.Sql("UPDATE Products SET Price = Price * 1.1;").Exec();
+```
+You just need to specify what T-SQL query you want to execute, and then just execute it. 
 
-> This libary is a utility library that uses the same ADO.NET classes that you always use. The additional value that is brings handling opening/closing connections, closing connection when the query is completed, re-trying execution if some transient error happens. Also, it uses async methods for data access such as `OpenAsync`, `ExecuteNonQueryAsync`, `ExecuteReaderAsync`, etc. providing the best concurrency in the .Net client code. This library also solves some common developer data access mistakes that could happen in your data access code. 
+If you ever wanted to execute T-SQL queries from the C# code the same way as you execute LINQ queries, this might be the library for you. It wraps all complexity of connection state management, and enables you to write one line of code to execute the query.
+
+> This libary is a utility library that uses the same ADO.NET classes that you always use. The additional value that is brings is opening/closing connections, closing connection when the query is completed, re-trying execution if some transient error happens. Also, it uses async methods for data access such as `OpenAsync`, `ExecuteNonQueryAsync`, `ExecuteReaderAsync`, etc. providing the best concurrency in the .Net client code. This library also solves some common developer data access mistakes that could happen in your data access code. 
 
 **Why would you use this library?**
 
