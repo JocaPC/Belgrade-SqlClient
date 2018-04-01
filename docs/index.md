@@ -9,7 +9,7 @@ You just need to specify what T-SQL query you want to execute, and then just exe
 
 If you ever wanted to execute T-SQL queries from the C# code the same way as you execute LINQ queries, this might be the library for you. It wraps all complexity of connection state management, and enables you to write one line of code to execute the query.
 
-> This libary is a utility library that uses the same ADO.NET classes that you always use. The additional value that is brings is automatic opening/closing connections, closing connection when the query is completed, re-trying execution if some transient error happens. Also, it uses async methods for data access such as `OpenAsync`, `ExecuteNonQueryAsync`, `ExecuteReaderAsync`, etc. providing the best concurrency in the .Net client code. This library also solves some common developer data access mistakes that could happen in your data access code. 
+> This libary is a utility library that uses the same ADO.NET classes that you always use. The additional value that is brings is automatic opening/closing connections, closing connection when the query is completed, etc. Also, it uses async methods for data access such as `OpenAsync`, `ExecuteNonQueryAsync`, `ExecuteReaderAsync`, etc. providing the best concurrency in the .Net client code. This library also solves some common developer data access mistakes that could happen in your data access code. 
 
 **Why would you use this library?**
 
