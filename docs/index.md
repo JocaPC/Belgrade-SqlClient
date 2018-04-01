@@ -124,7 +124,7 @@ await sqlCmd
 Currently, **Belgrade SqlClient** works only with `Common.Logging` interface.
 
 ## Using the library
-You can use this library without any restriction since it is licenses under <a href="https://github.com/JocaPC/Belgrade-SqlClient/license.txt">MIT license</a>.
+You can use this library without any restriction since it is licenses under <a href="https://github.com/JocaPC/Belgrade-SqlClient/blob/master/license.txt">MIT license</a>.
 
 This library is used in several <a href="https://github.com/Microsoft/sql-server-samples/tree/master/samples/features/json">SQL Server GitHub Samples</a> so there you can find how to use it. You can also find different examples of usage in <a href="https://github.com/JocaPC/Belgrade-SqlClient/tree/master/Test">Test</a> project. There are 7500 test cases used to test this library, so you can find various usage scenarios in tests.
 Feel free to report any issue on <a href="https://github.com/JocaPC/Belgrade-SqlClient/issues">GitHub Issues</a> or send a Pull Request if you want to correct some issue or update documentation or tests.
