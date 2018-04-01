@@ -1,6 +1,6 @@
 # Belgrade SqlClient in ASP.NET applications
 
-**Belgrade Sql Client** can be used as a data-access framework in ASP.NET, including ASP.NET Core.
+**Belgrade SqlClient** can be used as a data-access framework in ASP.NET, including ASP.NET Core.
 
 ## Contents
 
@@ -32,8 +32,8 @@ public class Startup
     // Use this method to add services to the container.
     public void ConfigureServices(IServiceCollection services)
     {
-        string ConnString = Configuration["ConnectionStrings:MyConnectionString"];
-        services.AddTransient<ICommand>(_ => new Command(ConnString));
+        string Conn = Configuration["ConnectionStrings:MyDatabase"];
+        services.AddTransient<ICommand>(_ => new Command(Conn));
 
         // Add framework services.
         services.AddMvc();
@@ -59,7 +59,6 @@ public class ProductController : Controller
     {
         this.cmd = sqlCommandService;
     }
-
 }
 ```
 
@@ -79,7 +78,7 @@ public async Task Get()
 @"select ProductID, Name, Color, Price, Quantity 
 from Product
 FOR JSON PATH")
-        .Streamm(Response.Body);
+        .Stream(Response.Body);
 }
 
 // POST api/Product
@@ -124,6 +123,8 @@ public async Task Delete(int productId)
         .Exec();
 }
 ```
+
+Currently, **Belgrade SqlClient** works only with `Common.Logging` interface.
 ## See also
 
  - [Home](index.md)

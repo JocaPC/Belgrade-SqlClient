@@ -6,7 +6,7 @@
 - Built-in retry logic for In-memory Oltp stored procedures
 - Built-in retry logic for some errors that require retrying queries (e.g. deadlock victims)
 
-Functions in this library use standard ADO.NET classes such as DataReader and SqlCommand. Library uses these classes in **full async mode**, providing optimized concurrency. There are no constraints in the term of support of the latest SQL features. Any feature that can be used with Transact-SQL can be used with this library.
+Functions in this library use standard ADO.NET classes such as `DataReader` and `SqlCommand`. Library uses these classes in **full async mode**, providing optimized concurrency. There are no constraints in the term of support of the latest SQL features. Any feature that can be used with Transact-SQL can be used with this library.
 
 This library is used in SQL Server 2016+/Azure SQL Database Sql Server GitHub samples.
 
@@ -66,7 +66,7 @@ It is just an async wrapper around standard SqlComand that handles errors and ma
 
 *Map()* method enables you to execute any T-SQL query and get results in callback method: 
 
-```javascript
+```
 await cmd
         .Sql("SELECT * FROM sys.objects")
         .Map(row => {
@@ -79,11 +79,12 @@ You can provide a function that accepts `DataReader` as an argument and populate
 ## Streaming results
 
 `Stream` is a method that executes a query against database and stream the results into an output stream. 
-```javascript
+```
 await cmd
         .Sql("SELECT * FROM Product FOR JSON PATH")
         .Stream(Response.Body);
 ```
+
 Method `Stream` may accept following parameters:
 - First parameter is an output stream where results of query will be pushed. This can be response stream of web Http request, output stream that writes to a file, or any other output stream.
 - Second (optional) parameter is a text content that should be sent to the output stream if query does not return any results. By default, nothing will be sent to output stream if there are not results form database. Usually default content that should be sent to output stream is an empty array "[]" or empty object "{}".
