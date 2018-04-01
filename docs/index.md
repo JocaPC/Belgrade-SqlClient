@@ -1,8 +1,21 @@
 # Belgrade SqlClient Data Access library
 
-**Belgrade Sql Client** is a lightweight data access library that supports the latest features that are available in SQL Server 2016+ and Azure SQL Database such as:
+**Belgrade Sql Client** is a lightweight data access library that wraps standard ADO.NET classes that you use.
+
+> This libary is a utility library that uses the same ADO.NET classes that you always use. However, it handles opening/closing
+connections, closing connection when thequery is completed, re-trying execution if some transent error happens. Also, it uses
+async methods for data access such as `OpenAsync`, `ExecuteNonQueryAsync`, `ExecuteReaderAsync`, etc. providing best concurrency
+on the .Net client code. This library also solves some common developer data access mistakes that could happen in your code. 
+
+**Why would you use this library?**
+
+This library is designed for **.Net application developers** who extensively use **T-SQL language** to access database, but need to have some utility/helper classes to execute queries. It can be good choice for developers who use other frameworks for data access but need to quickly execute some query without writing custom code that opens/closes connections and handles the errors.
+This library enables you to use all T-SQL language elements (for example window aggregates) including the latest features that are available in SQL Server 2016+ and Azure SQL Database such as:
 - JSON support
+- Temporal querying syntax
 - Row-level security with SESSION_CONTEXT
+- Graph support
+- New T-SQL language features such as STRING_AGG
 - Built-in retry logic for In-memory Oltp stored procedures
 - Built-in retry logic for some errors that require retrying queries (e.g. deadlock victims)
 - Read scale-out
