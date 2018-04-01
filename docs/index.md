@@ -22,7 +22,7 @@ Functions in this library use standard ADO.NET classes such as `DataReader` and 
 
 ## Setup
 
-You can download source of this package and build your version of **Belgrade Sql Client**.
+You can download source of this package and build your version of **Belgrade SqlClient** <a href="https://github.com/JocaPC/Belgrade-SqlClient">from GitHub</a>.
 To install **Belgrade SqlClient** using <a href="https://www.nuget.org/packages/Belgrade.Sql.Client/>">NuGet</a>, run the following command in the Package Manager Console: 
 ```
 Install-Package Belgrade.Sql.Client 
@@ -44,7 +44,7 @@ Install-Package Belgrade.Sql.Client
 In order to initialize data access components, you can provide standard `SqlConnection` to a constructor of `Command` object:
 
 ```
-const string ConnString = "Server=<SERVER NAME>;Database=<DB NAME>;Integrated Security=true";
+var ConnString = "Server=<SERVER>;Database=<DB>;Integrated Security=true";
 ICommand cmd = new Command(new SqlConnection(ConnString));
 ```
 
@@ -72,7 +72,7 @@ await cmd
 ```
 Method *Stream* may accept following parameters:
 - First parameter is  an output stream where results of the query will be pushed. This can be response stream of web Http request, output stream that writes to file, or any other output stream.
-- Second (optional) parameter is a text content that should be sent to the output stream if query does not return any results. By default, "[]" will be sent to the output stream if there are no results from database.
+- Second (optional) parameter is a text content that should be sent to the output stream if query does not return any results. By default, "[]" will be sent to the output stream if there are no results from the database.
 
 <a name="exec"></a>
 

@@ -60,3 +60,8 @@ await cmd
         .Exec();
 ```
 It is just an async wrapper around standard SqlComand that handles errors and manage connection.
+
+## See also
+
+ - [Home](index.md)
+ - [Using Belgrade SqlClient in ASP.NET](aspnet.md)
