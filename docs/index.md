@@ -85,7 +85,7 @@ await sqlCmd
         .Param("Product", product)
         .Exec();
 ```
-It is just an async wrapper around standard `SqlComand` that handles errors and manages connection state.
+It is just an async wrapper around standard `SqlCommand` that handles errors and manages connection state.
 
 ## See also
 

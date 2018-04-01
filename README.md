@@ -8,7 +8,7 @@
 
 Functions in this library use standard ADO.NET classes such as DataReader and SqlCommand. Library uses these classes in **full async mode**, providing optimized concurrency. There are no constraints in the term of support of the latest SQL features. Any feature that can be used with Transact-SQL can be used with this library.
 
-This library is used in SQL Server 2016/Azure SQL Database samples.
+This library is used in SQL Server 2016+/Azure SQL Database Sql Server GitHub samples.
 
 ## Contents
 
@@ -31,11 +31,11 @@ Install-Package Belgrade.Sql.Client
 <a name="init"></a>
 ## Initializing data access components
 
-The core component in this library is **Command**. **Command** is object that executes any T-SQL command or query.
-In order to initialize **Command**, you can provide standard *SqlConnection* to the constructor:
+The core component in this library is `Command`. `Command` is object that executes any T-SQL command or query.
+In order to initialize `Command`, you can provide standard `SqlConnection` to the constructor:
 
 ```
-const string ConnString = "Server=<SERVER NAME>;Database=<DB NAME>;Integrated Security=true";
+const string ConnString = "Server=<SERVER>;Database=<DB>;Integrated Security=true";
 ICommand cmd = new Command(ConnString);
 ```
 Now you have a fully functional object that you can use to execute queries.
@@ -44,7 +44,7 @@ Now you have a fully functional object that you can use to execute queries.
 
 ## Executing commands
 
-Command has **Exec()** method that executes a query or stored procedure that don't return any results. **Exec()** is used in update statements, for example:
+Command has `Exec` method that executes a query or stored procedure that don't return any results. `Exec()` is used in update statements, for example:
 ```
 await cmd.Sql("EXEC dbo.CalculateResults").Exec();
 ```
@@ -73,21 +73,21 @@ await cmd
                     	// Populate some C# object from the row data.
                     });
 ```
-You can provide a function that accepts *DataReader* as an argument and populates fields from *DataReader* into some object or list.
+You can provide a function that accepts `DataReader` as an argument and populates fields from `DataReader` into some object or list.
 <a name="query-pipe"></a>
 
 ## Streaming results
 
-*Stream()* is a method that executes a query against database and stream the results into an output stream. 
+`Stream` is a method that executes a query against database and stream the results into an output stream. 
 ```javascript
 await cmd
         .Sql("SELECT * FROM Product FOR JSON PATH")
         .Stream(Response.Body);
 ```
-Method *Stream* may accept following parameters:
+Method `Stream` may accept following parameters:
 - First parameter is an output stream where results of query will be pushed. This can be response stream of web Http request, output stream that writes to a file, or any other output stream.
 - Second (optional) parameter is a text content that should be sent to the output stream if query does not return any results. By default, nothing will be sent to output stream if there are not results form database. Usually default content that should be sent to output stream is an empty array "[]" or empty object "{}".
 
 ## More info
 
-**Belgrade Sql Client** has some additional functionalities such as error handling, logging, retrying errors, etc. You can find more informaiton about other features in <a href="docs/index.md">documentation</a>.
+**Belgrade SqlClient** has some additional functionalities such as error handling, logging, retrying errors, etc. You can find more informaiton about other features in <a href="http://jocapc.github.io/Belgrade-SqlClient/">documentation</a>.
