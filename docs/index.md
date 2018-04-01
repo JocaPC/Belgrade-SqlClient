@@ -20,8 +20,6 @@ This library enables you to use all T-SQL language elements (for example window 
 - Row-level security with SESSION_CONTEXT
 - Graph support
 - New T-SQL language features such as STRING_AGG
-- Built-in retry logic for In-memory Oltp stored procedures
-- Built-in retry logic for some errors that require retrying queries (e.g. deadlock victims)
 - Read scale-out
 
 Functions in this library use standard ADO.NET classes such as `DataReader` and `SqlCommand` guaranteeing the best performance. Library uses these classes in **full async mode**, providing optimized concurrency. There are no constraints in the term of support of the latest SQL features. Any feature that can be used with Transact-SQL can be used with this library.
