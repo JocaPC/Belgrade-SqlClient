@@ -1,11 +1,8 @@
 # Belgrade SqlClient Data Access library
 
-**Belgrade Sql Client** is a lightweight data access library that wraps standard ADO.NET classes.
+**Belgrade SqlClient** is a lightweight data access library that wraps standard ADO.NET classes.
 
-> This libary is a utility library that uses the same ADO.NET classes that you always use. However, it handles opening/closing
-connections, closing connection when the query is completed, re-trying execution if some transient error happens. Also, it uses
-async methods for data access such as `OpenAsync`, `ExecuteNonQueryAsync`, `ExecuteReaderAsync`, etc. providing best concurrency
-in the .Net client code. This library also solves some common developer data access mistakes that could happen in your data access code. 
+> This libary is a utility library that uses the same ADO.NET classes that you always use. The additional value that is brings handling opening/closing connections, closing connection when the query is completed, re-trying execution if some transient error happens. Also, it uses async methods for data access such as `OpenAsync`, `ExecuteNonQueryAsync`, `ExecuteReaderAsync`, etc. providing the best concurrency in the .Net client code. This library also solves some common developer data access mistakes that could happen in your data access code. 
 
 **Why would you use this library?**
 
@@ -30,6 +27,7 @@ Functions in this library use standard ADO.NET classes such as `DataReader` and 
 [Query Mapper](#map)<br/>
 [Streaming results](#stream)<br/>
 [Executing commands](#exec)<br/>
+[Logging and error handling](#error-log)<br/>
 
 <a name="setup"></a>
 
@@ -44,7 +42,7 @@ Install-Package Belgrade.Sql.Client
 <a name="command"></a>
 # Command
 
-`Command` object is the core component in **Belgrade.Sql.Client**. Every T-SQL query that you execute is one command.
+`Command` object is the core component in **Belgrade SqlClient**. Every T-SQL query that you execute is one command.
 `Command` object has three methods:
  - Map() that executed a SQL command and provides results to a callback. Use this method to map query results to a list of objects.
  - Exec() that executes a SQL command that don't returns any results (e.g. INSERT, UPDATE, DELETE)
@@ -61,7 +59,7 @@ var ConnString = "Server=<SERVER>;Database=<DB>;Integrated Security=true";
 ICommand cmd = new Command(ConnString);
 ```
 
-Once you provide the connection string to the `Command`, you can execute any query. As an alternative, you can provide SqlConnection to the constructor `new Command(new SqlConnection(ConnString))`
+Once you provide the connection string to the `Command`, you can execute any query. As an alternative, you can provide `SqlConnection` object to the constructor - `new Command(new SqlConnection(ConnString))`.
 
 <a name="map"></a>
 
@@ -74,7 +72,7 @@ await cmd
         .Sql(command)
         .Map(row => { /* Populate object using reader */ });
 ```
-You can provide a callback function that accepts `DataReader` as an argument and populates fields from `DataReader` into some object or collection of objects. in order to access values returned by query, you can use indexer with the column names (for example, row["ID"], row["Name"]) in the body of callback.
+You can provide a callback function that accepts `DataReader` as an argument and populates fields from `DataReader` into some object or collection of objects. in order to access values returned by query, you can use indexer with the column names (for example, `row["ID"]`, `row["Name"]`) in the body of callback.
 
 <a name="stream"></a>
 ## Streaming results
