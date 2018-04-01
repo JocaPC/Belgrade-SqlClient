@@ -5,11 +5,11 @@ you need to write **one C# statement** to execute **one T-SQL statement** withou
 ```
 await sqlCmd.Sql("UPDATE Products SET Price = Price * 1.1;").Exec();
 ```
-You just need to specify what T-SQL query you want to execute, and then just execute it. 
+You just need to specify what T-SQL query you want to execute, and then just execute it. Also, note the `await` keyword - all methods in **Belgrade SqlClient** are async because there is no need to block your app while waiting for the T-SQL query to execute. This best practice is built-in into this library.
 
 If you ever wanted to execute T-SQL queries from the C# code the same way as you execute LINQ queries, this might be the library for you. It wraps all complexity of connection state management, and enables you to write one line of code to execute the query.
 
-> This libary is a utility library that uses the same ADO.NET classes that you always use. The additional value that is brings is opening/closing connections, closing connection when the query is completed, re-trying execution if some transient error happens. Also, it uses async methods for data access such as `OpenAsync`, `ExecuteNonQueryAsync`, `ExecuteReaderAsync`, etc. providing the best concurrency in the .Net client code. This library also solves some common developer data access mistakes that could happen in your data access code. 
+> This libary is a utility library that uses the same ADO.NET classes that you always use. The additional value that is brings is automatic opening/closing connections, closing connection when the query is completed, re-trying execution if some transient error happens. Also, it uses async methods for data access such as `OpenAsync`, `ExecuteNonQueryAsync`, `ExecuteReaderAsync`, etc. providing the best concurrency in the .Net client code. This library also solves some common developer data access mistakes that could happen in your data access code. 
 
 **Why would you use this library?**
 
@@ -66,7 +66,7 @@ var ConnString = "Server=<SERVER>;Database=<DB>;Integrated Security=true";
 ICommand cmd = new Command(ConnString);
 ```
 
-Once you provide the connection string to the `Command`, you can execute any query. As an alternative, you can provide `SqlConnection` object to the constructor - `new Command(new SqlConnection(ConnString))`.
+Once you provide the connection string to the `Command`, you can execute any query. As an alternative, you can provide `SqlConnection` object to the constructor, something like `new Command(new SqlConnection(ConnString))`.
 
 <a name="map"></a>
 
@@ -101,7 +101,7 @@ Method `Stream` may accept following parameters:
 `Exec` is method that executes a query or stored procedure that don't return any results. `Exec` method can be used in insert, update, and delete statements. 
 ```
 await sqlCmd
-        .Sql("InsertProduct")
+        .Proc("InsertProduct")
         .Param("Product", product)
         .Exec();
 ```
@@ -122,6 +122,12 @@ await sqlCmd
     .Exec();
 ```
 Currently, **Belgrade SqlClient** works only with `Common.Logging` interface.
+
+## Using the library
+You can use this library without any restriction since it is licenses under <a href="https://github.com/JocaPC/Belgrade-SqlClient/license.txt">MIT license</a>.
+
+This library is used in several <a href="https://github.com/Microsoft/sql-server-samples/tree/master/samples/features/json">SQL Server GitHub Samples</a> so there you can find how to use it. You can also find different examples of usage in <a href="https://github.com/JocaPC/Belgrade-SqlClient/tree/master/Test">Test</s> project. There are 7500 test cases used to test this library, so you can find various usage scenarios in tests.
+Feel free to report any issue on <a href="https://github.com/JocaPC/Belgrade-SqlClient/issues">GitHub Issues</a> or send a Pull Request if you want to correct some issue or update documentation or tests.
 
 ## See also
 
