@@ -14,26 +14,10 @@ namespace Belgrade.SqlClient.Common
     /// </summary>
     public abstract class ErrorHandlerBuilder
     {
-        /// <summary>
-        /// Sql command that caused an error.
-        /// </summary>
-        protected DbCommand Command;
-
-        protected Action<Exception, bool> FallbackHandler = null;
+        protected Action<Exception> FallbackHandler = null;
 
         protected ILog _logger = null;
-
-        /// <summary>
-        /// Set the command that caused the error.
-        /// </summary>
-        /// <param name="command">The command that caused the error.</param>
-        /// <returns>Current instance of ErrorHandler object.</returns>
-        internal ErrorHandlerBuilder SetCommand(DbCommand command)
-        {
-            this.Command = command;
-            return this;
-        }
-
+        
         internal ErrorHandlerBuilder AddErrorHandlerBuilder(ErrorHandlerBuilder errorHandlerBuilder)
         {
             this.FallbackHandler = errorHandlerBuilder.CreateErrorHandler(this._logger);
@@ -44,16 +28,16 @@ namespace Belgrade.SqlClient.Common
         /// Creates error handler action.
         /// </summary>
         /// <returns>The action that will be executed on error.</returns>
-        internal abstract Action<Exception, bool> CreateErrorHandler(ILog logger);
+        internal abstract Action<Exception> CreateErrorHandler(ILog logger);
 
         /// <summary>
         /// Function that will handle exceptions that are not handled by error handler. 
         /// </summary>
         /// <param name="ex">The unhandled exception.</param>
-        internal virtual void HandleUnhandledException(Exception ex, bool isResultSentToCallback)
+        internal virtual void HandleUnhandledException(Exception ex)
         {
             if (this.FallbackHandler != null)
-                this.FallbackHandler(ex, isResultSentToCallback);
+                this.FallbackHandler(ex);
             else
             {
                 if (_logger != null)

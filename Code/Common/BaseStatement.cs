@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using System.Threading.Tasks;
 
 namespace Belgrade.SqlClient.Common
 {
@@ -108,5 +109,66 @@ namespace Belgrade.SqlClient.Common
             this._logger = logger;
             return this;
         }
+
+        protected async Task ExecuteWithRetry(DbCommand command, object callback)
+        {
+            bool isResultSentToCallback = false;
+            int retryIteration = 0;
+            bool shouldRetry = false;
+            Exception rootException = null;
+            do
+            {
+                shouldRetry = false; // Let's assume that we should not retry execution in this iteration.
+                rootException = null;
+                try
+                {
+                    isResultSentToCallback = await ExecuteCommand(command, callback);
+                }
+                catch (Exception ex)
+                {
+                    rootException = ex;
+                    // If this is transient error AND results are not already sent to the client:
+                    // Retry the action.
+                    if (SqlDb.RetryErrorHandler.ShouldRetry(ex) && !isResultSentToCallback)
+                    {
+                        shouldRetry = true;
+                        retryIteration++;
+                    }
+                    else
+                    {
+                        await ExecuteCallbackWithException(callback, ex);
+                    }
+                }
+                finally
+                {
+                    command.Connection.Close();
+                    if (shouldRetry && !isResultSentToCallback)
+                    {
+                        if (SqlDb.RetryErrorHandler.ShouldWaitToRetry(rootException))
+                        {
+                            if (_logger != null)
+                                _logger.Warn("Delayed retry (" + retryIteration + ") due to the transient error.");
+                            await Task.Delay(5000 + 10000 * (retryIteration - 1)); // wait 5, 15, and 25 sec
+                        }
+                        else
+                        {
+                            if (_logger != null)
+                                _logger.Warn("Retrying immediatelly (" + retryIteration + ").");
+                        }
+                    }
+                }
+            } while (shouldRetry && retryIteration < SqlDb.RetryErrorHandler.RETRY_COUNT && !isResultSentToCallback);
+
+            if (shouldRetry && retryIteration == SqlDb.RetryErrorHandler.RETRY_COUNT)
+            {
+                if (this._logger != null)
+                    this._logger.Error("Query failed after " + SqlDb.RetryErrorHandler.RETRY_COUNT + " retries.");
+
+                await ExecuteCallbackWithException(callback, rootException);
+            }
+        }
+
+        protected virtual async Task ExecuteCallbackWithException(object callback, Exception ex) { }
+        protected virtual async Task<bool> ExecuteCommand(DbCommand command, object callback) => false;
     }
 }

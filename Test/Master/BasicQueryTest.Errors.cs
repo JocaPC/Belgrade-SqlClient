@@ -48,15 +48,22 @@ namespace Errors
             }
         }
 
-        //#if EXTENSIVE_TEST
-        //        [Theory, CombinatorialData]
-        //#else
-        //        [Theory, PairwiseData]
-        //#endif
+        [Fact]
+        public async Task HandlesCompileErrorsRepro()
+        {
+            await HandlesCompileErrors(query_error: "select UnknownColumn from sys.objects FOR JSON PATH/Invalid column name 'UnknownColumn'.",
+ async: true, client: "command", useCommandAsPipe: false, defaultValue: "", prefix: "", suffix: "}",
+ executeCallbackOnError: false);
+        }
+
+#if EXTENSIVE_TEST
+        [Theory, CombinatorialData]
+#else
         [Theory, PairwiseData]
+#endif
         public async Task HandlesCompileErrors(
         [CombinatorialValues(
-            "select * from NonExistentTable FOR JSON PATH/Invalid object name 'NonExistentTable'.",
+            "select * from UnknownTable FOR JSON PATH/Invalid object name 'UnknownTable'.",
             "select UnknownColumn from sys.objects FOR JSON PATH/Invalid column name 'UnknownColumn'.",
             "select g= geometry::STGeomFromText('LINESTRING (100 100, 20 180, 180 180)', 0) from sys.objects FOR JSON PATH/FOR JSON cannot serialize CLR objects. Cast CLR types explicitly into one of the supported types in FOR JSON queries.")]
             string query_error,
@@ -92,23 +99,29 @@ namespace Errors
                         break;
 
                     case "mapper":
-                        var m = mapper
-                            .OnError(ex =>
-                            {
-                                Assert.True(ex.GetType().Name == "SqlException");
-                                Assert.Equal(error, ex.Message);
-                                exceptionThrown = true;
-                            });
+                        var m = mapper;
                         if(executeCallbackOnError)
                             t = m.Sql(query)
+                                .OnError(ex =>
+                                {
+                                    Assert.True(false, "OnError should not be executed if the callback with exception is provided.");
+                                })
                                 .Map((r,ex) => {
                                     Assert.Null(r);
                                     Assert.NotNull(ex);
                                     Assert.True(ex.GetType().Name == "SqlException");
                                     Assert.Equal(error, ex.Message);
+                                    exceptionThrown = true;
                                 });
                         else
-                            t = m.Sql(query).Map(r => { throw new Exception("Should not execute callback!"); });
+                            t = m.Sql(query)
+                                .OnError(ex =>
+                                {
+                                    Assert.True(ex.GetType().Name == "SqlException");
+                                    Assert.Equal(error, ex.Message);
+                                    exceptionThrown = true;
+                                })
+                                .Map(r => { throw new Exception("Should not execute callback!"); });
                         break;
 
                     case "command":
@@ -142,7 +155,7 @@ namespace Errors
                 else
                     t.Wait();
 
-                Assert.True(exceptionThrown);
+                Assert.True(exceptionThrown, "Exception handler is not invoked!");
                 if (client == "query" || client == "command" && useCommandAsPipe)
                 {
                     ms.Position = 0;

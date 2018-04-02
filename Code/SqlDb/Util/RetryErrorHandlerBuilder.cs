@@ -3,18 +3,15 @@
 //  This source file is distributed in the hope that it will be useful, but
 //  WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 //  or FITNESS FOR A PARTICULAR PURPOSE.See the license files for details.
-using Belgrade.SqlClient.Common;
-using Common.Logging;
 using System;
 using System.Data.SqlClient;
-using System.Threading.Tasks;
 
 namespace Belgrade.SqlClient.SqlDb
 {
     /// <summary>
     /// Class that builds an error handler that will handle retry logic.
     /// </summary>
-    public class RetryErrorHandlerBuilder : ErrorHandlerBuilder
+    public class RetryErrorHandler
     {
         /// <summary>
         /// Sql error codes that indicate that retry acton is required.
@@ -35,18 +32,18 @@ namespace Belgrade.SqlClient.SqlDb
 
         /// <summary>
         /// Sql error codes that indicate that retry acton is required.
+        /// See - https://docs.microsoft.com/azure/sql-database/sql-database-develop-error-messages#transient-fault-error-codes
         /// </summary>
         static readonly int[] TransientErrorCodes =
-            new int[8]{
-                4060, 40197, 40501, 40613, 49918, 49919, 49920, 11001
+            new int[9]{
+                4060, 40197, 40501, 40613, 49918, 49919, 49920, 4221, 11001
         };
 
         /// <summary>
         /// Default number of retry attempts.
         /// </summary>
-        private static int RETRY_COUNT = 3;
+        internal static int RETRY_COUNT = 3;
         
-
         /// <summary>
         /// Enables or disables retry handler.
         /// </summary>
@@ -59,7 +56,8 @@ namespace Belgrade.SqlClient.SqlDb
         /// <summary>
         /// Enables or disables retry handler that performs delayed retry on transient errors such as failover.
         /// Retry handler will repeat command after 5, 10, and 15 seconds if some of the following errors occure:
-        /// 4060, 40197, 40501, 40613, 49918, 49919, 49920, 11001
+        /// - 4060, 40197, 40501, 40613, 49918, 49919, 49920, 4221 - https://docs.microsoft.com/azure/sql-database/sql-database-develop-error-messages#transient-fault-error-codes
+        /// - 11001 - An error has occurred while establishing a connection to the server. When connecting to SQL Server, this failure may be caused by the fact that under the default settings SQL Server does not allow remote connections. (provider: TCP Provider, error: 0 - No such host is known.)
         /// </summary>
         /// <param name="retry">Specifies should the retry logic be enabled (<code>true</code> by default).</param>
         public static void EnableDelayedRetries(bool retry)
@@ -67,103 +65,51 @@ namespace Belgrade.SqlClient.SqlDb
             RETRY_TRANSIENT_ERRORS = retry;
         }
 
-        private static bool RETRY_ERRORS = true;
+        internal static bool RETRY_ERRORS = true;
 
-        private static bool RETRY_TRANSIENT_ERRORS = true;
-
-        /// <summary>
-        /// Function that creates error handler that will implement retry logic.
-        /// </summary>
-        /// <returns></returns>
-        internal override Action<Exception, bool> CreateErrorHandler(ILog logger)
+        internal static bool RETRY_TRANSIENT_ERRORS = true;
+        
+        internal static bool ShouldWaitToRetry(Exception ex)
         {
-            base._logger = logger;
-            if (!RETRY_ERRORS)
+            var sqlex = (ex as SqlException);
+            if (sqlex == null)
+                return false;
+            if (RETRY_TRANSIENT_ERRORS)
             {
-                // if retry is disabled just re-throw the error
-                return (ex, flag) => throw ex;
+                foreach (int code in TransientErrorCodes)
+                {
+                    if (sqlex.Number == code)
+                    {
+                        return true;
+                    }
+                }
             }
+            return false;
+        }
 
-            return async delegate (Exception ex, bool isResultSentToCallback)
+        internal static bool ShouldRetry(Exception ex)
+        {
+            var sqlex = (ex as SqlException);
+            if (sqlex == null)
+                return false;
+            foreach (int code in RetryErrorCodes)
             {
-                /// IMPORTANT: If at least one result is sent to the client
-                /// we cannot retry SQL query
-                /// beacuse client might get duplicate rows.
-                if (isResultSentToCallback)
-                    throw ex;
-
-                if (!RETRY_ERRORS)
+                if (sqlex.Number == code)
                 {
-                    // if retry is disabled just re-throw the error
-                    throw ex;
+                    return true;
                 }
-
-                bool success = false;
-                SqlException sqlex = ex as SqlException;
-                if (ex == null)
-                    throw new ArgumentException("Exception type must be SqlException.", ex);
-                int retryIteration = 0;
-                while (!success && retryIteration < RETRY_COUNT)
+            }
+            if (RETRY_TRANSIENT_ERRORS)
+            {
+                foreach (int code in TransientErrorCodes)
                 {
-                    bool isRetryErrorCode = false;
-                    foreach(int code in RetryErrorCodes)
+                    if (sqlex.Number == code)
                     {
-                        if (sqlex.Number == code)
-                        {
-                            isRetryErrorCode = true;
-                            if(logger!=null)
-                                logger.Warn("Immediate retry (" + retryIteration + ") due to error.", sqlex);
-
-                            break;
-                        }
+                        return true;
                     }
-                    if (RETRY_TRANSIENT_ERRORS)
-                    {
-                        foreach (int code in TransientErrorCodes)
-                        {
-                            if (sqlex.Number == code)
-                            {
-                                isRetryErrorCode = true;
-                                if (logger != null)
-                                    logger.Warn("Delayed retry (" + retryIteration + ") due to transient error: ", sqlex);
-
-                                await Task.Delay(5000 + 10000 * retryIteration);
-                                break;
-                            }
-                        }
-                    }
-                    if (!isRetryErrorCode)
-                    {
-                        if(logger!=null)
-                            logger.Error("Non-transient error occured - re-throwing exception.", sqlex);
-                        throw sqlex;
-                    }
-                    
-                    try
-                    {
-                        await base.Command.ExecuteNonQueryAsync();
-                        success = true;
-                        if(logger!=null)
-                            logger.Info("Retry attempt (" +  retryIteration + ") suceeded");
-                        break;
-                    }
-                    catch (SqlException innerEx)
-                    {
-                        if(logger!=null)
-                            logger.Error("Final retry attempt (" +  retryIteration + ") failed: " + innerEx.Message);
-                        sqlex = innerEx;
-                    }
-
-                    retryIteration++;
                 }
-
-                if (!success && retryIteration == RETRY_COUNT)
-                {
-                    if(logger!=null)
-                        logger.Error("Query failed after " +  RETRY_COUNT + " retries.", sqlex);
-                    this.HandleUnhandledException(sqlex, isResultSentToCallback);
-                }
-            };
+            }
+            return false;
         }
     }
 }

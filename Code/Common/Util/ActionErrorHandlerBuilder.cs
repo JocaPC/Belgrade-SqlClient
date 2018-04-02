@@ -14,20 +14,16 @@ namespace Belgrade.SqlClient
     /// </summary>
     public class ActionErrorHandlerBuilder : ErrorHandlerBuilder
     {
-        readonly Action<Exception, bool> handler;
-        internal ActionErrorHandlerBuilder(Action<Exception, bool> handler) {
+        readonly Action<Exception> handler;
+        internal ActionErrorHandlerBuilder(Action<Exception> handler) {
             this.handler = handler;
         }
-
-        internal ActionErrorHandlerBuilder(Action<Exception> handler)
-        {
-            this.handler = (ex, isResultSent) => handler(ex);
-        }
+        
         /// <summary>
         /// Function that creates error handler that will just re-throw exception.
         /// </summary>
         /// <returns>Action that re-throws the exception.</returns>
-        internal override Action<Exception, bool> CreateErrorHandler(ILog logger)
+        internal override Action<Exception> CreateErrorHandler(ILog logger)
         {
             base._logger = logger;
             return this.handler;

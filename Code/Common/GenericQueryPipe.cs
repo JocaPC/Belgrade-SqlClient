@@ -174,8 +174,8 @@ namespace Belgrade.SqlClient.Common
                                 options.DefaultOutput = null; // Don't generate default output if error is raised.
                             try
                             {
-                                var errorHandler = base.GetErrorHandlerBuilder().SetCommand(command).CreateErrorHandler(base._logger);
-                                errorHandler(ex, outputIsGenerated);
+                                var errorHandler = base.GetErrorHandlerBuilder().CreateErrorHandler(base._logger);
+                                errorHandler(ex);
                             }
                             catch (Exception ex2){
                                 if (_logger != null)
@@ -195,8 +195,8 @@ namespace Belgrade.SqlClient.Common
                     options.DefaultOutput = null; // Don't generate default output if error is raised.
                 try
                 {
-                    var errorHandler = base.GetErrorHandlerBuilder().SetCommand(command).CreateErrorHandler(base._logger);
-                    errorHandler(ex, outputIsGenerated);
+                    var errorHandler = base.GetErrorHandlerBuilder().CreateErrorHandler(base._logger);
+                    errorHandler(ex);
                 }
                 catch (Exception ex2)
                 {

@@ -51,30 +51,9 @@ namespace Belgrade.SqlClient.Common
             command = this.CommandModifier(command);
             if (command.Connection == null)
                 command.Connection = this.Connection;
-            try
-            {
-                await command.Connection.OpenAsync().ConfigureAwait(false);
-                await command.ExecuteNonQueryAsync().ConfigureAwait(false);
-            }
-            catch (Exception ex)
-            {
-                if (_logger != null)
-                    _logger.Error("Error occured while trying to execute the command.", ex);
-                try
-                {
-                    var errorHandler = base.GetErrorHandlerBuilder().SetCommand(command).CreateErrorHandler(base._logger);
-                    errorHandler(ex, false);
-                } catch (Exception ex2)
-                {
-                    if (_logger != null)
-                        _logger.Error("Error occured while trying to handle command error.", ex2);
-                    throw;
-                }
-            }
-            finally
-            {
-                command.Connection.Close();
-            }
+
+            await base.ExecuteWithRetry(command, null);
+
         }
 
         /// <summary>
@@ -211,6 +190,30 @@ namespace Belgrade.SqlClient.Common
         public ICommand Param(string name, DbType type, object value, int size = 0)
         {
             return base.AddParameter(name, type, value, size) as ICommand;
+        }
+
+        protected override async Task ExecuteCallbackWithException(object callback, Exception ex)
+        {
+            if (_logger != null)
+                _logger.Error("Error occurred while trying to provide query results to mapper function.", ex);
+            try
+            {
+                var errorHandler = base.GetErrorHandlerBuilder().CreateErrorHandler(base._logger);
+                errorHandler(ex);
+            }
+            catch (Exception ex2)
+            {
+                if (_logger != null)
+                    _logger.Error("Callback provided to Map() thrown the error while trying to handle exception.", ex2);
+                throw;
+            }
+        }
+
+        protected override async Task<bool> ExecuteCommand(DbCommand command, object callback)
+        {
+            await command.Connection.OpenAsync().ConfigureAwait(false);
+            await command.ExecuteNonQueryAsync().ConfigureAwait(false);
+            return false;
         }
     }
 }

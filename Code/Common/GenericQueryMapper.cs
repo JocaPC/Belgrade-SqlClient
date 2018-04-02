@@ -49,76 +49,54 @@ namespace Belgrade.SqlClient.Common
             command = this.CommandModifier(command);
             if (command.Connection == null)
                 command.Connection = this.Connection;
-            bool isExceptionReported = false;
-            bool isResultSentToCallback = false;
+            await base.ExecuteWithRetry(command, callback);
+        }
 
+        protected override async Task<bool> ExecuteCommand(DbCommand command, object callback)
+        {
+            bool isResultSentToCallback = false;
+            await command.Connection.OpenAsync().ConfigureAwait(false);
+            using (var reader = await command.ExecuteReaderAsync().ConfigureAwait(false))
+            {
+                while (await reader.ReadAsync().ConfigureAwait(false))
+                {
+                    if (callback is Action<DbDataReader>)
+                        (callback as Action<DbDataReader>)(reader);
+                    else if (callback is Action<DbDataReader, Exception>)
+                        (callback as Action<DbDataReader, Exception>)(reader, null);
+                    else if (callback is Func<DbDataReader, Task>)
+                        await (callback as Func<DbDataReader, Task>)(reader);
+                    else if (callback is Func<DbDataReader, Exception, Task>)
+                        await (callback as Func<DbDataReader, Exception, Task>)(reader, null);
+                    else
+                        throw new ArgumentException("Cannot use " + callback.GetType().Name + "as a callback.");
+                    isResultSentToCallback = true;
+                }
+            }
+
+            return isResultSentToCallback;
+        }
+
+        protected override async Task ExecuteCallbackWithException(object callback, Exception ex)
+        {
+            if (_logger != null)
+                _logger.Error("Error occurred while trying to provide query results to mapper function.", ex);
             try
             {
-                await command.Connection.OpenAsync().ConfigureAwait(false);
-                using (var reader = await command.ExecuteReaderAsync().ConfigureAwait(false))
-                {
-                    try
-                    {
-                        while (await reader.ReadAsync().ConfigureAwait(false))
-                        {
-                            if (callback is Action<DbDataReader>)
-                                (callback as Action<DbDataReader>)(reader);
-                            else if (callback is Action<DbDataReader, Exception>)
-                                (callback as Action<DbDataReader, Exception>)(reader, null);
-                            else if (callback is Func<DbDataReader, Task>)
-                                await (callback as Func<DbDataReader, Task>)(reader);
-                            else if (callback is Func<DbDataReader, Exception, Task>)
-                                await (callback as Func<DbDataReader, Exception, Task>)(reader, null);
-                            else
-                                throw new ArgumentException("Cannot use " + callback.GetType().Name + "as a callback.");
-                            isResultSentToCallback = true;
-                        }
-                    } catch (Exception ex)
-                    {
-                        if (_logger != null)
-                            _logger.Error("Error occurred while trying to provide query results to mapper function.", ex);
-                        if (callback is Action<DbDataReader, Exception>)
-                            (callback as Action<DbDataReader, Exception>)(reader, ex);
-                        else if (callback is Func<DbDataReader, Exception, Task>)
-                            await (callback as Func<DbDataReader, Exception, Task>)(reader, ex);
-                        isExceptionReported = true;
-                        throw;
-                    }
+                if (callback is Action<DbDataReader, Exception>)
+                    (callback as Action<DbDataReader, Exception>)(null, ex);
+                else if (callback is Func<DbDataReader, Exception, Task>)
+                    await (callback as Func<DbDataReader, Exception, Task>)(null, ex);
+                else {
+                    var errorHandler = base.GetErrorHandlerBuilder().CreateErrorHandler(base._logger);
+                    errorHandler(ex);
                 }
             }
-            catch (Exception ex)
+            catch (Exception ex2)
             {
-                if (!isExceptionReported)
-                {
-                    // Do not call the callback that expects exception second time 
-                    // if it is already called before the exception was re-thrown.
-                    try
-                    {
-                        if (callback is Action<DbDataReader, Exception>)
-                            (callback as Action<DbDataReader, Exception>)(null, ex);
-                        else if (callback is Func<DbDataReader, Exception, Task>)
-                            await (callback as Func<DbDataReader, Exception, Task>)(null, ex);
-                    } catch (Exception ex2)
-                    {
-                        if (_logger != null)
-                            _logger.Error("Callback provided to Map() thrown the error while trying to handle exception.", ex2);
-                        throw;
-                    }
-                }
-                try
-                {
-                    var errorHandler = base.GetErrorHandlerBuilder().SetCommand(command).CreateErrorHandler(base._logger);
-                    errorHandler(ex, isResultSentToCallback);
-                } catch(Exception ex2)
-                {
-                    if (_logger != null)
-                        _logger.Error("Error occurred while trying to handle excpetion thrown during mapping phase.", ex2);
-                    throw;
-                }
-            }
-            finally
-            {
-                command.Connection.Close();
+                if (_logger != null)
+                    _logger.Error("Callback provided to Map() thrown the error while trying to handle exception.", ex2);
+                throw;
             }
         }
 
