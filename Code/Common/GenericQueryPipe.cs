@@ -279,12 +279,25 @@ namespace Belgrade.SqlClient.Common
                 throw;
             }
         }
-        
+
+        /// <summary>
+        /// Set T-SQL query that should be executed.
+        /// </summary>
+        /// <param name="cmd">DbCommand with the query text.</param>
+        /// <returns>Query initialized with query text that will be executed.</returns>
         public IQueryPipe Sql(DbCommand cmd)
         {
             return base.SetCommand(cmd) as IQueryPipe;
         }
 
+        /// <summary>
+        /// Adds a parameter to the mapper.
+        /// </summary>
+        /// <param name="name">Parameter name.</param>
+        /// <param name="type">Parameter type.</param>
+        /// <param name="value">Value of the parameter.</param>
+        /// <param name="size">Size of the parameter.</param>
+        /// <returns>Mapper with new parameter.</returns>
         public IQueryPipe Param(string name, DbType type, object value, int size = 0)
         {
             return base.AddParameter(name, type, value, size) as IQueryPipe;
