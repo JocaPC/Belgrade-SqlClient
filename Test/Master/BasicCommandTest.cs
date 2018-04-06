@@ -14,7 +14,7 @@ namespace Basic
         ICommand sut;
         public Command()
         {
-            sut = new Belgrade.SqlClient.SqlDb.Command(Util.Settings.ConnectionString);
+            sut = new Belgrade.SqlClient.SqlDb.Command(Util.Settings.MasterConnectionString);
         }
 
         [Fact]

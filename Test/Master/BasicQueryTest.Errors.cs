@@ -14,9 +14,9 @@ namespace Errors
         ICommand command;
         public Pipe()
         {
-            sut = new Belgrade.SqlClient.SqlDb.QueryPipe(Util.Settings.ConnectionString);
-            mapper = new Belgrade.SqlClient.SqlDb.QueryMapper(Util.Settings.ConnectionString);
-            command = new Belgrade.SqlClient.SqlDb.Command(Util.Settings.ConnectionString);
+            sut = new Belgrade.SqlClient.SqlDb.QueryPipe(Util.Settings.MasterConnectionString);
+            mapper = new Belgrade.SqlClient.SqlDb.QueryMapper(Util.Settings.MasterConnectionString);
+            command = new Belgrade.SqlClient.SqlDb.Command(Util.Settings.MasterConnectionString);
         }
 
 
@@ -193,7 +193,7 @@ namespace Errors
         public async Task InvalidConnection(string ConnStringToken, string NewValue, int ErrorCode)
         {
             bool exceptionThrown = false;
-            var connString = Util.Settings.ConnectionString.Replace(ConnStringToken, NewValue);
+            var connString = Util.Settings.MasterConnectionString.Replace(ConnStringToken, NewValue);
             var sut = new Belgrade.SqlClient.SqlDb.QueryPipe(connString);
             using (MemoryStream ms = new MemoryStream())
             {

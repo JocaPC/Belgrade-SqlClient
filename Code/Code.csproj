@@ -18,7 +18,7 @@
     <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Authors>Jovan Popovic</Authors>
-    <Version>1.1</Version>
+    <Version>1.1.1</Version>
     <PackageProjectUrl>http://jocapc.github.io/Belgrade-SqlClient/</PackageProjectUrl>
     <PackageTags>C#, .NET, SqlServer, AdoNet</PackageTags>
     <RepositoryUrl>https://github.com/JocaPC/Belgrade-SqlClient</RepositoryUrl>
@@ -26,7 +26,7 @@
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>BelgradeSqlClient.pfx</AssemblyOriginatorKeyFile>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
-    <PackageReleaseNotes></PackageReleaseNotes>
+    <PackageReleaseNotes>Added query notifications in mapper.</PackageReleaseNotes>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netstandard1.5|AnyCPU'">

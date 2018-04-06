@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-
-namespace Util
+﻿namespace Util
 {
     public class Settings
     {
-        public static string ConnectionString = "Server=.;Database=master;Integrated Security=true";
+        public static string MasterConnectionString = "Server=.;Database=master;Integrated Security=true";
+        public static string ProductCatalogConnectionString = "Server=.;Database=ProductCatalogDemo;Integrated Security=true";
     }
 }

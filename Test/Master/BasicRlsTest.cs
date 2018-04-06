@@ -20,7 +20,7 @@ namespace Basic
             // Arrange
             string key = Guid.NewGuid().ToString();
             string value = Guid.NewGuid().ToString().Replace('-', '_');
-            var sut = new Belgrade.SqlClient.SqlDb.QueryMapper(Util.Settings.ConnectionString).AddRls(key,() => value);
+            var sut = new Belgrade.SqlClient.SqlDb.QueryMapper(Util.Settings.MasterConnectionString).AddRls(key,() => value);
             string result = null;
 
             // Action
@@ -39,7 +39,7 @@ namespace Basic
             // Arrange
             string key = Guid.NewGuid().ToString();
             string value = Guid.NewGuid().ToString().Replace('-', '_');
-            IQueryPipe sut = new Belgrade.SqlClient.SqlDb.QueryPipe(Util.Settings.ConnectionString).AddRls(key,() => value);
+            IQueryPipe sut = new Belgrade.SqlClient.SqlDb.QueryPipe(Util.Settings.MasterConnectionString).AddRls(key,() => value);
             string result = "";
 
             // Action
@@ -62,7 +62,7 @@ namespace Basic
             // Arrange
             string key = Guid.NewGuid().ToString();
             string value = Guid.NewGuid().ToString().Replace('-', '_');
-            var sut = new Belgrade.SqlClient.SqlDb.Command(Util.Settings.ConnectionString).AddRls(key,() => value);
+            var sut = new Belgrade.SqlClient.SqlDb.Command(Util.Settings.MasterConnectionString).AddRls(key,() => value);
             var sql = string.Format(
 @"select cast(SESSION_CONTEXT(N'{0}') as varchar(50)) as sc
 into #temp;
@@ -85,7 +85,7 @@ for json path, include_null_values, without_array_wrapper", key);
             // Arrange
             string key = Guid.NewGuid().ToString();
             string value = Guid.NewGuid().ToString().Replace('-', '_');
-            var sut = new Belgrade.SqlClient.SqlDb.Command(Util.Settings.ConnectionString).AddRls(key, () => value);
+            var sut = new Belgrade.SqlClient.SqlDb.Command(Util.Settings.MasterConnectionString).AddRls(key, () => value);
             bool isExceptionThrown = false;
             // Action
             try

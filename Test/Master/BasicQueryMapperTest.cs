@@ -12,7 +12,7 @@ namespace Basic
         IQueryMapper mapper;
         public Mapper()
         {
-            mapper = new QueryMapper(Util.Settings.ConnectionString);
+            mapper = new QueryMapper(Util.Settings.MasterConnectionString);
         }
         
         [Theory]

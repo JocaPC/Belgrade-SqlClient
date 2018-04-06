@@ -14,7 +14,7 @@ namespace Basic
         IQueryPipe sut;
         public Pipe()
         {
-            sut = new Belgrade.SqlClient.SqlDb.QueryPipe(Util.Settings.ConnectionString);
+            sut = new Belgrade.SqlClient.SqlDb.QueryPipe(Util.Settings.MasterConnectionString);
         }
 
         [Fact]

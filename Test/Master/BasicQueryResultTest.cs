@@ -22,9 +22,9 @@ namespace Basic
         ICommand command;
         public Query()
         {
-            pipe = new Belgrade.SqlClient.SqlDb.QueryPipe(Util.Settings.ConnectionString);
-            mapper = new Belgrade.SqlClient.SqlDb.QueryMapper(Util.Settings.ConnectionString);
-            command = new Belgrade.SqlClient.SqlDb.Command(Util.Settings.ConnectionString);
+            pipe = new Belgrade.SqlClient.SqlDb.QueryPipe(Util.Settings.MasterConnectionString);
+            mapper = new Belgrade.SqlClient.SqlDb.QueryMapper(Util.Settings.MasterConnectionString);
+            command = new Belgrade.SqlClient.SqlDb.Command(Util.Settings.MasterConnectionString);
         }
 
         //[Theory, CombinatorialData] -> do not use combinatorial too much cases
@@ -72,15 +72,15 @@ namespace Basic
             // Arrange
             bool isExceptionThrown = false;
 
-            var pipe = new Belgrade.SqlClient.SqlDb.QueryPipe(Util.Settings.ConnectionString)
+            var pipe = new Belgrade.SqlClient.SqlDb.QueryPipe(Util.Settings.MasterConnectionString)
                 .AddContextVariable("v1", () => sessionContext1)
                 .AddContextVariable("v2", () => sessionContext2)
                 .OnError(ex=> { isExceptionThrown = true; Console.WriteLine(ex); });
-            var mapper = new Belgrade.SqlClient.SqlDb.QueryMapper(Util.Settings.ConnectionString)
+            var mapper = new Belgrade.SqlClient.SqlDb.QueryMapper(Util.Settings.MasterConnectionString)
                 .AddContextVariable("v1", () => sessionContext1)
                 .AddContextVariable("v2", () => sessionContext2)
                 .OnError(ex => { isExceptionThrown = true; Console.WriteLine(ex); });
-            var command = new Belgrade.SqlClient.SqlDb.Command(Util.Settings.ConnectionString)
+            var command = new Belgrade.SqlClient.SqlDb.Command(Util.Settings.MasterConnectionString)
                 .AddContextVariable("v1", () => sessionContext1)
                 .AddContextVariable("v2", () => sessionContext2)
                 .OnError(ex => { isExceptionThrown = true; Console.WriteLine(ex); });

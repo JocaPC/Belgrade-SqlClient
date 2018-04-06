@@ -17,7 +17,7 @@ namespace CQRS
     {
         public Scenario()
         {
-            var command = new Command(Util.Settings.ConnectionString.Replace("Database=master;", "Database=ProductCatalogDemo;"));
+            var command = new Command(Util.Settings.MasterConnectionString.Replace("Database=master;", "Database=ProductCatalogDemo;"));
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
             command.Sql("DELETE Company WHERE companyId >= 4").Exec();
 #pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
@@ -282,13 +282,13 @@ namespace CQRS
 
         private static ICommand CreateNewCommand(List<string> errors)
         {
-            return new Command(new SqlConnection(Util.Settings.ConnectionString.Replace("Database=master;", "Database=ProductCatalogDemo;")))
+            return new Command(new SqlConnection(Util.Settings.MasterConnectionString.Replace("Database=master;", "Database=ProductCatalogDemo;")))
                                 .OnError(ex => errors.Add(ex.Message));
         }
 
         private static IQueryMapper CreateNewMapper(List<string> errors)
         {
-            return new QueryMapper(new SqlConnection(Util.Settings.ConnectionString.Replace("Database=master;", "Database=ProductCatalogDemo;")))
+            return new QueryMapper(new SqlConnection(Util.Settings.MasterConnectionString.Replace("Database=master;", "Database=ProductCatalogDemo;")))
                                 .OnError(ex => errors.Add(ex.Message));
         }
     }
