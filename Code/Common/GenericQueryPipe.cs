@@ -30,6 +30,28 @@ namespace Belgrade.SqlClient.Common
             return this;
         }
 
+        internal override BaseStatement AddErrorHandler(ErrorHandlerBuilder builder)
+        {
+            // IMPORTANT: Secondary Mapper should NOT have error handler!!!!
+            // If Mapper handles the error, Pipe will not know that error is thrown and it will generate default output.
+            // Mapper should handle all errors.
+            //this.Mapper.AddErrorHandler(builder);
+
+            return base.AddErrorHandler(builder);
+        }
+
+        /// <summary>
+        /// Adds a logger that will be used by SQL Command.
+        /// </summary>
+        /// <param name="logger">Common.Logging.ILog where log records will be written.</param>
+        /// <returns>This statement.</returns>
+        public override BaseStatement AddLogger(ILog logger)
+        {
+            if (this.Mapper != null) this.Mapper.AddLogger(logger);
+
+            return base.AddLogger(logger);
+        }
+
         /// <summary>
         /// Creates QueryPipe object.
         /// </summary>
@@ -168,7 +190,7 @@ namespace Belgrade.SqlClient.Common
                         catch (Exception ex)
                         {
                             if (_logger != null)
-                                _logger.Error("Error occured while trying to flush results of SQL query to the stream.", ex);
+                                _logger.ErrorFormat("Error {error} occured while trying to flush results of SQL query to the stream.\n{exception}", ex.Message, ex);
                             isErrorDetected = true;
                             if (options != null)
                                 options.DefaultOutput = null; // Don't generate default output if error is raised.
@@ -179,7 +201,7 @@ namespace Belgrade.SqlClient.Common
                             }
                             catch (Exception ex2){
                                 if (_logger != null)
-                                    _logger.Warn("Error occured while trying to handle error in query pipe error handler.", ex2);
+                                    _logger.ErrorFormat("Error {error} occured while trying to handle error in query pipe error handler on {source}.", ex2.Message, ex2.Source);
                                 throw;
                             }
                         }

@@ -80,7 +80,7 @@ namespace Belgrade.SqlClient.Common
         protected override async Task ExecuteCallbackWithException(object callback, Exception ex)
         {
             if (_logger != null)
-                _logger.Error("Error occurred while trying to provide query results to mapper function.", ex);
+                _logger.ErrorFormat("Error {message} occurred while trying to provide query results to mapper function. \n{exception}", ex.Message, ex);
             try
             {
                 if (callback is Action<DbDataReader, Exception>)
@@ -95,7 +95,7 @@ namespace Belgrade.SqlClient.Common
             catch (Exception ex2)
             {
                 if (_logger != null)
-                    _logger.Error("Callback provided to Map() thrown the error while trying to handle exception.", ex2);
+                    _logger.ErrorFormat("Callback provided to Map() thrown the error {error} while trying to handle exception.\n{exception}", ex2.Message, ex2);
                 throw;
             }
         }

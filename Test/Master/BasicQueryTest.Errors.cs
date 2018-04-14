@@ -51,9 +51,8 @@ namespace Errors
         [Fact]
         public async Task HandlesCompileErrorsRepro()
         {
-            await HandlesCompileErrors(query_error: "select UnknownColumn from sys.objects FOR JSON PATH/Invalid column name 'UnknownColumn'.",
- async: true, client: "command", useCommandAsPipe: false, defaultValue: "", prefix: "", suffix: "}",
- executeCallbackOnError: false);
+            await HandlesCompileErrors(query_error: "select * from UnknownTable FOR JSON PATH/Invalid object name 'UnknownTable'.",
+                async: false, client: "command", useCommandAsPipe: true, defaultValue: "", prefix: "<s>", suffix: "</s>", executeCallbackOnError: true);
         }
 
 #if EXTENSIVE_TEST

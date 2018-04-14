@@ -3,6 +3,7 @@
 //  This source file is distributed in the hope that it will be useful, but
 //  WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 //  or FITNESS FOR A PARTICULAR PURPOSE. See the license files for details.
+using Common.Logging;
 using System;
 using System.Data;
 using System.Data.Common;
@@ -179,6 +180,19 @@ namespace Belgrade.SqlClient.Common
             if (this.Pipe != null) this.Pipe.AddErrorHandler(builder);
 
             return base.AddErrorHandler(builder);
+        }
+
+        /// <summary>
+        /// Adds a logger that will be used by SQL Command.
+        /// </summary>
+        /// <param name="logger">Common.Logging.ILog where log records will be written.</param>
+        /// <returns>This statement.</returns>
+        public override BaseStatement AddLogger(ILog logger)
+        {
+            if (this.Mapper != null) this.Mapper.AddLogger(logger);
+            if (this.Pipe != null) this.Pipe.AddLogger(logger);
+
+            return base.AddLogger(logger);
         }
 
         /// <summary>

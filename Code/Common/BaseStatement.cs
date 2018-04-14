@@ -104,7 +104,7 @@ namespace Belgrade.SqlClient.Common
         /// </summary>
         /// <param name="logger">Common.Logging.ILog where log records will be written.</param>
         /// <returns>This statement.</returns>
-        public BaseStatement AddLogger(ILog logger)
+        public virtual BaseStatement AddLogger(ILog logger)
         {
             this._logger = logger;
             return this;
@@ -122,7 +122,7 @@ namespace Belgrade.SqlClient.Common
                 rootException = null;
                 try
                 {
-                    isResultSentToCallback = await ExecuteCommand(command, callback);
+                    isResultSentToCallback = await ExecuteCommand(command, callback).ConfigureAwait(false);
                 }
                 catch (Exception ex)
                 {
@@ -133,10 +133,14 @@ namespace Belgrade.SqlClient.Common
                     {
                         shouldRetry = true;
                         retryIteration++;
+                        if (_logger != null)
+                            _logger.InfoFormat("Database call returned the transient error {message}. Retrying..", ex.Message);
                     }
                     else
                     {
-                        await ExecuteCallbackWithException(callback, ex);
+                        if(_logger!=null)
+                            _logger.WarnFormat("Database call returned the error {message}. Trying to handle exception...", ex.Message);
+                        await ExecuteCallbackWithException(callback, ex).ConfigureAwait(false);
                     }
                 }
                 finally
@@ -147,13 +151,13 @@ namespace Belgrade.SqlClient.Common
                         if (SqlDb.RetryErrorHandler.ShouldWaitToRetry(rootException))
                         {
                             if (_logger != null)
-                                _logger.Warn("Delayed retry (" + retryIteration + ") due to the transient error.");
-                            await Task.Delay(5000 + 10000 * (retryIteration - 1)); // wait 5, 15, and 25 sec
+                                _logger.InfoFormat("Delayed retry {iteration} due to the transient error.", retryIteration);
+                            await Task.Delay(5000 + 10000 * (retryIteration - 1)).ConfigureAwait(false); // wait 5, 15, and 25 sec
                         }
                         else
                         {
                             if (_logger != null)
-                                _logger.Warn("Retrying immediatelly (" + retryIteration + ").");
+                                _logger.InfoFormat("Retrying immediatelly {iteration} attempt", retryIteration);
                         }
                     }
                 }
@@ -162,7 +166,7 @@ namespace Belgrade.SqlClient.Common
             if (shouldRetry && retryIteration == SqlDb.RetryErrorHandler.RETRY_COUNT)
             {
                 if (this._logger != null)
-                    this._logger.Error("Query failed after " + SqlDb.RetryErrorHandler.RETRY_COUNT + " retries.");
+                    this._logger.ErrorFormat("Query failed after {iteration} retries.\n{excetpion}", SqlDb.RetryErrorHandler.RETRY_COUNT, rootException);
 
                 await ExecuteCallbackWithException(callback, rootException);
             }

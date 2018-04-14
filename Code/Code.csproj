@@ -18,7 +18,7 @@
     <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Authors>Jovan Popovic</Authors>
-    <Version>1.1.1</Version>
+    <Version>1.1.2</Version>
     <PackageProjectUrl>http://jocapc.github.io/Belgrade-SqlClient/</PackageProjectUrl>
     <PackageTags>C#, .NET, SqlServer, AdoNet</PackageTags>
     <RepositoryUrl>https://github.com/JocaPC/Belgrade-SqlClient</RepositoryUrl>
@@ -55,7 +55,7 @@
 
   <ItemGroup>
     <PackageReference Include="Common.Logging" Version="3.4.1" />
-    <PackageReference Include="System.Data.SqlClient" Version="4.4.2" />
+    <PackageReference Include="System.Data.SqlClient" Version="4.4.3" />
   </ItemGroup>
 
 </Project>
