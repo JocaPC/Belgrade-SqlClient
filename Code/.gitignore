@@ -8,4 +8,5 @@ obj/*
 bin/*
 nuget/*
 .vs/*
+.vscode/*
 project.lock.json

@@ -18,7 +18,7 @@
     <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Authors>Jovan Popovic</Authors>
-    <Version>1.1.3</Version>
+    <Version>1.1.4</Version>
     <PackageProjectUrl>http://jocapc.github.io/Belgrade-SqlClient/</PackageProjectUrl>
     <PackageTags>C#, .NET, SqlServer, AdoNet</PackageTags>
     <RepositoryUrl>https://github.com/JocaPC/Belgrade-SqlClient</RepositoryUrl>
