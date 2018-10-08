@@ -1,6 +1,7 @@
 ﻿using Belgrade.SqlClient;
 using Belgrade.SqlClient.SqlDb;
 using System;
+using System.Data.SqlClient;
 using System.IO;
 using System.Threading.Tasks;
 using Xunit;
@@ -95,6 +96,28 @@ namespace Basic
 
             // Assert
             Assert.Equal("", response);
+        }
+
+        [Fact]
+        public async Task ReturnsValueFromBatch()
+        {
+            // Arrange
+            string title = null;
+
+            // Action
+            var cmd = new SqlCommand(
+@"create table #Todo(i int);
+insert into #Todo(i) select @i;
+SELECT 'a' as Title ");
+            cmd.Parameters.AddWithValue("i", 1);
+            await mapper
+            .Sql(cmd)
+            .Map(row => {
+                title = row["Title"].ToString();
+            });
+
+            // Assert
+            Assert.Equal("a", title);
         }
     }
 }
