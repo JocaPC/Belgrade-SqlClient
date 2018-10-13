@@ -282,14 +282,17 @@ namespace CQRS
 
         private static ICommand CreateNewCommand(List<string> errors)
         {
-            return new Command(new SqlConnection(Util.Settings.MasterConnectionString.Replace("Database=master;", "Database=ProductCatalogDemo;")))
-                                .OnError(ex => errors.Add(ex.Message));
+            ICommand c = new Command(new SqlConnection(Util.Settings.MasterConnectionString.Replace("Database=master;", "Database=ProductCatalogDemo;")));
+            c.OnError(ex => errors.Add(ex.Message));
+            return c;
+
         }
 
         private static IQueryMapper CreateNewMapper(List<string> errors)
         {
-            return new QueryMapper(new SqlConnection(Util.Settings.MasterConnectionString.Replace("Database=master;", "Database=ProductCatalogDemo;")))
-                                .OnError(ex => errors.Add(ex.Message));
+            IQueryMapper m = new QueryMapper(new SqlConnection(Util.Settings.MasterConnectionString.Replace("Database=master;", "Database=ProductCatalogDemo;")));
+            m.OnError(ex => errors.Add(ex.Message));
+            return m;
         }
     }
 }
