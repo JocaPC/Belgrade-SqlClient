@@ -14,7 +14,7 @@ namespace Basic
             
         }
 
-#if NET46
+//#if NET46
         [Fact]
         public async Task OnChangeAction()
         {
@@ -64,7 +64,7 @@ namespace Basic
             // Assert
             Assert.True(isChanged);
         }
-#endif
+//#endif
 
     }
 }
