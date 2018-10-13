@@ -7,21 +7,21 @@ using Xunit;
 
 namespace Errors
 {
-    public class Pipe
+    public class Errors
     {
         IQueryPipe sut;
         IQueryMapper mapper;
         ICommand command;
-        public Pipe()
+        public Errors()
         {
             sut = new Belgrade.SqlClient.SqlDb.QueryPipe(Util.Settings.MasterConnectionString);
             mapper = new Belgrade.SqlClient.SqlDb.QueryMapper(Util.Settings.MasterConnectionString);
             command = new Belgrade.SqlClient.SqlDb.Command(Util.Settings.MasterConnectionString);
         }
 
-
+   
         [Fact]
-        public async Task ErrorInSql()
+        public async Task ErrorInSqlWithErrorHandler()
         {
             bool exceptionThrown = false;
             using (MemoryStream ms = new MemoryStream())
@@ -29,6 +29,26 @@ namespace Errors
                 await sut.Sql("select 1 as a, 1/0 as b for json path")
                     .OnError(ex => { exceptionThrown = true; Assert.True(ex.GetType().Name == "SqlException"); })
                     .Stream(ms);
+                Assert.True(exceptionThrown);
+            }
+        }
+
+        [Fact]
+        public async Task ErrorInSqlWithoutErrorHandler()
+        {
+            bool exceptionThrown = false;
+            using (MemoryStream ms = new MemoryStream())
+            {
+                try
+                {
+                    await sut.Sql("select 1 as a, 1/0 as b for json path")
+                        .Stream(ms);
+                    Assert.True(false, "Exception should be thrown before this point.");
+                } catch (Exception ex)
+                {
+                    exceptionThrown = true;
+                    Assert.True(ex.GetType().Name == "SqlException");
+                }
                 Assert.True(exceptionThrown);
             }
         }
