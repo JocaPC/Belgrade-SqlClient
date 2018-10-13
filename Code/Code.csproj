@@ -1,7 +1,7 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard1.6;netcoreapp1.0;netcoreapp1.1;netcoreapp2.0;net46</TargetFrameworks>
+    <TargetFrameworks>netstandard1.6;netstandard2.0;netcoreapp1.0;netcoreapp1.1;netcoreapp2.0;netcoreapp2.1;net46</TargetFrameworks>
     <AssemblyName>Belgrade.SqlClient</AssemblyName>
     <PackageId>Belgrade.Sql.Client</PackageId>
     <PackageTargetFallback Condition=" '$(TargetFramework)' == 'netstandard1.5' ">$(PackageTargetFallback);dnxcore50</PackageTargetFallback>

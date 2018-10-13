@@ -74,5 +74,27 @@ namespace Basic
             // Assert
             Assert.Equal("OK", result);
         }
+
+        [Fact]
+        public async Task ReturnsValueFromBatch()
+        {
+            // Arrange
+            string title = null;
+
+            // Action
+            var cmd = new SqlCommand(
+@"create table #Todo(i int);
+insert into #Todo(i) select @i;
+SELECT 'a' as Title ");
+            cmd.Parameters.AddWithValue("i", 1);
+            await sut
+            .Sql(cmd)
+            .Map(row => {
+                title = row["Title"].ToString();
+            });
+
+            // Assert
+            Assert.Equal("a", title);
+        }
     }
 }
