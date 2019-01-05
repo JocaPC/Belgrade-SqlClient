@@ -11,13 +11,28 @@ namespace Errors
     public class Errors
     {
         IQueryPipe sut;
-        IQueryMapper mapper;
+        readonly IQueryMapper mapper;
         ICommand command;
         public Errors()
         {
             sut = new Belgrade.SqlClient.SqlDb.QueryPipe(Util.Settings.MasterConnectionString);
             mapper = new Belgrade.SqlClient.SqlDb.QueryMapper(Util.Settings.MasterConnectionString);
             command = new Belgrade.SqlClient.SqlDb.Command(Util.Settings.MasterConnectionString);
+        }
+
+        [Fact]
+        public async Task HandlesErrorsRepro()
+        {
+            var query_error = "select JSON_VALUE('a', '$.test')/JSON text is not properly formatted. Unexpected character 'a' is found at position 0.";
+            var async = true;
+            var client = "query";
+            bool useCommandAsPipe = true;
+            string defaultValue = null;
+            string prefix = "<!--";
+            string suffix = "-->";
+            bool executeCallbackOnError = true;
+            bool provideOnErrorHandler = true;
+            await HandlesErrors(query_error, async, client, useCommandAsPipe, defaultValue, prefix, suffix, executeCallbackOnError, provideOnErrorHandler);
         }
 
 #if EXTENSIVE_TEST
@@ -70,7 +85,7 @@ namespace Errors
             if(provideOnErrorHandler)
             {
                 sut.OnError(ex => {
-                                Assert.True(ex.GetType().Name == "SqlException");
+                                Assert.True(ex.GetType().Name == "SqlException", "The thrown excpetion should be 'SqlException'!");
                                 Assert.Equal(error, ex.Message);
                                 exceptionThrown = true;
                             });
@@ -113,13 +128,6 @@ namespace Errors
                         else
                         {
                             t = ((ICommand)sut)
-                                //.Sql("EXEC NON_EXISTING_PROCEDURE")
-                                //.OnError(ex =>
-                                //{
-                                //    Assert.True(ex.GetType().Name == "SqlException");
-                                //    Assert.Equal("Could not find stored procedure 'NON_EXISTING_PROCEDURE'.", ex.Message);
-                                //    exceptionThrown = true;
-                                //})
                                 .Exec();
                         }
                         break;
@@ -143,7 +151,7 @@ namespace Errors
                         {
                             ms.Position = 0;
                             var text = new StreamReader(ms).ReadToEnd();
-                            Assert.Equal("", text);
+                            Assert.Equal(prefix + defaultValue + suffix, text);// "NEW: Exception is not thrown so returned value shoudl be prefix+default+suffix");
                         }
                     }
 

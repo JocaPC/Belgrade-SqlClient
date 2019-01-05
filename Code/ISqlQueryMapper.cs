@@ -12,7 +12,7 @@ namespace Belgrade.SqlClient
     /// <summary>
     /// Executes SQL query and provides DataReader to callback function.
     /// </summary>
-    public interface IQueryMapper
+    public interface IQuery
     {
         /// <summary>
         /// Executes sql command and provides each row to the callback function.
@@ -42,4 +42,9 @@ namespace Belgrade.SqlClient
         /// <returns>Task</returns>
         Task Map(Func<DbDataReader, Exception, Task> callback);
     }
+
+    /// <summary>
+    /// Old query interface used for backward compatibility.
+    /// </summary>
+    public interface IQueryMapper: IQuery { }
 }

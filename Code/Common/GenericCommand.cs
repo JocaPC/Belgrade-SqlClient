@@ -59,7 +59,7 @@ namespace Belgrade.SqlClient.Common
         /// <summary>
         /// Query pipe used to stream results.
         /// </summary>
-        private GenericQueryPipe<T> Pipe;
+        private readonly GenericQueryPipe<T> Pipe;
         
         /// <summary>
         /// Executes sql statement and provides each row to the callback function.
@@ -100,7 +100,7 @@ namespace Belgrade.SqlClient.Common
         /// <summary>
         /// Query mapper used to stream results.
         /// </summary>
-        private GenericQueryMapper<T> Mapper;
+        private readonly GenericQueryMapper<T> Mapper;
 
         /// <summary>
         /// Executes sql statement and provides each row to the callback function.

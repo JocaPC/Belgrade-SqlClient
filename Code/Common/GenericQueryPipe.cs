@@ -16,56 +16,16 @@ namespace Belgrade.SqlClient.Common
     /// <summary>
     /// Component that streams results of SQL query into an output stream.
     /// </summary>
-    public class GenericQueryPipe<T> : BaseStatement, IQueryPipe
+    public class GenericQueryPipe<T> : GenericQueryMapper<T>, IQueryPipe
         where T : DbCommand, new()
     {
-        /// <summary>
-        /// Query mapper used to stream results.
-        /// </summary>
-        private GenericQueryMapper<T> Mapper;
-
-        internal override BaseStatement SetCommandModifier(Func<DbCommand, DbCommand> value)
-        {
-            this.Mapper.SetCommandModifier(value);
-            return this;
-        }
-
-        internal override BaseStatement AddErrorHandler(ErrorHandlerBuilder builder)
-        {
-            // IMPORTANT: Secondary Mapper should NOT have error handler!!!!
-            // If Mapper handles the error, Pipe will not know that error is thrown and it will generate default output.
-            // Mapper should handle all errors.
-            //this.Mapper.AddErrorHandler(builder);
-
-            return base.AddErrorHandler(builder);
-        }
-
-        /// <summary>
-        /// Adds a logger that will be used by SQL Command.
-        /// </summary>
-        /// <param name="logger">Common.Logging.ILog where log records will be written.</param>
-        /// <returns>This statement.</returns>
-        public override BaseStatement AddLogger(ILog logger)
-        {
-            if (this.Mapper != null) this.Mapper.AddLogger(logger);
-
-            return base.AddLogger(logger);
-        }
-
         /// <summary>
         /// Creates QueryPipe object.
         /// </summary>
         /// <param name="connection">Connection to Sql Database.</param>
-        public GenericQueryPipe(DbConnection connection)
+        public GenericQueryPipe(DbConnection connection): base(connection)
         {
-            if (connection == null)
-                throw new ArgumentNullException("Connection is not defined.");
-
-            if (string.IsNullOrWhiteSpace(connection.ConnectionString))
-                throw new ArgumentNullException("Connection string is not set.");
-
-            this.Connection = connection;
-            this.Mapper = new GenericQueryMapper<T>(connection);
+         
         }
 
         /// <summary>
@@ -135,7 +95,7 @@ namespace Belgrade.SqlClient.Common
             bool isErrorDetected = false;
             try
             {
-                await this.Mapper.Sql(command).Map(
+                await base.Sql(command).Map(
                     async reader =>
                     {
                         try
@@ -309,7 +269,7 @@ namespace Belgrade.SqlClient.Common
         /// </summary>
         /// <param name="cmd">DbCommand with the query text.</param>
         /// <returns>Query initialized with query text that will be executed.</returns>
-        public IQueryPipe Sql(DbCommand cmd)
+        public new IQueryPipe Sql(DbCommand cmd)
         {
             return base.SetCommand(cmd) as IQueryPipe;
         }
@@ -322,7 +282,7 @@ namespace Belgrade.SqlClient.Common
         /// <param name="value">Value of the parameter.</param>
         /// <param name="size">Size of the parameter.</param>
         /// <returns>Mapper with new parameter.</returns>
-        public IQueryPipe Param(string name, DbType type, object value, int size = 0)
+        public new IQueryPipe Param(string name, DbType type, object value, int size = 0)
         {
             return base.AddParameter(name, type, value, size) as IQueryPipe;
         }

@@ -81,11 +81,15 @@ namespace Belgrade.SqlClient.SqlDb.Rls
             /// </summary>
             string SESSION_VALUE_NAME = guid.ToString().Replace('-', 'v');
 
-            var SessionKey = new SqlParameter(SESSION_KEY_NAME, System.Data.SqlDbType.NVarChar, 128);
-            SessionKey.Value = key;
-            var SessionValue = new SqlParameter(SESSION_VALUE_NAME, System.Data.SqlDbType.Variant);
-            SessionValue.Value = value();
-            if(SessionValue.Value == null)
+            var SessionKey = new SqlParameter(SESSION_KEY_NAME, System.Data.SqlDbType.NVarChar, 128)
+            {
+                Value = key
+            };
+            var SessionValue = new SqlParameter(SESSION_VALUE_NAME, System.Data.SqlDbType.Variant)
+            {
+                Value = value()
+            };
+            if (SessionValue.Value == null)
             {
                 SessionValue.Value = System.DBNull.Value;
             }
