@@ -10,7 +10,7 @@ namespace Basic
 {
     public class Mapper
     {
-        IQueryMapper mapper;
+        IQuery mapper;
         public Mapper()
         {
             mapper = new QueryMapper(Util.Settings.MasterConnectionString);

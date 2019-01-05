@@ -19,7 +19,7 @@ namespace Basic
         public async Task OnChangeAction()
         {
             // Arrange
-            IQueryMapper sut = new QueryMapper(Util.Settings.ProductCatalogConnectionString);
+            IQuery sut = new QueryMapper(Util.Settings.ProductCatalogConnectionString);
             bool isChanged = false;
             ICommand c = new Belgrade.SqlClient.SqlDb.Command(Util.Settings.ProductCatalogConnectionString);
             await c.Sql("ALTER DATABASE ProductCatalogDemo SET ENABLE_BROKER;").Exec();
@@ -44,7 +44,7 @@ namespace Basic
         public async Task OnChangeEventHandler()
         {
             // Arrange
-            IQueryMapper sut = new QueryMapper(Util.Settings.ProductCatalogConnectionString);
+            IQuery sut = new QueryMapper(Util.Settings.ProductCatalogConnectionString);
             bool isChanged = false;
             ICommand c = new Belgrade.SqlClient.SqlDb.Command(Util.Settings.ProductCatalogConnectionString);
             await c.Sql("ALTER DATABASE ProductCatalogDemo SET ENABLE_BROKER;").Exec();

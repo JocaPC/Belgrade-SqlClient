@@ -22,9 +22,11 @@ namespace Basic
         {
             // Arrange
             string sql = "EXEC xp_sprintf @string OUTPUT , 'Hello %s' , 'World'";
-            var SQLCmd = new SqlCommand();
-            SQLCmd.CommandTimeout = 360;
-            SQLCmd.CommandText = sql;
+            var SQLCmd = new SqlCommand
+            {
+                CommandTimeout = 360,
+                CommandText = sql
+            };
             var p = SQLCmd.Parameters.Add(new SqlParameter("@string", SqlDbType.VarChar));
             p.Direction = ParameterDirection.Output;
             p.Size = 4000;

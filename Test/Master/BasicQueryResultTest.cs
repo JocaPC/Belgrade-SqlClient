@@ -18,7 +18,7 @@ namespace Basic
     public class Query
     {
         IQueryPipe pipe;
-        IQueryMapper mapper;
+        IQuery mapper;
         ICommand command;
         public Query()
         {

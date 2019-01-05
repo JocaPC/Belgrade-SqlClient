@@ -11,7 +11,7 @@ namespace Errors
     public class Errors
     {
         IQueryPipe sut;
-        readonly IQueryMapper mapper;
+        readonly IQuery mapper;
         ICommand command;
         public Errors()
         {
@@ -105,7 +105,7 @@ namespace Errors
 
                     case "mapper":
                         if (executeCallbackOnError)
-                            t = ((IQueryMapper)sut)
+                            t = ((IQuery)sut)
                                 .Map((r, ex) => {
                                     Assert.Null(r);
                                     Assert.NotNull(ex);
@@ -114,7 +114,7 @@ namespace Errors
                                     exceptionThrown = true;
                                 });
                         else
-                            t = ((IQueryMapper)sut)
+                            t = ((IQuery)sut)
                                 .Map(r => { throw new Exception("Should not execute callback!"); });
                         break;
 

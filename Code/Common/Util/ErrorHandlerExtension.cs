@@ -12,6 +12,13 @@ namespace Belgrade.SqlClient
             return pipe;
         }
 
+        public static IQuery OnError(this IQuery query, Action<Exception> handler)
+        {
+            var stmt = query as BaseStatement;
+            stmt.AddErrorHandler(new ActionErrorHandlerBuilder(handler));
+            return query;
+        }
+
         public static BaseStatement OnError(this BaseStatement stmt, Action<Exception> handler)
         {
             stmt.AddErrorHandler(new ActionErrorHandlerBuilder(handler));

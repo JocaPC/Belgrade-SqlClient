@@ -49,7 +49,7 @@ namespace CQRS
         public async Task CRUD(bool useCommand)
         {
             List<string> errors = new List<string>();
-            IQueryMapper mapper = CreateNewMapper(errors);
+            IQuery mapper = CreateNewMapper(errors);
             var command = CreateNewCommand(errors);
 
             var sqlCmd = new SqlCommand();
@@ -67,8 +67,10 @@ namespace CQRS
             mapper = CreateNewMapper(errors);
             if (useCommand)
             {
-                sqlCmd = new SqlCommand();
-                sqlCmd.CommandText = "select count(*) from Company where CompanyId = @ID";
+                sqlCmd = new SqlCommand
+                {
+                    CommandText = "select count(*) from Company where CompanyId = @ID"
+                };
                 sqlCmd.Parameters.AddWithValue("ID", ID);
                 await mapper.Sql(sqlCmd).Map(reader => count = reader.GetInt32(0));
             }
@@ -288,9 +290,9 @@ namespace CQRS
 
         }
 
-        private static IQueryMapper CreateNewMapper(List<string> errors)
+        private static IQuery CreateNewMapper(List<string> errors)
         {
-            IQueryMapper m = new QueryMapper(new SqlConnection(Util.Settings.MasterConnectionString.Replace("Database=master;", "Database=ProductCatalogDemo;")));
+            IQuery m = new QueryMapper(new SqlConnection(Util.Settings.MasterConnectionString.Replace("Database=master;", "Database=ProductCatalogDemo;")));
             m.OnError(ex => errors.Add(ex.Message));
             return m;
         }

@@ -30,6 +30,13 @@ namespace Belgrade.SqlClient
             return query;
         }
 
+        public static IQuery Param(this IQuery query, string name, System.Data.DbType type, object value, int size = 0)
+        {
+            if (query is BaseStatement)
+                (query as BaseStatement).AddParameter(name, type, value, size);
+            return query;
+        }
+
         #region "Text command extensions"
 
         /// <summary>
