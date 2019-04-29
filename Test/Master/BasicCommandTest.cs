@@ -14,7 +14,7 @@ namespace Basic
         ICommand sut;
         public Command()
         {
-            sut = new Belgrade.SqlClient.SqlDb.Command(Util.Settings.ConnectionString);
+            sut = new Belgrade.SqlClient.SqlDb.Command(Util.Settings.MasterConnectionString);
         }
 
         [Fact]
@@ -22,18 +22,81 @@ namespace Basic
         {
             // Arrange
             string sql = "EXEC xp_sprintf @string OUTPUT , 'Hello %s' , 'World'";
-            var SQLCmd = new SqlCommand();
-            SQLCmd.CommandTimeout = 360;
-            SQLCmd.CommandText = sql;
+            var SQLCmd = new SqlCommand
+            {
+                CommandTimeout = 360,
+                CommandText = sql
+            };
             var p = SQLCmd.Parameters.Add(new SqlParameter("@string", SqlDbType.VarChar));
             p.Direction = ParameterDirection.Output;
             p.Size = 4000;
 
             // Action
-            await sut.Exec(SQLCmd);
+            await sut.Sql(SQLCmd).Exec();
 
             // Assert
             Assert.Equal("Hello World", p.Value);
+        }
+
+        [Theory]
+        [InlineData("sys", "columns")]
+        [InlineData("sys", "objects")]
+        public async Task ExecuteProc(string schema, string view)
+        {
+            // Arrange
+            string rSchema = "", rView = "";
+
+            // Action
+            await sut.Proc("sp_help")
+                        .Param("objname", schema+"."+view)
+                        .OnError(ex => Assert.False(true, "Unexpected exception: " + ex))
+                        .Map(r => { rView = r["Name"].ToString();
+                                    rSchema = r["Owner"].ToString();
+                        });
+
+            // Assert
+            Assert.Equal(view, rView);
+            Assert.Equal(schema, rSchema);
+        }
+
+        [Fact]
+        public void SelectNullAsParameter()
+        {
+            // Arrange
+            string sql = "SELECT TOP 1 a = 'OK' FROM sys.columns WHERE @p IS NULL";
+            string result = "DEFAULT";
+
+            // Action
+            sut
+                .Sql(sql)
+                .Param("@p", DbType.String, null)
+                .Map(r => result = r.GetString(0))
+                .Wait();
+
+            // Assert
+            Assert.Equal("OK", result);
+        }
+
+        [Fact]
+        public async Task ReturnsValueFromBatch()
+        {
+            // Arrange
+            string title = null;
+
+            // Action
+            var cmd = new SqlCommand(
+@"create table #Todo(i int);
+insert into #Todo(i) select @i;
+SELECT 'a' as Title ");
+            cmd.Parameters.AddWithValue("i", 1);
+            await sut
+            .Sql(cmd)
+            .Map(row => {
+                title = row["Title"].ToString();
+            });
+
+            // Assert
+            Assert.Equal("a", title);
         }
     }
 }

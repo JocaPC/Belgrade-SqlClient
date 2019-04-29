@@ -1,6 +1,7 @@
 ﻿using Belgrade.SqlClient;
 using Belgrade.SqlClient.SqlDb;
 using System;
+using System.Data.SqlClient;
 using System.IO;
 using System.Threading.Tasks;
 using Xunit;
@@ -9,10 +10,10 @@ namespace Basic
 {
     public class Mapper
     {
-        IQueryMapper mapper;
+        IQuery mapper;
         public Mapper()
         {
-            mapper = new QueryMapper(Util.Settings.ConnectionString);
+            mapper = new QueryMapper(Util.Settings.MasterConnectionString);
         }
         
         [Theory]
@@ -27,7 +28,7 @@ namespace Basic
             var sql = String.Format("select {0} 'a'", constant);
 
             // Action
-            var t = mapper.ExecuteReader(sql, (reader) => { result = reader.GetInt32(0); });
+            var t = mapper.Sql(sql).Map(reader => { result = reader.GetInt32(0); });
             if (useAsync)
                 await t;
             else
@@ -50,8 +51,8 @@ namespace Basic
             using (MemoryStream ms = new MemoryStream())
             {
                 count = count % 10000;
-                var t = mapper.ExecuteReader(String.Format("select top {0} 'a' from sys.all_objects, sys.all_parameters", count), 
-                    _=> i++);
+                var t = mapper.Sql(String.Format("select top {0} 'a' from sys.all_objects, sys.all_parameters", count))
+                    .Map(_ => i++);
 
                 if (useAsync)
                     await t;
@@ -74,8 +75,8 @@ namespace Basic
             // Action
             using (MemoryStream ms = new MemoryStream())
             {
-                var t = mapper.ExecuteReader("select * from sys.all_objects where 1 = 0",
-                    _ => callbackExecuted = true);
+                var t = mapper.Sql("select * from sys.all_objects where 1 = 0")
+                    .Map(_ => callbackExecuted = true);
 
                 if (useAsync)
                     await t;
@@ -95,6 +96,28 @@ namespace Basic
 
             // Assert
             Assert.Equal("", response);
+        }
+
+        [Fact]
+        public async Task ReturnsValueFromBatch()
+        {
+            // Arrange
+            string title = null;
+
+            // Action
+            var cmd = new SqlCommand(
+@"create table #Todo(i int);
+insert into #Todo(i) select @i;
+SELECT 'a' as Title ");
+            cmd.Parameters.AddWithValue("i", 1);
+            await mapper
+            .Sql(cmd)
+            .Map(row => {
+                title = row["Title"].ToString();
+            });
+
+            // Assert
+            Assert.Equal("a", title);
         }
     }
 }

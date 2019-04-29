@@ -3,7 +3,6 @@
 //  This source file is distributed in the hope that it will be useful, but
 //  WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 //  or FITNESS FOR A PARTICULAR PURPOSE.See the license files for details.
-using Belgrade.SqlClient.Common;
 using System;
 using System.Data.SqlClient;
 
@@ -12,7 +11,7 @@ namespace Belgrade.SqlClient.SqlDb
     /// <summary>
     /// Class that builds an error handler that will handle retry logic.
     /// </summary>
-    public class RetryErrorHandlerBuilder : ErrorHandlerBuilder
+    public class RetryErrorHandler
     {
         /// <summary>
         /// Sql error codes that indicate that retry acton is required.
@@ -32,55 +31,85 @@ namespace Belgrade.SqlClient.SqlDb
         };
 
         /// <summary>
-        /// Default number of retry attempts.
+        /// Sql error codes that indicate that retry acton is required.
+        /// See - https://docs.microsoft.com/azure/sql-database/sql-database-develop-error-messages#transient-fault-error-codes
         /// </summary>
-        public static int RETRY_COUNT = 3;
+        static readonly int[] TransientErrorCodes =
+            new int[9]{
+                4060, 40197, 40501, 40613, 49918, 49919, 49920, 4221, 11001
+        };
 
         /// <summary>
-        /// Function that creates error handler that will implement retry logic.
+        /// Default number of retry attempts.
         /// </summary>
-        /// <returns></returns>
-        public override Action<Exception> CreateErrorHandler()
+        internal static int RETRY_COUNT = 3;
+        
+        /// <summary>
+        /// Enables or disables retry handler.
+        /// </summary>
+        /// <param name="retry">Specifies should the retry logic be enabled (<code>true</code> by default).</param>
+        public static void Enable(bool retry)
         {
-            return delegate (Exception ex)
+            RETRY_ERRORS = retry;
+        }
+
+        /// <summary>
+        /// Enables or disables retry handler that performs delayed retry on transient errors such as failover.
+        /// Retry handler will repeat command after 5, 10, and 15 seconds if some of the following errors occure:
+        /// - 4060, 40197, 40501, 40613, 49918, 49919, 49920, 4221 - https://docs.microsoft.com/azure/sql-database/sql-database-develop-error-messages#transient-fault-error-codes
+        /// - 11001 - An error has occurred while establishing a connection to the server. When connecting to SQL Server, this failure may be caused by the fact that under the default settings SQL Server does not allow remote connections. (provider: TCP Provider, error: 0 - No such host is known.)
+        /// </summary>
+        /// <param name="retry">Specifies should the retry logic be enabled (<code>true</code> by default).</param>
+        public static void EnableDelayedRetries(bool retry)
+        {
+            RETRY_TRANSIENT_ERRORS = retry;
+        }
+
+        internal static bool RETRY_ERRORS = true;
+
+        internal static bool RETRY_TRANSIENT_ERRORS = true;
+        
+        internal static bool ShouldWaitToRetry(Exception ex)
+        {
+            var sqlex = (ex as SqlException);
+            if (sqlex == null)
+                return false;
+            if (RETRY_TRANSIENT_ERRORS)
             {
-                bool success = false;
-                SqlException sqlex = ex as SqlException;
-                if (ex == null)
-                    throw new ArgumentException("Exception type must be SqlException.");
-                int retryIteration = 0;
-                while (retryIteration < RETRY_COUNT)
+                foreach (int code in TransientErrorCodes)
                 {
-                    bool isRetryErrorCode = false;
-                    foreach(int code in RetryErrorCodes)
+                    if (sqlex.Number == code)
                     {
-                        if (sqlex.Number == code)
-                            isRetryErrorCode = true;
+                        return true;
                     }
-                    if (!isRetryErrorCode)
-                    {
-                        throw sqlex;
-                    }
-
-                    try
-                    {
-                        base.Command.ExecuteNonQuery();
-                        success = true;
-                        break;
-                    }
-                    catch (SqlException innerEx)
-                    {
-                        sqlex = innerEx;
-                    }
-
-                    retryIteration++;
                 }
+            }
+            return false;
+        }
 
-                if (!success && retryIteration == RETRY_COUNT)
-                { 
-                    this.HandleUnhandledException(sqlex);
+        internal static bool ShouldRetry(Exception ex)
+        {
+            var sqlex = (ex as SqlException);
+            if (sqlex == null)
+                return false;
+            foreach (int code in RetryErrorCodes)
+            {
+                if (sqlex.Number == code)
+                {
+                    return true;
                 }
-            };
+            }
+            if (RETRY_TRANSIENT_ERRORS)
+            {
+                foreach (int code in TransientErrorCodes)
+                {
+                    if (sqlex.Number == code)
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
         }
     }
 }

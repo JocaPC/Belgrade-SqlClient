@@ -13,7 +13,7 @@ namespace Belgrade.SqlClient
     /// <summary>
     /// Query component that streams results of SQL query into an output stream.
     /// </summary>
-    public interface IQueryPipe
+    public interface IQueryPipe: IQueryMapper
     {
         /// <summary>
         /// Executes SQL command and put results into stream.

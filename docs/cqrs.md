@@ -1,6 +1,6 @@
 # Command-Query Responsibility Segregation
 
-**Belgrade Sql Client** is follows a Command-Query Responsibility Segregation (CQRS) pattern. Data access classes are divided in two classes:
+**Belgrade Sql Client** can be used in the architectures that use <a href="https://docs.microsoft.com/azure/architecture/patterns/cqrs">Command-Query Responsibility Segregation (CQRS)</a> pattern. Data access classes are divided in two classes:
 - Commands that will execute SQL commands that update database.
 - Queries that are used to execute SQL queries that will return results to the client. Queries are divided in two categories:
  - Query Mappers that execute SQL commands and return *DataReader* object that can be mapped to standard objects.
@@ -18,7 +18,7 @@ This library is used in SQL Server 2016/Azure SQL Database samples.
 
 In order to initialize data access components, you can provide standard *SqlConnection* as a constructor:
 
-```javascript
+```
 const string ConnString = "Server=<SERVER NAME>;Database=<DB NAME>;Integrated Security=true";
 IQueryMapper sqlMapper = new QueryMapper(new SqlConnection(ConnString));
 IQueryPipe sqlPipe = new QueryPipe(new SqlConnection(ConnString));
@@ -31,15 +31,17 @@ ICommand sqlCmd = new Command(new SqlConnection(ConnString));
 *QueryMapper* is data-access component that executes a query against database and maps results using mapper function. 
 
 ```
-await sqlMapper.ExecuteReader(command, row => { /* Populate an object from the row */ });
+await sqlMapper.Sql(command).Map(row => { /* Populate an object from the row */ });
 ```
 You can provide function that accepts *DataReader* as an argument and populate fields from *DataReader* into some object.
 <a name="query-pipe"></a>
 ## Query Pipes
 
 QueryPipe is data-access component that executes a query against database and stream results into an output stream. 
-```javascript
-await sqlQuery.Stream("select * from Product FOR JSON PATH", Response.Body, EMPTY_PRODUCTS_ARRAY);
+```
+await sqlQuery
+        .Sql("select * from Product FOR JSON PATH")
+        .Stream(Response.Body);
 ```
 Method *Stream* in *QueryPipe* class may accept two or three parameters:
 - First parameter is a T-SQL query that will be executed.
@@ -51,10 +53,15 @@ Method *Stream* in *QueryPipe* class may accept two or three parameters:
 ## Command
 
 Command is data-access component that executes a query or stored procedure that don't return any results. Commands are used in update statements. 
-```javascript
-var cmd = new SqlCommand("InsertProduct");
-cmd.CommandType = System.Data.CommandType.StoredProcedure;
-cmd.Parameters.AddWithValue("Product", product);
-await sqlCmd.ExecuteNonQuery(cmd);
+```
+await cmd
+        .Proc("InsertProduct")
+        .Param("Product", product);
+        .Exec();
 ```
 It is just an async wrapper around standard SqlComand that handles errors and manage connection.
+
+## See also
+
+ - [Home](index.md)
+ - [Using Belgrade SqlClient in ASP.NET](aspnet.md)

@@ -14,7 +14,7 @@ namespace Basic
         IQueryPipe sut;
         public Pipe()
         {
-            sut = new Belgrade.SqlClient.SqlDb.QueryPipe(Util.Settings.ConnectionString);
+            sut = new Belgrade.SqlClient.SqlDb.QueryPipe(Util.Settings.MasterConnectionString);
         }
 
         [Fact]
@@ -27,7 +27,7 @@ namespace Basic
             using (MemoryStream ms = new MemoryStream())
             {
                 count = count % 10000;
-                await sut.Stream(String.Format("select top {0} 'a' from sys.all_objects, sys.all_parameters", count), ms);
+                await sut.Sql(String.Format("select top {0} 'a' from sys.all_objects, sys.all_parameters", count)).Stream(ms);
 
                 // Assert
                 Assert.Equal(count, ms.Length);
@@ -43,7 +43,7 @@ namespace Basic
             // Action
             using (MemoryStream ms = new MemoryStream())
             {
-                await sut.Stream("select * from sys.all_objects where 1 = 0", ms, "DEFAULT");
+                await sut.Sql("select * from sys.all_objects where 1 = 0").Stream(ms, "DEFAULT");
                 ms.Position = 0;
                 text = new StreamReader(ms).ReadToEnd();
             }
@@ -58,7 +58,7 @@ namespace Basic
             // Action
             using (MemoryStream ms = new MemoryStream())
             {
-                await sut.Stream("select * from sys.all_objects where 1 = 0", ms, UTF8Encoding.Default.GetBytes("DEFAULT"));
+                await sut.Sql("select * from sys.all_objects where 1 = 0").Stream(ms, UTF8Encoding.Default.GetBytes("DEFAULT"));
                 ms.Position = 0;
                 var text = new StreamReader(ms).ReadToEnd();
 
@@ -74,7 +74,7 @@ namespace Basic
             // Action
             using (var ms = new MemoryStream())
             {
-                await sut.Stream("select cast('TEST' as varbinary)", ms, System.Text.UTF8Encoding.Default.GetBytes("DEFAULT"));
+                await sut.Sql("select cast('TEST' as varbinary)").Stream(ms, System.Text.UTF8Encoding.Default.GetBytes("DEFAULT"));
                 ms.Position = 0;
                 var text = new StreamReader(ms).ReadToEnd();
 
@@ -93,15 +93,16 @@ namespace Basic
             // Action
             using (var ms = new MemoryStream())
             {
-                await sut
+                await sut.Sql("select 1")
                     .OnError(ex => {
                         isErrorThrown = true;
 
                         // Assert (refactor)
-                        Assert.Equal("DataReader returned unexpected type Int32", ex.Message);
-                        Assert.Equal("reader", (ex as ArgumentException).ParamName);
+                        Assert.Equal(@"The column type returned by the query cannot be sent to the stream.
+Parameter name: Int32", ex.Message);
+                        Assert.Equal("Int32", actual: (ex as ArgumentException).ParamName);
                     })
-                    .Stream("select 1", ms, System.Text.UTF8Encoding.Default.GetBytes("DEFAULT"));
+                    .Stream(ms, new Options() { DefaultOutput = System.Text.UTF8Encoding.Default.GetBytes("DEFAULT") });
                 text = new StreamReader(ms).ReadToEnd();
             }
 
@@ -124,7 +125,7 @@ namespace Basic
             // Action
             using (var ms = new MemoryStream())
             {
-                await sut.Stream(sql, ms, System.Text.UTF8Encoding.Default.GetBytes("DEFAULT"));
+                await sut.Sql(sql).Stream(ms, System.Text.UTF8Encoding.Default.GetBytes("DEFAULT"));
                 ms.Position = 0;
                 using (var gz = new GZipStream(ms, CompressionMode.Decompress))
                 {
@@ -149,7 +150,7 @@ namespace Basic
             // Action
             using (MemoryStream ms = new MemoryStream())
             {
-                await sut.Stream("select a = 2 for json path",
+                await sut.Sql("select a = 2 for json path").Stream(
                                     ms,
                                     new Options() { Prefix = "{\"data\":", Suffix="}" });
                 ms.Position = 0;

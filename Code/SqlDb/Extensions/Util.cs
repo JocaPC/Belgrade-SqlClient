@@ -10,6 +10,8 @@ namespace Code.SqlDb.Extensions
     {
         internal static void AddParameterWithValue(object command, string name, object value)
         {
+            if (value == null)
+                value = DBNull.Value;
             if (command is BaseStatement &&
                             (command as BaseStatement).Command is SqlCommand)
             {

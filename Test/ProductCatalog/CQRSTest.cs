@@ -17,9 +17,9 @@ namespace CQRS
     {
         public Scenario()
         {
-            var command = new Command(Util.Settings.ConnectionString.Replace("Database=master;", "Database=ProductCatalogDemo;"));
+            var command = new Command(Util.Settings.MasterConnectionString.Replace("Database=master;", "Database=ProductCatalogDemo;"));
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-            command.Exec("DELETE Company WHERE companyId >= 4");
+            command.Sql("DELETE Company WHERE companyId >= 4").Exec();
 #pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
         }
 
@@ -49,7 +49,7 @@ namespace CQRS
         public async Task CRUD(bool useCommand)
         {
             List<string> errors = new List<string>();
-            IQueryMapper mapper = CreateNewMapper(errors);
+            IQuery mapper = CreateNewMapper(errors);
             var command = CreateNewCommand(errors);
 
             var sqlCmd = new SqlCommand();
@@ -67,10 +67,12 @@ namespace CQRS
             mapper = CreateNewMapper(errors);
             if (useCommand)
             {
-                sqlCmd = new SqlCommand();
-                sqlCmd.CommandText = "select count(*) from Company where CompanyId = @ID";
+                sqlCmd = new SqlCommand
+                {
+                    CommandText = "select count(*) from Company where CompanyId = @ID"
+                };
                 sqlCmd.Parameters.AddWithValue("ID", ID);
-                await mapper.Map(sqlCmd, reader => count = reader.GetInt32(0));
+                await mapper.Sql(sqlCmd).Map(reader => count = reader.GetInt32(0));
             }
             else
             {
@@ -88,7 +90,7 @@ namespace CQRS
                 sqlCmd.Parameters.Clear();
                 sqlCmd.Parameters.AddWithValue("ID", ID);
                 sqlCmd.Parameters.AddWithValue("NAME", NAME);
-                await command.Exec(sqlCmd);
+                await command.Sql(sqlCmd).Exec();
             }
             else
             {
@@ -106,7 +108,7 @@ namespace CQRS
                 sqlCmd.CommandText = "select count(*) from Company where CompanyId = @ID";
                 sqlCmd.Parameters.Clear();
                 sqlCmd.Parameters.AddWithValue("ID", ID);
-                await mapper.Map(sqlCmd, reader => count = reader.GetInt32(0));
+                await mapper.Sql(sqlCmd).Map(reader => count = reader.GetInt32(0));
             }
             else
             {
@@ -127,8 +129,9 @@ namespace CQRS
                 sqlCmd.CommandText = "select CompanyId, Name from Company where CompanyId = @ID";
                 sqlCmd.Parameters.Clear();
                 sqlCmd.Parameters.AddWithValue("ID", ID);
-                await mapper.Map(sqlCmd,
-                            reader => { id = reader.GetInt32(0); name = reader.GetString(1); });
+                await mapper
+                        .Sql(sqlCmd)
+                        .Map(reader => { id = reader.GetInt32(0); name = reader.GetString(1); });
             } else
             {
                 await 
@@ -143,7 +146,8 @@ namespace CQRS
             if (useCommand)
             {
                 await command
-                    .Exec("update Company set Name = '" + NAME2 + "' where CompanyId = " + ID);
+                    .Sql("update Company set Name = '" + NAME2 + "' where CompanyId = " + ID)
+                    .Exec();
             } else
             {
                 await command
@@ -156,8 +160,9 @@ namespace CQRS
                 sqlCmd.CommandText = "select Name from Company where CompanyId = @ID";
                 sqlCmd.Parameters.Clear();
                 sqlCmd.Parameters.AddWithValue("ID", ID);
-                await mapper.Map(sqlCmd,
-                            reader => { name = reader.GetString(0); });
+                await mapper
+                    .Sql(sqlCmd)
+                    .Map( reader => { name = reader.GetString(0); });
             } else
             {
                 await mapper
@@ -174,7 +179,7 @@ namespace CQRS
                 sqlCmd.CommandText = "delete Company where CompanyId = @ID";
                 sqlCmd.Parameters.Clear();
                 sqlCmd.Parameters.AddWithValue("ID", ID);
-                await command.Exec(sqlCmd);
+                await command.Sql(sqlCmd).Exec();
             } else
             {
                 await command
@@ -189,7 +194,7 @@ namespace CQRS
                 sqlCmd.CommandText = "select count(*) from Company where CompanyId = @ID";
                 sqlCmd.Parameters.Clear();
                 sqlCmd.Parameters.AddWithValue("ID", ID);
-                await mapper.Map(sqlCmd, reader => count = reader.GetInt32(0));
+                await mapper.Sql(sqlCmd).Map(reader => count = reader.GetInt32(0));
             } else
             {
                 await mapper
@@ -206,7 +211,7 @@ namespace CQRS
                 sqlCmd.CommandText = "insert into Company(Name) output inserted.CompanyId values(@NAME)";
                 sqlCmd.Parameters.Clear();
                 sqlCmd.Parameters.AddWithValue("NAME", NAME3);
-                await command.Map(sqlCmd, reader => id = reader.GetInt32(0));
+                await command.Sql(sqlCmd).Map(reader => id = reader.GetInt32(0));
             } else
             {
                 await command
@@ -221,7 +226,7 @@ namespace CQRS
                 sqlCmd.CommandText = "select count(*) from Company where CompanyId = @ID";
                 sqlCmd.Parameters.Clear();
                 sqlCmd.Parameters.AddWithValue("ID", id);
-                await mapper.Map(sqlCmd, reader => count = reader.GetInt32(0));
+                await mapper.Sql(sqlCmd).Map(reader => count = reader.GetInt32(0));
             } else
             {
                 await mapper
@@ -237,7 +242,7 @@ namespace CQRS
                 sqlCmd.CommandText = "select Name from Company where CompanyId = @ID";
                 sqlCmd.Parameters.Clear();
                 sqlCmd.Parameters.AddWithValue("ID", id);
-                await mapper.Map(sqlCmd, reader => name = reader.GetString(0));
+                await mapper.Sql(sqlCmd).Map(reader => name = reader.GetString(0));
             } else
             {
                 await mapper
@@ -250,7 +255,7 @@ namespace CQRS
 
             string oldname = null;
             string newname = null;
-            await command.Map("update Company SET Name = '" + NAME4 + "' output deleted.Name, inserted.Name where CompanyId = " + id, reader => { oldname = reader.GetString(0); newname = reader.GetString(1); });
+            await command.Sql("update Company SET Name = '" + NAME4 + "' output deleted.Name, inserted.Name where CompanyId = " + id).Map(reader => { oldname = reader.GetString(0); newname = reader.GetString(1); });
             Assert.Equal(NAME3, oldname);
             Assert.Equal(NAME4, newname);
 
@@ -262,7 +267,7 @@ namespace CQRS
                 sqlCmd.CommandText = "delete Company output deleted.CompanyId, deleted.Name where CompanyId = @ID";
                 sqlCmd.Parameters.Clear();
                 sqlCmd.Parameters.AddWithValue("ID", id);
-                await command.Map(sqlCmd,
+                await command.Sql(sqlCmd).Map(
                     reader => { deletedId = reader.GetInt32(0); name = reader.GetString(1); });
             } else
             {
@@ -279,14 +284,17 @@ namespace CQRS
 
         private static ICommand CreateNewCommand(List<string> errors)
         {
-            return new Command(new SqlConnection(Util.Settings.ConnectionString.Replace("Database=master;", "Database=ProductCatalogDemo;")))
-                                .OnError(ex => errors.Add(ex.Message));
+            ICommand c = new Command(new SqlConnection(Util.Settings.MasterConnectionString.Replace("Database=master;", "Database=ProductCatalogDemo;")));
+            c.OnError(ex => errors.Add(ex.Message));
+            return c;
+
         }
 
-        private static IQueryMapper CreateNewMapper(List<string> errors)
+        private static IQuery CreateNewMapper(List<string> errors)
         {
-            return new QueryMapper(new SqlConnection(Util.Settings.ConnectionString.Replace("Database=master;", "Database=ProductCatalogDemo;")))
-                                .OnError(ex => errors.Add(ex.Message));
+            IQuery m = new QueryMapper(new SqlConnection(Util.Settings.MasterConnectionString.Replace("Database=master;", "Database=ProductCatalogDemo;")));
+            m.OnError(ex => errors.Add(ex.Message));
+            return m;
         }
     }
 }

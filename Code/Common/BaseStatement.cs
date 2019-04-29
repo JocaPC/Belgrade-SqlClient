@@ -3,10 +3,12 @@
 //  This source file is distributed in the hope that it will be useful, but
 //  WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 //  or FITNESS FOR A PARTICULAR PURPOSE.See the license files for details.
+using Common.Logging;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using System.Threading.Tasks;
 
 namespace Belgrade.SqlClient.Common
 {
@@ -94,5 +96,83 @@ namespace Belgrade.SqlClient.Common
             this.Command.Parameters.Add(p);
             return this;
         }
+
+        protected ILog _logger = null;
+
+        /// <summary>
+        /// Adds a logger that will be used by SQL client.
+        /// </summary>
+        /// <param name="logger">Common.Logging.ILog where log records will be written.</param>
+        /// <returns>This statement.</returns>
+        public virtual BaseStatement AddLogger(ILog logger)
+        {
+            this._logger = logger;
+            return this;
+        }
+
+        protected async Task ExecuteWithRetry(DbCommand command, object callback)
+        {
+            bool isResultSentToCallback = false;
+            int retryIteration = 0;
+            bool shouldRetry = false;
+            Exception rootException = null;
+            do
+            {
+                shouldRetry = false; // Let's assume that we should not retry execution in this iteration.
+                rootException = null;
+                try
+                {
+                    isResultSentToCallback = await ExecuteCommand(command, callback).ConfigureAwait(false);
+                }
+                catch (Exception ex)
+                {
+                    rootException = ex;
+                    // If this is transient error AND results are not already sent to the client:
+                    // Retry the action.
+                    if (SqlDb.RetryErrorHandler.ShouldRetry(ex) && !isResultSentToCallback)
+                    {
+                        shouldRetry = true;
+                        retryIteration++;
+                        if (_logger != null)
+                            _logger.InfoFormat("Database call returned the transient error {message}. Retrying..", ex.Message);
+                    }
+                    else
+                    {
+                        if(_logger!=null)
+                            _logger.WarnFormat("Database call returned the error {message}. Trying to handle exception...", ex.Message);
+                        await ExecuteCallbackWithException(callback, ex).ConfigureAwait(false);
+                    }
+                }
+                finally
+                {
+                    command.Connection.Close();
+                    if (shouldRetry && !isResultSentToCallback)
+                    {
+                        if (SqlDb.RetryErrorHandler.ShouldWaitToRetry(rootException))
+                        {
+                            if (_logger != null)
+                                _logger.InfoFormat("Delayed retry {iteration} due to the transient error.", retryIteration);
+                            await Task.Delay(5000 + 10000 * (retryIteration - 1)).ConfigureAwait(false); // wait 5, 15, and 25 sec
+                        }
+                        else
+                        {
+                            if (_logger != null)
+                                _logger.InfoFormat("Retrying immediatelly {iteration} attempt", retryIteration);
+                        }
+                    }
+                }
+            } while (shouldRetry && retryIteration < SqlDb.RetryErrorHandler.RETRY_COUNT && !isResultSentToCallback);
+
+            if (shouldRetry && retryIteration == SqlDb.RetryErrorHandler.RETRY_COUNT)
+            {
+                if (this._logger != null)
+                    this._logger.ErrorFormat("Query failed after {iteration} retries.\n{excetpion}", SqlDb.RetryErrorHandler.RETRY_COUNT, rootException);
+
+                await ExecuteCallbackWithException(callback, rootException);
+            }
+        }
+
+        protected virtual async Task ExecuteCallbackWithException(object callback, Exception ex) { }
+        protected virtual async Task<bool> ExecuteCommand(DbCommand command, object callback) => false;
     }
 }

@@ -1,24 +1,40 @@
-﻿using Code.SqlDb.Extensions;
+﻿using Belgrade.SqlClient.Common;
+using Code.SqlDb.Extensions;
 using System;
+using System.Data.Common;
 using System.Data.SqlClient;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace Belgrade.SqlClient
 {
-    public static partial class IQueryMapperExtensions
+    public static partial class IQueryExtensions
     {
+        public static IQuery Sql(this IQuery query, DbCommand cmd)
+        {
+            if (query is BaseStatement)
+                (query as BaseStatement).SetCommand(cmd);
+            return query;
+        }
+
         /// <summary>
         /// Add a parameter with specified value to the mapper.
         /// </summary>
-        /// <param name="mapper">Mapper where the parameter will be added.</param>
+        /// <param name="query">Mapper where the parameter will be added.</param>
         /// <param name="name">Name of the parameter.</param>
         /// <param name="value">Value of the parameter.</param>
-        /// <returns>Mapper object.</returns>
-        public static IQueryMapper Param(this IQueryMapper mapper, string name, object value)
+        /// <returns>Query object.</returns>
+        public static IQuery Param(this IQuery query, string name, object value)
         {
-            Util.AddParameterWithValue(mapper, name, value);
-            return mapper;
+            Util.AddParameterWithValue(query, name, value);
+            return query;
+        }
+
+        public static IQuery Param(this IQuery query, string name, System.Data.DbType type, object value, int size = 0)
+        {
+            if (query is BaseStatement)
+                (query as BaseStatement).AddParameter(name, type, value, size);
+            return query;
         }
 
         #region "Text command extensions"
@@ -27,10 +43,10 @@ namespace Belgrade.SqlClient
         /// Set the query text on the mapper.
         /// </summary>
         /// <returns>Query Mapper.</returns>
-        public static IQueryMapper Sql(this IQueryMapper mapper, string query)
+        public static IQuery Sql(this IQuery query, string queryText)
         {
-            var cmd = new SqlCommand(query);
-            return mapper.Sql(cmd);
+            var cmd = new SqlCommand(queryText);
+            return query.Sql(cmd);
         }
 
         #endregion
@@ -40,10 +56,10 @@ namespace Belgrade.SqlClient
         /// </summary>
         /// <param name="sql">SQL query that will be executed.</param>
         /// <returns>Task</returns>
-        public static async Task<string> GetString(this IQueryMapper mapper, SqlCommand cmd)
+        public static async Task<string> GetString(this IQuery query, SqlCommand cmd)
         {
             var sb = new StringBuilder();
-            await mapper.Sql(cmd).Map(reader => sb.Append(reader[0]));
+            await query.Sql(cmd).Map(reader => sb.Append(reader[0]));
             return sb.ToString();
         }
 
@@ -52,10 +68,10 @@ namespace Belgrade.SqlClient
         /// </summary>
         /// <param name="sql">SQL query that will be executed.</param>
         /// <returns>Task</returns>
-        public static async Task<string> GetString(this IQueryMapper mapper, string sql)
+        public static async Task<string> GetString(this IQuery query, string sql)
         {
             var cmd = new SqlCommand(sql);
-            return await mapper.GetString(cmd);
+            return await query.GetString(cmd);
         }
 
 #if NET46
@@ -63,29 +79,29 @@ namespace Belgrade.SqlClient
         /// Add action that will be executed once the underlying data source is changed.
         /// Make sure that you call SqlDependency.Start(connString) once application starts, and SqlDependency.Stop(connString); when application stops.
         /// </summary>
-        /// <param name="mapper">Mapper object that will execute the query.</param>
+        /// <param name="query">The object that will execute the query.</param>
         /// <param name="action">Action that will be executed once the query results change.</param>
         /// <returns>Mapper.</returns>
-        public static IQueryMapper OnChange(this IQueryMapper mapper, Action<SqlNotificationEventArgs> action)
+        public static IQuery OnChange(this IQuery query, Action<SqlNotificationEventArgs> action)
         {
-            var cmd = ((mapper as Common.BaseStatement).Command as SqlCommand);
+            var cmd = ((query as Common.BaseStatement).Command as SqlCommand);
             new SqlDependency(cmd)
                 .OnChange += (sender, e) => { if (e.Type == SqlNotificationType.Change) action(e); };
-            return mapper;
+            return query;
         }
 
         /// <summary>
         /// Add action that will be executed once the underlying data source is changed.
         /// Make sure that you call SqlDependency.Start(connString) once application starts, and SqlDependency.Stop(connString); when application stops.
         /// </summary>
-        /// <param name="mapper">Mapper object that will execute the query.</param>
+        /// <param name="query">Mapper object that will execute the query.</param>
         /// <param name="action">Action that will be executed once the query results change.</param>
         /// <returns>Mapper.</returns>
-        public static IQueryMapper OnChange(this IQueryMapper mapper, OnChangeEventHandler action)
+        public static IQuery OnChange(this IQuery query, OnChangeEventHandler action)
         {
-            var cmd = ((mapper as Common.BaseStatement).Command as SqlCommand);
+            var cmd = ((query as Common.BaseStatement).Command as SqlCommand);
             new SqlDependency(cmd).OnChange += action;
-            return mapper;
+            return query;
         }
 #endif
     }

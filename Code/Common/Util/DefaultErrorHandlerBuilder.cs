@@ -4,6 +4,7 @@
 //  WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 //  or FITNESS FOR A PARTICULAR PURPOSE.See the license files for details.
 using Belgrade.SqlClient.Common;
+using Common.Logging;
 using System;
 
 namespace Belgrade.SqlClient
@@ -17,9 +18,9 @@ namespace Belgrade.SqlClient
         /// Function that creates error handler that will just re-throw exception.
         /// </summary>
         /// <returns>Action that re-throws the exception.</returns>
-        public override Action<Exception> CreateErrorHandler()
+        internal override Action<Exception> CreateErrorHandler(ILog logger)
         {
-            return null;
+            return ex => throw ex;
         }
     }
 }

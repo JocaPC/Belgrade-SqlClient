@@ -1,4 +1,5 @@
 ﻿using Belgrade.SqlClient;
+using Belgrade.SqlClient.Common;
 using System;
 using System.Data.SqlClient;
 using System.IO;
@@ -7,44 +8,31 @@ using Xunit;
 
 namespace Errors
 {
-    public class Pipe
+    public class Errors
     {
         IQueryPipe sut;
-        IQueryMapper mapper;
+        readonly IQuery mapper;
         ICommand command;
-        public Pipe()
+        public Errors()
         {
-            sut = new Belgrade.SqlClient.SqlDb.QueryPipe(Util.Settings.ConnectionString);
-            mapper = new Belgrade.SqlClient.SqlDb.QueryMapper(Util.Settings.ConnectionString);
-            command = new Belgrade.SqlClient.SqlDb.Command(Util.Settings.ConnectionString);
-        }
-
-
-        [Fact]
-        public async Task ErrorInSql()
-        {
-            bool exceptionThrown = false;
-            using (MemoryStream ms = new MemoryStream())
-            {
-                await sut.OnError(ex => { exceptionThrown = true; Assert.True(ex.GetType().Name == "SqlException"); })
-                    .Stream("select 1 as a, 1/0 as b for json path", ms);
-                Assert.True(exceptionThrown);
-            }
+            sut = new Belgrade.SqlClient.SqlDb.QueryPipe(Util.Settings.MasterConnectionString);
+            mapper = new Belgrade.SqlClient.SqlDb.QueryMapper(Util.Settings.MasterConnectionString);
+            command = new Belgrade.SqlClient.SqlDb.Command(Util.Settings.MasterConnectionString);
         }
 
         [Fact]
-        public async Task InvalidSql()
+        public async Task HandlesErrorsRepro()
         {
-            bool exceptionThrown = false;
-            using (MemoryStream ms = new MemoryStream())
-            {
-                await sut
-                    .OnError(ex=> { exceptionThrown = true;
-                                    Assert.True(ex.GetType().Name == "SqlException"); })
-                    .Stream("SELECT hrkljush", ms,
-                                new Options() { Prefix = "<start>", Suffix = "<end>" });
-                Assert.True(exceptionThrown);
-            }
+            var query_error = "select JSON_VALUE('a', '$.test')/JSON text is not properly formatted. Unexpected character 'a' is found at position 0.";
+            var async = true;
+            var client = "query";
+            bool useCommandAsPipe = true;
+            string defaultValue = null;
+            string prefix = "<!--";
+            string suffix = "-->";
+            bool executeCallbackOnError = true;
+            bool provideOnErrorHandler = true;
+            await HandlesErrors(query_error, async, client, useCommandAsPipe, defaultValue, prefix, suffix, executeCallbackOnError, provideOnErrorHandler);
         }
 
 #if EXTENSIVE_TEST
@@ -52,9 +40,13 @@ namespace Errors
 #else
         [Theory, PairwiseData]
 #endif
-        public async Task HandlesCompileErrors(
+        public async Task HandlesErrors(
         [CombinatorialValues(
-            "select * from NonExistentTable FOR JSON PATH/Invalid object name 'NonExistentTable'.",
+            "select CAST('a' as int)/Conversion failed when converting the varchar value 'a' to data type int.",
+            "select hrkljush/Invalid column name 'hrkljush'.",
+            "select 1 as a, 1%0 as b for json path/Divide by zero error encountered.",
+            "select JSON_VALUE('a', '$.test')/JSON text is not properly formatted. Unexpected character 'a' is found at position 0.",
+            "select * from UnknownTable FOR JSON PATH/Invalid object name 'UnknownTable'.",
             "select UnknownColumn from sys.objects FOR JSON PATH/Invalid column name 'UnknownColumn'.",
             "select g= geometry::STGeomFromText('LINESTRING (100 100, 20 180, 180 180)', 0) from sys.objects FOR JSON PATH/FOR JSON cannot serialize CLR objects. Cast CLR types explicitly into one of the supported types in FOR JSON queries.")]
             string query_error,
@@ -63,79 +55,134 @@ namespace Errors
         [CombinatorialValues(true, false)] bool useCommandAsPipe,
         [CombinatorialValues("?", "N/A", null, "")] string defaultValue,
         [CombinatorialValues("<s>", "{", "<!--", null, "")] string prefix,
-        [CombinatorialValues(null, "</s>", "}", "", "-->")] string suffix)
+        [CombinatorialValues(null, "</s>", "}", "", "-->")] string suffix,
+        [CombinatorialValues(true, false)] bool executeCallbackOnError,
+        [CombinatorialValues(true, false)] bool provideOnErrorHandler)
         {
+            // Arrange
             var pair = query_error.Split('/');
             var query = pair[0];
             var error = pair[1];
             bool exceptionThrown = false;
 
+            BaseStatement sut = null;
+            switch (client)
+            {
+                case "query":
+                    sut = (BaseStatement) new Belgrade.SqlClient.SqlDb.QueryPipe(Util.Settings.MasterConnectionString)
+                        .Sql(query);
+                    break;
+                case "mapper":
+                    sut = (BaseStatement) new Belgrade.SqlClient.SqlDb.QueryMapper(Util.Settings.MasterConnectionString)
+                        .Sql(query);
+                    break;
+                case "command":                
+                    sut = (BaseStatement)new Belgrade.SqlClient.SqlDb.Command(Util.Settings.MasterConnectionString)
+                        .Sql(query);
+                    break;
+            }
+
+            if(provideOnErrorHandler)
+            {
+                sut.OnError(ex => {
+                                Assert.True(ex.GetType().Name == "SqlException", "The thrown excpetion should be 'SqlException'!");
+                                Assert.Equal(error, ex.Message);
+                                exceptionThrown = true;
+                            });
+            }
+
+
             using (MemoryStream ms = new MemoryStream())
             {
                 Task t = null;
-                switch(client)
+                switch (client)
                 {
                     case "query":
-                        t = sut
-                            .OnError(ex =>
-                            {
-                                Assert.True(ex.GetType().Name == "SqlException");
-                                Assert.Equal(error, ex.Message);
-                                exceptionThrown = true;
-                            })
-                            .Stream(query, ms,
+                        t = ((IQueryPipe)sut)
+                            .Stream(ms,
                                 new Options() { Prefix = prefix, DefaultOutput = defaultValue, Suffix = suffix });
                         break;
 
                     case "mapper":
-                        t = mapper
-                            .OnError(ex =>
-                            {
-                                Assert.True(ex.GetType().Name == "SqlException");
-                                Assert.Equal(error, ex.Message);
-                                exceptionThrown = true;
-                            })
-                            .ExecuteReader(query, r => { throw new Exception("Should not execute callback!"); });
+                        if (executeCallbackOnError)
+                            t = ((IQuery)sut)
+                                .Map((r, ex) => {
+                                    Assert.Null(r);
+                                    Assert.NotNull(ex);
+                                    Assert.True(ex.GetType().Name == "SqlException");
+                                    Assert.Equal(error, ex.Message);
+                                    exceptionThrown = true;
+                                });
+                        else
+                            t = ((IQuery)sut)
+                                .Map(r => { throw new Exception("Should not execute callback!"); });
                         break;
 
                     case "command":
                         if (useCommandAsPipe)
                         {
-                            t = command
-                                .OnError(ex =>
-                                {
-                                    Assert.True(ex.GetType().Name == "SqlException");
-                                    Assert.Equal(error, ex.Message);
-                                    exceptionThrown = true;
-                                })
-                                .Stream(query, ms,
+                            t = ((ICommand)sut)
+                                .Stream(ms,
                                     new Options() { Prefix = prefix, DefaultOutput = defaultValue, Suffix = suffix });
-                        } else
+                        }
+                        else
                         {
-                            t = command.OnError(ex =>
-                            {
-                                Assert.True(ex.GetType().Name == "SqlException");
-                                Assert.Equal("Could not find stored procedure 'NON_EXISTING_PROCEDURE'.", ex.Message);
-                                exceptionThrown = true;
-                            }).Exec("EXEC NON_EXISTING_PROCEDURE");
+                            t = ((ICommand)sut)
+                                .Exec();
                         }
                         break;
                 }
-                if (async)
-                    await t;
-                else
-                    t.Wait();
 
-                Assert.True(exceptionThrown);
-                if (client == "query" || client == "command" && useCommandAsPipe)
+                try {
+
+                    // Action
+                    if (async)
+                        await t;
+                    else
+                        t.Wait();
+
+                    if (!provideOnErrorHandler)
+                    {
+                        Assert.True(false, "Exception should be thrown before this statement");
+                    } else
+                    {
+                        Assert.True(exceptionThrown, "Exception handler is not invoked!");
+                        if (client == "query" || client == "command" && useCommandAsPipe)
+                        {
+                            ms.Position = 0;
+                            var text = new StreamReader(ms).ReadToEnd();
+                            Assert.Equal(prefix + defaultValue + suffix, text);// "NEW: Exception is not thrown so returned value shoudl be prefix+default+suffix");
+                        }
+                    }
+
+                } catch (Exception ex)
                 {
-                    ms.Position = 0;
-                    var text = new StreamReader(ms).ReadToEnd();
-                    Assert.Equal("", text);
+                    if (provideOnErrorHandler)
+                    {
+                        Assert.True(false, "Exception should not be thrown if error handler is provided." + ex.ToString());
+                    }
                 }
             }
         }
-        
+
+        [Fact]
+        public async void NonExistingStoredProcedure()
+        {
+            bool exceptionThrown = false;
+            
+            await command
+                .Sql("EXEC NON_EXISTING_PROCEDURE")
+                .OnError(ex =>
+                {
+                    Assert.True(ex.GetType().Name == "SqlException");
+                    Assert.Equal("Could not find stored procedure 'NON_EXISTING_PROCEDURE'.", ex.Message);
+                    exceptionThrown = true;
+                })
+                .Exec();
+
+            Assert.True(exceptionThrown, "EXEC NON_EXISTING_PROCEDURE should throw exception.");
+        }
+
         [Fact]
         public void ClosedStream()
         {
@@ -151,30 +198,31 @@ namespace Errors
                                exceptionThrown = true;
                                Assert.True(false, "Exception should not be catched here.");
                            })
-                           .Stream("SELECT 1 as a for json path", ms);
+                           .Sql("SELECT 1 as a for json path").Stream(ms);
                        Assert.False(exceptionThrown, "Belgrade Sql client should fast fail on this exception.");
                    });
             }
         }
         
         [Theory]
-        [InlineData("Server=.\\SQLEXPRESS", "Server=.\\NONEXISTINGSERVER")]
-        [InlineData("Database=master;", "Database=INVALIDDTABASE;")]
-        [InlineData("Integrated Security=true", "User Id=sa;Password=invalidpassword")]
-        public async Task InvalidConnection(string ConnStringToken, string NewValue)
+        [InlineData("Server=.", "Server=.\\NONEXISTINGSERVER", -1)]
+        [InlineData("Database=master;", "Database=INVALIDDATABASE;", 4060)]
+        [InlineData("Integrated Security=true", "User Id=sa;Password=invalidpassword", 18456)]
+        public async Task InvalidConnection(string ConnStringToken, string NewValue, int ErrorCode)
         {
             bool exceptionThrown = false;
-            var connString = Util.Settings.ConnectionString.Replace(ConnStringToken, NewValue);
+            var connString = Util.Settings.MasterConnectionString.Replace(ConnStringToken, NewValue);
             var sut = new Belgrade.SqlClient.SqlDb.QueryPipe(connString);
             using (MemoryStream ms = new MemoryStream())
             {
                 await sut
+                    .Sql("select 1 as a for json path")
                     .OnError(ex => {
                         exceptionThrown = true;
-                        Assert.True(ex.GetType().Name == "SqlException");
-                        Assert.Equal("A network-related or instance-specific error occurred while establishing a connection to SQL Server.The server was not found or was not accessible.Verify that the instance name is correct and that SQL Server is configured to allow remote connections. (provider: SQL Network Interfaces, error: 26 - Error Locating Server/ Instance Specified)", ex.Message);
+                        Assert.True(ex is SqlException);
+                        Assert.Equal(ErrorCode, (ex as SqlException).Number);
                     })
-                    .Stream("select 1 as a for json path", ms);
+                    .Stream(ms);
                 Assert.True(exceptionThrown, "Exception should be thrown when using connection string: " + connString);
             }
         }
